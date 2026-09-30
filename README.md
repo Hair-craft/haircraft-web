@@ -22,7 +22,8 @@ npm run dev      # http://localhost:3000
 
 ## Structure
 
-- `src/app/page.tsx` is the coming-soon page.
+- `src/app/coming-soon.tsx` is the coming-soon page, animated with Framer Motion. `page.tsx` renders it.
+- `public/images/logo.png` is the trimmed brand logo (`Hair Craft.png` is the original).
 - `src/app/layout.tsx` holds the fonts (Cormorant Garamond + Geist) and the metadata.
-- `src/app/globals.css` holds the colour tokens and animations.
+- `src/app/globals.css` holds the colour tokens: mint `#edf9e5`, deep green `#16362a` and gold.
 - `src/app/icon.svg` is the favicon.
