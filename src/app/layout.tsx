@@ -15,19 +15,19 @@ const sans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "HairCraft — Coming Soon",
+  title: "Hair Craft — Coming Soon",
   description:
-    "Premium hair extensions, crafted for you. HairCraft is launching soon.",
+    "Premium hair extensions, crafted for you. Hair Craft is launching soon.",
   openGraph: {
-    title: "HairCraft — Coming Soon",
+    title: "Hair Craft — Coming Soon",
     description:
-      "Premium hair extensions, crafted for you. HairCraft is launching soon.",
+      "Premium hair extensions, crafted for you. Hair Craft is launching soon.",
     type: "website",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1c1512",
+  themeColor: "#edf9e5",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

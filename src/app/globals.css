@@ -1,78 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #1c1512;
-  --foreground: #f4ece3;
-  --muted: #b8a797;
-  --accent: #c9a27e;
+  --mint: #edf9e5;
+  --mint-deep: #cdeebb;
+  --deep: #16362a;
+  --deep-soft: #3d6b54;
+  --gold: #d9982f;
+  --gold-light: #f2c45c;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-accent: var(--accent);
+  --color-mint: var(--mint);
+  --color-mint-deep: var(--mint-deep);
+  --color-deep: var(--deep);
+  --color-deep-soft: var(--deep-soft);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-display);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--mint);
+  color: var(--deep);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
-}
-
-@keyframes strand {
-  from {
-    stroke-dashoffset: 1600;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes sway {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-12px) rotate(-1.5deg);
-  }
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.strand {
-  stroke-dasharray: 1600;
-  animation: strand 4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-}
-
-.sway {
-  transform-origin: 50% 0;
-  animation: sway 9s ease-in-out infinite;
-}
-
-.rise {
-  opacity: 0;
-  animation: rise 1s ease-out forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .strand,
-  .sway,
-  .rise {
-    animation: none;
-    opacity: 1;
-    stroke-dashoffset: 0;
-  }
 }
