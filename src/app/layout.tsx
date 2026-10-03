@@ -14,17 +14,54 @@ const sans = Geist({
   subsets: ["latin"],
 });
 
+const siteUrl = "https://haircraft.in";
+const title = "HairCraft — Premium Hair Extensions | Coming Soon";
+const description =
+  "HairCraft (Hair Craft) brings premium hair extensions, crafted for length, volume and confidence. Our online store at haircraft.in is launching soon.";
+
 export const metadata: Metadata = {
-  title: "Hair Craft — Coming Soon",
-  description:
-    "Premium hair extensions, crafted for you. Hair Craft is launching soon.",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  applicationName: "HairCraft",
+  keywords: ["HairCraft", "Hair Craft", "haircraft.in", "hair extensions", "hair extensions India"],
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
   openGraph: {
-    title: "Hair Craft — Coming Soon",
-    description:
-      "Premium hair extensions, crafted for you. Hair Craft is launching soon.",
+    title,
+    description,
+    url: siteUrl,
+    siteName: "HairCraft",
+    locale: "en_IN",
     type: "website",
+    images: [{ url: "/images/logo.png", width: 1240, height: 1088, alt: "HairCraft logo" }],
+  },
+  twitter: {
+    card: "summary",
+    title,
+    description,
+    images: ["/images/logo.png"],
   },
 };
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "HairCraft",
+    alternateName: ["Hair Craft", "haircraft.in"],
+    url: `${siteUrl}/`,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "HairCraft",
+    alternateName: "Hair Craft",
+    url: `${siteUrl}/`,
+    logo: `${siteUrl}/images/logo.png`,
+    description,
+  },
+];
 
 export const viewport: Viewport = {
   themeColor: "#edf9e5",
@@ -36,7 +73,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

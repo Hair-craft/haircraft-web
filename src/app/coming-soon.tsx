@@ -47,14 +47,16 @@ export default function ComingSoon() {
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               className="flex h-48 w-48 items-center justify-center rounded-full bg-white/80 shadow-xl shadow-deep/10 ring-1 ring-gold/20 sm:h-60 sm:w-60"
             >
-              <Image
-                src="/images/logo.png"
-                alt="Hair Craft"
-                width={1240}
-                height={1088}
-                preload
-                className="h-auto w-32 sm:w-44"
-              />
+              <h1>
+                <Image
+                  src="/images/logo.png"
+                  alt="HairCraft"
+                  width={1240}
+                  height={1088}
+                  preload
+                  className="h-auto w-32 sm:w-44"
+                />
+              </h1>
             </motion.div>
           </motion.div>
 
@@ -62,10 +64,10 @@ export default function ComingSoon() {
             variants={fadeUp}
             className="mt-10 rounded-full bg-deep px-5 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-mint sm:text-xs"
           >
-            Launching soon
+            HairCraft · Launching soon
           </motion.p>
 
-          <motion.h1
+          <motion.h2
             variants={fadeUp}
             className="mt-6 font-display text-6xl font-light leading-none text-deep sm:text-8xl"
           >
@@ -73,7 +75,7 @@ export default function ComingSoon() {
             <em className="bg-gradient-to-r from-gold to-gold-light bg-clip-text italic text-transparent">
               soon
             </em>
-          </motion.h1>
+          </motion.h2>
 
           <motion.p
             variants={fadeUp}
