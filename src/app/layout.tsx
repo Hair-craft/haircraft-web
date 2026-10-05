@@ -14,33 +14,23 @@ const sans = Geist({
   subsets: ["latin"],
 });
 
+/** The public site address used in metadata and structured data. */
 const siteUrl = "https://haircraft.in";
-const title = "HairCraft — Premium Hair Extensions | Coming Soon";
 const description =
-  "HairCraft (Hair Craft) brings premium hair extensions, crafted for length, volume and confidence. Our online store at haircraft.in is launching soon.";
+  "HairCraft (Hair Craft): premium hair extensions, wigs and ponytails, crafted for length, volume and confidence.";
 
+/** Defaults for every page; each page sets its own title and description. */
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title,
+  title: { default: "HairCraft — Premium Hair Extensions", template: "%s | HairCraft" },
   description,
   applicationName: "HairCraft",
-  keywords: ["HairCraft", "Hair Craft", "haircraft.in", "hair extensions", "hair extensions India"],
-  alternates: { canonical: "/" },
   robots: { index: true, follow: true },
   openGraph: {
-    title,
-    description,
-    url: siteUrl,
     siteName: "HairCraft",
     locale: "en_IN",
     type: "website",
     images: [{ url: "/images/logo.png", width: 1240, height: 1088, alt: "HairCraft logo" }],
-  },
-  twitter: {
-    card: "summary",
-    title,
-    description,
-    images: ["/images/logo.png"],
   },
 };
 
