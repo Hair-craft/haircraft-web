@@ -14,7 +14,36 @@ export interface StoreSettings {
   siteUrl: string;
   /** How long one API call may take before it is given up. */
   apiTimeoutMs: number;
+  /**
+   * Free shipping from this order total, in rupees ("1999"), for marketing
+   * copy only: it must match the backend's FREE_SHIPPING_THRESHOLD, and
+   * checkout always shows the real shipping from the API. null = don't
+   * mention an amount.
+   */
+  freeShippingThreshold: string | null;
+  /** Products per page on the shop's listing pages (1–100, default 24). */
+  productsPerPage: number;
+  /**
+   * Razorpay's payment script. Always Razorpay's own in production; tests
+   * point it at the API's stand-in (with ALLOW_TEST_PAYMENT_SCRIPT=true).
+   */
+  razorpayScriptUrl: string;
+  /**
+   * How long approved reviews may be cached (seconds, default 120): a newly
+   * approved review appears within this time. 0 = always fresh (tests).
+   */
+  reviewsCacheSeconds: number;
+  /**
+   * Search engines may index the site (default false). Set true on the live
+   * site only, so test and preview copies never appear in search results.
+   */
+  allowIndexing: boolean;
+  /** Google Search Console's HTML-tag verification code, or null. */
+  googleSiteVerification: string | null;
 }
+
+/** Razorpay Checkout's script, as Razorpay publishes it. */
+export const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
 
 type Env = Record<string, string | undefined>;
 
@@ -31,12 +60,19 @@ function parseUrl(name: string, value: string, problems: string[]): string {
     if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error();
     return value.replace(/\/+$/, "");
   } catch {
-    problems.push(`${name} must be an http(s) address, e.g. http://localhost:3000/api/v1 (got "${value}")`);
+    problems.push(
+      `${name} must be an http(s) address, e.g. http://localhost:3000/api/v1 (got "${value}")`,
+    );
     return value;
   }
 }
 
-function parseBoolean(name: string, value: string | undefined, fallback: boolean, problems: string[]): boolean {
+function parseBoolean(
+  name: string,
+  value: string | undefined,
+  fallback: boolean,
+  problems: string[],
+): boolean {
   if (value === undefined || value.trim() === "") return fallback;
   const normalised = value.trim().toLowerCase();
   if (normalised === "true") return true;
@@ -52,7 +88,11 @@ function parseBoolean(name: string, value: string | undefined, fallback: boolean
 export function parseSettings(env: Env): StoreSettings {
   const problems: string[] = [];
   const production = env.NODE_ENV === "production";
-  const apiBaseUrl = parseUrl("API_BASE_URL", env.API_BASE_URL?.trim() || "http://localhost:3000/api/v1", problems);
+  const apiBaseUrl = parseUrl(
+    "API_BASE_URL",
+    env.API_BASE_URL?.trim() || "http://localhost:3000/api/v1",
+    problems,
+  );
   const siteUrl = parseUrl(
     "SITE_URL",
     env.SITE_URL?.trim() || (production ? "https://haircraft.in" : "http://localhost:3001"),
@@ -64,11 +104,74 @@ export function parseSettings(env: Env): StoreSettings {
   if (timeoutRaw) {
     apiTimeoutMs = Number(timeoutRaw);
     if (!Number.isInteger(apiTimeoutMs) || apiTimeoutMs < 1000 || apiTimeoutMs > 60_000) {
-      problems.push(`API_TIMEOUT_MS must be a whole number of milliseconds from 1000 to 60000 (got "${timeoutRaw}")`);
+      problems.push(
+        `API_TIMEOUT_MS must be a whole number of milliseconds from 1000 to 60000 (got "${timeoutRaw}")`,
+      );
     }
   }
+  const shippingRaw = env.FREE_SHIPPING_THRESHOLD?.trim();
+  let freeShippingThreshold: string | null = null;
+  if (shippingRaw) {
+    if (/^\d{1,7}(\.\d{1,2})?$/.test(shippingRaw)) freeShippingThreshold = shippingRaw;
+    else
+      problems.push(
+        `FREE_SHIPPING_THRESHOLD must be an amount in rupees such as 1999 (got "${shippingRaw}")`,
+      );
+  }
+  const perPageRaw = env.PRODUCTS_PER_PAGE?.trim();
+  let productsPerPage = 24;
+  if (perPageRaw) {
+    productsPerPage = Number(perPageRaw);
+    if (!/^\d+$/.test(perPageRaw) || productsPerPage < 1 || productsPerPage > 100) {
+      problems.push(`PRODUCTS_PER_PAGE must be a whole number from 1 to 100 (got "${perPageRaw}")`);
+    }
+  }
+  const razorpayScriptUrl = parseUrl(
+    "RAZORPAY_SCRIPT_URL",
+    env.RAZORPAY_SCRIPT_URL?.trim() || RAZORPAY_SCRIPT_URL,
+    problems,
+  );
+  if (
+    production &&
+    razorpayScriptUrl !== RAZORPAY_SCRIPT_URL &&
+    !parseBoolean("ALLOW_TEST_PAYMENT_SCRIPT", env.ALLOW_TEST_PAYMENT_SCRIPT, false, problems)
+  ) {
+    problems.push(
+      `RAZORPAY_SCRIPT_URL must be ${RAZORPAY_SCRIPT_URL} in production (a stand-in needs ALLOW_TEST_PAYMENT_SCRIPT=true, for tests only)`,
+    );
+  }
+  const reviewsCacheRaw = env.REVIEWS_CACHE_SECONDS?.trim();
+  let reviewsCacheSeconds = 120;
+  if (reviewsCacheRaw) {
+    reviewsCacheSeconds = Number(reviewsCacheRaw);
+    if (!/^\d+$/.test(reviewsCacheRaw) || reviewsCacheSeconds > 3600)
+      problems.push(
+        `REVIEWS_CACHE_SECONDS must be a whole number of seconds from 0 to 3600 (got "${reviewsCacheRaw}")`,
+      );
+  }
+  const allowIndexing = parseBoolean("ALLOW_INDEXING", env.ALLOW_INDEXING, false, problems);
+  const verificationRaw = env.GOOGLE_SITE_VERIFICATION?.trim();
+  let googleSiteVerification: string | null = null;
+  if (verificationRaw) {
+    if (/^[\w-]{10,100}$/.test(verificationRaw)) googleSiteVerification = verificationRaw;
+    else
+      problems.push(
+        `GOOGLE_SITE_VERIFICATION must be the code from Search Console's HTML tag: letters, digits, - and _ only (got "${verificationRaw}")`,
+      );
+  }
   if (problems.length > 0) throw new ConfigError(problems);
-  return { apiBaseUrl, storeOpen, siteUrl, apiTimeoutMs };
+  return {
+    apiBaseUrl,
+    storeOpen,
+    siteUrl,
+    apiTimeoutMs,
+    freeShippingThreshold,
+    productsPerPage,
+    razorpayScriptUrl,
+    reviewsCacheSeconds,
+    allowIndexing,
+    googleSiteVerification,
+  };
 }
 
 let cached: StoreSettings | undefined;

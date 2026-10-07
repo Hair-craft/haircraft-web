@@ -27,7 +27,24 @@ dev/
 
 ## Index
 
-| Date | Slug | Plan | Status | Testing | QC |
-|---|---|---|---|---|---|
-| 2026-10-05 | storefront-roadmap | [plan](plan/2026-10-05-storefront-roadmap.md) (draft, awaiting review) | — (tracked per phase) | — | — |
-| 2026-10-05 | phase-s1-foundation | [plan](plan/2026-10-05-phase-s1-foundation.md) (draft, awaiting review) | — | — | — |
+| Date       | Slug                        | Plan                                                     | Status                                                     | Testing                                                      | QC      |
+| ---------- | --------------------------- | -------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ | ------- |
+| 2026-10-05 | storefront-roadmap          | [plan](plan/2026-10-05-storefront-roadmap.md) (approved) | — (tracked per phase)                                      | —                                                            | —       |
+| 2026-10-05 | phase-s1-foundation         | [plan](plan/2026-10-05-phase-s1-foundation.md)           | [status](status/2026-10-05-phase-s1-foundation.md)         | [testing](testing/2026-10-05-phase-s1-foundation.md)         | Pending |
+| 2026-10-05 | phase-s2-home-page          | [plan](plan/2026-10-05-phase-s2-home-page.md)            | [status](status/2026-10-05-phase-s2-home-page.md)          | [testing](testing/2026-10-05-phase-s2-home-page.md)          | Pending |
+| 2026-10-05 | phase-s2b-home-redesign     | [plan](plan/2026-10-05-phase-s2b-home-redesign.md)       | [status](status/2026-10-05-phase-s2b-home-redesign.md)     | [testing](testing/2026-10-05-phase-s2b-home-redesign.md)     | Pending |
+| 2026-10-06 | phase-s3-product-listing    | [plan](plan/2026-10-06-phase-s3-product-listing.md)      | [status](status/2026-10-06-phase-s3-product-listing.md)    | [testing](testing/2026-10-06-phase-s3-product-listing.md)    | Pending |
+| 2026-10-06 | phase-s4-search             | [plan](plan/2026-10-06-phase-s4-search.md)               | [status](status/2026-10-06-phase-s4-search.md)             | [testing](testing/2026-10-06-phase-s4-search.md)             | Pending |
+| 2026-10-06 | phase-s5-product-page       | [plan](plan/2026-10-06-phase-s5-product-page.md)         | [status](status/2026-10-06-phase-s5-product-page.md)       | [testing](testing/2026-10-06-phase-s5-product-page.md)       | Pending |
+| 2026-10-06 | phase-s6-sign-in            | [plan](plan/2026-10-06-phase-s6-sign-in.md)              | [status](status/2026-10-06-phase-s6-sign-in.md)            | [testing](testing/2026-10-06-phase-s6-sign-in.md)            | Pending |
+| 2026-10-06 | phase-s7-cart               | [plan](plan/2026-10-06-phase-s7-cart.md)                 | [status](status/2026-10-06-phase-s7-cart.md)               | [testing](testing/2026-10-06-phase-s7-cart.md)               | Pending |
+| 2026-10-06 | phase-s8-wishlist           | [plan](plan/2026-10-06-phase-s8-wishlist.md)             | [status](status/2026-10-06-phase-s8-wishlist.md)           | [testing](testing/2026-10-06-phase-s8-wishlist.md)           | Pending |
+| 2026-10-06 | phase-b9-edit-profile       | [plan](plan/2026-10-06-phase-b9-edit-profile.md)         | [status](status/2026-10-06-phase-b9-edit-profile.md)       | [testing](testing/2026-10-06-phase-b9-edit-profile.md)       | Pending |
+| 2026-10-07 | phase-s9-my-account         | [plan](plan/2026-10-07-phase-s9-my-account.md)           | [status](status/2026-10-07-phase-s9-my-account.md)         | [testing](testing/2026-10-07-phase-s9-my-account.md)         | Pending |
+| 2026-10-07 | phase-s10-checkout          | [plan](plan/2026-10-07-phase-s10-checkout.md)            | [status](status/2026-10-07-phase-s10-checkout.md)          | [testing](testing/2026-10-07-phase-s10-checkout.md)          | Pending |
+| 2026-10-07 | phase-s11-payment           | [plan](plan/2026-10-07-phase-s11-payment.md)             | [status](status/2026-10-07-phase-s11-payment.md)           | [testing](testing/2026-10-07-phase-s11-payment.md)           | Pending |
+| 2026-10-07 | phase-s12-my-orders         | [plan](plan/2026-10-07-phase-s12-my-orders.md)           | [status](status/2026-10-07-phase-s12-my-orders.md)         | [testing](testing/2026-10-07-phase-s12-my-orders.md)         | Pending |
+| 2026-10-07 | phase-s13-reviews           | [plan](plan/2026-10-07-phase-s13-reviews.md)             | [status](status/2026-10-07-phase-s13-reviews.md)           | [testing](testing/2026-10-07-phase-s13-reviews.md)           | Pending |
+| 2026-10-07 | phase-s13b-review-photos    | [plan](plan/2026-10-07-phase-s13b-review-photos.md)      | [status](status/2026-10-07-phase-s13b-review-photos.md)    | [testing](testing/2026-10-07-phase-s13b-review-photos.md)    | Pending |
+| 2026-10-07 | phase-s14-information-pages | [plan](plan/2026-10-07-phase-s14-information-pages.md)   | [status](status/2026-10-07-phase-s14-information-pages.md) | [testing](testing/2026-10-07-phase-s14-information-pages.md) | Pending |
+| 2026-10-07 | phase-s15-seo-performance   | [plan](plan/2026-10-07-phase-s15-seo-performance.md)     | [status](status/2026-10-07-phase-s15-seo-performance.md)   | [testing](testing/2026-10-07-phase-s15-seo-performance.md)   | Pending |

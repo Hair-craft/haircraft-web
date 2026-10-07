@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Geist } from "next/font/google";
+import { settings } from "@/lib/env";
+import { siteJsonLd } from "@/lib/seo/organization";
+import { jsonLdScript } from "@/lib/seo/json-ld";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -14,44 +17,27 @@ const sans = Geist({
   subsets: ["latin"],
 });
 
-/** The public site address used in metadata and structured data. */
-const siteUrl = "https://haircraft.in";
 const description =
   "HairCraft (Hair Craft): premium hair extensions, wigs and ponytails, crafted for length, volume and confidence.";
 
-/** Defaults for every page; each page sets its own title and description. */
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: { default: "HairCraft — Premium Hair Extensions", template: "%s | HairCraft" },
-  description,
-  applicationName: "HairCraft",
-  robots: { index: true, follow: true },
-  openGraph: {
-    siteName: "HairCraft",
-    locale: "en_IN",
-    type: "website",
-    images: [{ url: "/images/logo.png", width: 1240, height: 1088, alt: "HairCraft logo" }],
-  },
-};
-
-const jsonLd = [
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "HairCraft",
-    alternateName: ["Hair Craft", "haircraft.in"],
-    url: `${siteUrl}/`,
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "HairCraft",
-    alternateName: "Hair Craft",
-    url: `${siteUrl}/`,
-    logo: `${siteUrl}/images/logo.png`,
+/**
+ * Defaults for every page; each page sets its own title and description. The
+ * site address and indexing come from the settings, so a test or preview copy
+ * is never indexed (ALLOW_INDEXING=true on the live site only).
+ */
+export function generateMetadata(): Metadata {
+  const { siteUrl, allowIndexing, googleSiteVerification } = settings();
+  return {
+    metadataBase: new URL(siteUrl),
+    title: { default: "HairCraft — Premium Hair Extensions", template: "%s | HairCraft" },
     description,
-  },
-];
+    applicationName: "HairCraft",
+    robots: allowIndexing ? { index: true, follow: true } : { index: false, follow: false },
+    openGraph: { siteName: "HairCraft", locale: "en_IN", type: "website" },
+    twitter: { card: "summary_large_image" },
+    ...(googleSiteVerification ? { verification: { google: googleSiteVerification } } : {}),
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#edf9e5",
@@ -59,15 +45,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${display.variable} ${sans.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
+    <html lang="en-IN" className={`${display.variable} ${sans.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+            __html: jsonLdScript(siteJsonLd(settings().siteUrl, description)),
           }}
         />
         {children}

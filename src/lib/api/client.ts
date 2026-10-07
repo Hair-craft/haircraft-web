@@ -49,11 +49,18 @@ async function call<T>(path: string, request: ApiRequest): Promise<SuccessEnvelo
     method,
     headers: {
       Accept: "application/json",
-      ...(request.body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(request.body !== undefined && !(request.body instanceof FormData)
+        ? { "Content-Type": "application/json" }
+        : {}),
       ...(request.token ? { Authorization: `Bearer ${request.token}` } : {}),
       ...request.headers,
     },
-    body: request.body !== undefined ? JSON.stringify(request.body) : undefined,
+    body:
+      request.body === undefined
+        ? undefined
+        : request.body instanceof FormData
+          ? request.body
+          : JSON.stringify(request.body),
     signal: AbortSignal.timeout(apiTimeoutMs),
     ...(cacheable
       ? { next: { revalidate: request.revalidate, tags: request.tags } }
@@ -107,10 +114,17 @@ export async function apiFetch<T>(path: string, request: ApiRequest = {}): Promi
 }
 
 /** For list endpoints: the items and the pagination `meta`. */
-export async function apiFetchPage<T>(path: string, request: ApiRequest = {}): Promise<Paginated<T>> {
+export async function apiFetchPage<T>(
+  path: string,
+  request: ApiRequest = {},
+): Promise<Paginated<T>> {
   const envelope = await call<T[]>(path, request);
   if (!envelope.meta) {
-    throw new ApiError(502, CLIENT_ERROR_CODES.badResponse, "The shop sent a list without page information.");
+    throw new ApiError(
+      502,
+      CLIENT_ERROR_CODES.badResponse,
+      "The shop sent a list without page information.",
+    );
   }
   return { items: envelope.data, meta: envelope.meta };
 }

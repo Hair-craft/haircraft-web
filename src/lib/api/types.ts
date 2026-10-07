@@ -66,3 +66,85 @@ export interface ProductCard {
   rating: number;
   reviewCount: number;
 }
+
+/** An approved review, as the storefront may show it (first name and initial only). */
+/** A customer's photo on a review. */
+export interface ReviewPhoto {
+  id: string;
+  urls: ImageUrls;
+  width: number;
+  height: number;
+}
+
+export interface PublicReview {
+  id: string;
+  rating: number;
+  title: string | null;
+  body: string | null;
+  reviewerName: string;
+  verifiedPurchase: boolean;
+  photos: ReviewPhoto[];
+  createdAt: string;
+}
+
+/** `GET /products/suggest`: what a search box suggests while the shopper types. */
+export interface SearchSuggestions {
+  /** Up to 5, most relevant first. */
+  products: ProductCard[];
+  /** Up to 3 categories whose names contain every word. */
+  categories: { id: string; name: string; slug: string }[];
+  /** When nothing matches: the search with misspelt words corrected, if that finds products. */
+  didYouMean: string | null;
+}
+
+/** A product photo (`GET /products/:slug`); `variantId` set when it shows one option. */
+export interface ProductImage {
+  id: string;
+  urls: ImageUrls;
+  altText: string | null;
+  variantId: string | null;
+  isPrimary: boolean;
+  sortOrder: number;
+}
+
+/** One buyable option of a product: a length, colour and texture at a price. */
+export interface PublicVariant {
+  id: string;
+  sku: string;
+  price: Money;
+  salePrice: Money | null;
+  /** The price paid: the sale price when on sale. */
+  effectivePrice: Money;
+  onSale: boolean;
+  lengthInches: number | null;
+  color: string | null;
+  texture: string | null;
+  weightGrams: number | null;
+  attributes: Record<string, string>;
+  inStock: boolean;
+}
+
+/** `GET /products/:slug`: everything the product page needs. */
+export interface PublicProduct {
+  id: string;
+  name: string;
+  slug: string;
+  shortDescription: string | null;
+  description: string | null;
+  attributes: Record<string, string>;
+  categories: { id: string; name: string; slug: string }[];
+  images: ProductImage[];
+  variants: PublicVariant[];
+  options: { lengths: number[]; colors: string[]; textures: string[]; weights: number[] };
+  priceRange: { min: Money; max: Money };
+  inStock: boolean;
+  rating: number;
+  reviewCount: number;
+}
+
+/** `GET /products/:slug/reviews/summary`. */
+export interface ReviewSummary {
+  average: number;
+  count: number;
+  breakdown: Record<"1" | "2" | "3" | "4" | "5", number>;
+}

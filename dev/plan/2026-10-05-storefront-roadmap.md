@@ -5,6 +5,7 @@
 ## Goal
 
 Build the **Hair Craft customer storefront** in `nextjs-haircraft`, on top of the finished NestJS API. Everything a customer needs, from the architecture document (§2, "Customer Application"):
+
 - register and sign in
 - browse, search and filter products
 - view products and pick variants
@@ -14,16 +15,17 @@ Build the **Hair Craft customer storefront** in `nextjs-haircraft`, on top of th
 - write reviews and manage their profile
 
 The work is split into **small phases** so each one can be planned, built, tested and signed off on its own. Every phase is:
+
 - production-quality
 - tested (unit, end-to-end and a browser click-through with screenshots)
 - documented with a plan, a status report and a QC testing guide
 
 ## Context
 
-| App | Folder | State |
-|---|---|---|
-| NestJS API | `../nestjs-haircraft` | **Done** (8 phases). The authority for data, prices, stock, auth and payments. |
-| Angular admin panel | `../angular-haircraft` | **Done** (A1–A12). |
+| App                    | Folder                            | State                                                                                                                                                                          |
+| ---------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| NestJS API             | `../nestjs-haircraft`             | **Done** (8 phases). The authority for data, prices, stock, auth and payments.                                                                                                 |
+| Angular admin panel    | `../angular-haircraft`            | **Done** (A1–A12).                                                                                                                                                             |
 | **Next.js storefront** | `nextjs-haircraft` (this project) | A live **Coming soon** page at haircraft.in. Next.js 16.3, React 19, Tailwind 4, Framer Motion; brand: mint `#edf9e5`, deep green `#16362a`, gold; Cormorant Garamond + Geist. |
 
 ## Architectural decisions (proposed)
@@ -64,25 +66,25 @@ The work is split into **small phases** so each one can be planned, built, teste
 
 ## Phases (small, one plan each)
 
-| # | Phase | What the customer gets | Needs from the backend |
-|---|---|---|---|
-| **S1** | Foundation | Project tooling, config, typed API client, BFF proxy skeleton, coming-soon gate, base layout (header, footer, mobile menu), design components, error and 404 pages | — |
-| **S2** | Home page | Hero, shop-by-category, new arrivals and best-rated, brand promise, newsletter-free footer | Catalogue (done) |
-| **S3** | Product listing | `/shop` and `/shop/[category]`: product cards, filters (length, colour, texture, price, in stock), sort, pagination | Catalogue (done) |
-| **S4** | Search | Header search with suggestions, `/search?q=` results, "no results" help | Catalogue (done) |
-| **S5** | Product page | Image gallery, variant picker (length/colour/texture), price and sale, stock, rating summary and reviews list, product structured data | Catalogue, reviews (done) |
-| **S6** | Sign-in and register | Register, sign in, sign out, session refresh in the BFF, protected account routes, friendly lockout/suspension messages | Auth (done) |
-| **S7** | Cart | Add to cart, cart drawer and page, quantity changes, live problems (out of stock, price changed), guest cart merged on sign-in | Cart (done) |
-| **S8** | Wishlist | Heart on cards and product page, wishlist page, move to cart | Wishlist (done) |
-| **B9** | *Backend:* edit profile | `PATCH /profile` (name, phone) for customers and admins | **New, small** (in `nestjs-haircraft`) |
-| **S9** | My account | Profile (view, edit), change password, sign out everywhere, address book (add, edit, default, delete) | Profile (B9), addresses (done) |
-| **S10** | Checkout | Address step, coupon, price summary (shipping, GST included), place order with an idempotency key, cash on delivery when switched on | Checkout (done) |
-| **S11** | Payment | Razorpay Checkout, verify, failure and retry, "paid" confirmation page, pay-later from the order page | Payments (done) |
-| **S12** | My orders | Order list, order detail with timeline and tracking, cancel, refund status | Orders (done) |
-| **S13** | Reviews | Write, edit and delete a review from the product and order pages; "my reviews" | Reviews (done) |
-| **S14** | Information pages | About, contact, shipping, returns, privacy, terms, FAQ (content from the owner) | — |
-| **S15** | SEO and performance | Sitemap from the catalogue, metadata and Open Graph per page, structured data, image optimisation, Core Web Vitals, accessibility audit | — |
-| **S16** | Launch readiness | Production settings, security headers, error monitoring hook, switching off the coming-soon gate, launch checklist | Deployment (separate) |
+| #       | Phase                   | What the customer gets                                                                                                                                             | Needs from the backend                 |
+| ------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| **S1**  | Foundation              | Project tooling, config, typed API client, BFF proxy skeleton, coming-soon gate, base layout (header, footer, mobile menu), design components, error and 404 pages | —                                      |
+| **S2**  | Home page               | Hero, shop-by-category, new arrivals and best-rated, brand promise, newsletter-free footer                                                                         | Catalogue (done)                       |
+| **S3**  | Product listing         | `/shop` and `/shop/[category]`: product cards, filters (length, colour, texture, price, in stock), sort, pagination                                                | Catalogue (done)                       |
+| **S4**  | Search                  | Header search with suggestions, `/search?q=` results, "no results" help                                                                                            | Catalogue (done)                       |
+| **S5**  | Product page            | Image gallery, variant picker (length/colour/texture), price and sale, stock, rating summary and reviews list, product structured data                             | Catalogue, reviews (done)              |
+| **S6**  | Sign-in and register    | Register, sign in, sign out, session refresh in the BFF, protected account routes, friendly lockout/suspension messages                                            | Auth (done)                            |
+| **S7**  | Cart                    | Add to cart, cart drawer and page, quantity changes, live problems (out of stock, price changed), guest cart merged on sign-in                                     | Cart (done)                            |
+| **S8**  | Wishlist                | Heart on cards and product page, wishlist page, move to cart                                                                                                       | Wishlist (done)                        |
+| **B9**  | _Backend:_ edit profile | `PATCH /profile` (name, phone) for customers and admins                                                                                                            | **New, small** (in `nestjs-haircraft`) |
+| **S9**  | My account              | Profile (view, edit), change password, sign out everywhere, address book (add, edit, default, delete)                                                              | Profile (B9), addresses (done)         |
+| **S10** | Checkout                | Address step, coupon, price summary (shipping, GST included), place order with an idempotency key, cash on delivery when switched on                               | Checkout (done)                        |
+| **S11** | Payment                 | Razorpay Checkout, verify, failure and retry, "paid" confirmation page, pay-later from the order page                                                              | Payments (done)                        |
+| **S12** | My orders               | Order list, order detail with timeline and tracking, cancel, refund status                                                                                         | Orders (done)                          |
+| **S13** | Reviews                 | Write, edit and delete a review from the product and order pages; "my reviews"                                                                                     | Reviews (done)                         |
+| **S14** | Information pages       | About, contact, shipping, returns, privacy, terms, FAQ (content from the owner)                                                                                    | —                                      |
+| **S15** | SEO and performance     | Sitemap from the catalogue, metadata and Open Graph per page, structured data, image optimisation, Core Web Vitals, accessibility audit                            | —                                      |
+| **S16** | Launch readiness        | Production settings, security headers, error monitoring hook, switching off the coming-soon gate, launch checklist                                                 | Deployment (separate)                  |
 
 Order of work: S1 → S8, then B9 → S9, then S10 → S16. Each phase stops for owner review, as before.
 
@@ -94,6 +96,7 @@ Order of work: S1 → S8, then B9 → S9, then S10 → S16. Each phase stops for
 ## Out of scope (until planned separately)
 
 These need email or SMS, which the backend does not send yet:
+
 - forgot/reset password
 - email verification
 - order emails

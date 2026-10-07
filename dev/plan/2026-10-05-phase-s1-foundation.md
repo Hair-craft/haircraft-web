@@ -7,6 +7,7 @@ Part of the [storefront roadmap](2026-10-05-storefront-roadmap.md). The ground e
 ## Context
 
 The project is a single coming-soon page. Before any shop page can be built it needs:
+
 - tooling and tests
 - a safe, typed way to call the API from the server
 - a session-cookie skeleton for sign-in later
@@ -18,6 +19,7 @@ The project is a single coming-soon page. Before any shop page can be built it n
 ## Scope
 
 **In scope**, as small steps (each is a checkbox in `PROGRESS.md`):
+
 1. **S1.1 Tooling:**
    - scripts: `typecheck`, `lint`, `format`, `format:check`, `test` (Vitest), `test:e2e` (Playwright)
    - Prettier

@@ -7,6 +7,8 @@
   --deep-soft: #3d6b54;
   --gold: #d9982f;
   --gold-light: #f2c45c;
+  /* Gold for words (accents in large headings): 3:1 or more on mint, cream and white. */
+  --gold-ink: #a8731c;
 }
 
 @theme inline {
@@ -16,6 +18,7 @@
   --color-deep-soft: var(--deep-soft);
   --color-gold: var(--gold);
   --color-gold-light: var(--gold-light);
+  --color-gold-ink: var(--gold-ink);
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-display);
 }
@@ -24,4 +27,103 @@ body {
   background: var(--mint);
   color: var(--deep);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Home hero: one gentle entrance, skipped for people who prefer reduced motion. */
+@keyframes hc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hc-rise {
+    animation: hc-rise 0.8s ease-out both;
+  }
+  .hc-delay {
+    animation-delay: 0.15s;
+  }
+}
+
+/* Marquee strips: an endless slow scroll that pauses on hover. */
+@keyframes hc-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.hc-marquee-track {
+  animation: hc-marquee var(--hc-marquee-duration, 40s) linear infinite;
+}
+
+.hc-marquee:hover .hc-marquee-track,
+.hc-marquee:focus-within .hc-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Standing still: one copy, centred and wrapping. */
+  .hc-marquee-track {
+    animation: none;
+    width: auto;
+    justify-content: center;
+  }
+  .hc-marquee-list {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.25rem;
+  }
+  .hc-marquee-list[aria-hidden="true"] {
+    display: none;
+  }
+}
+
+/* Hero photo: a slow settle from a slight zoom. */
+@keyframes hc-settle {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hc-settle {
+    animation: hc-settle 2.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hc-delay-2 {
+    animation-delay: 0.3s;
+  }
+  .hc-delay-3 {
+    animation-delay: 0.45s;
+  }
+}
+
+/* Search boxes have their own buttons: hide the browser's blue clear "×". */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* A photo swapped in (product gallery): a quick fade instead of a jump. */
+@keyframes hc-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.hc-fade-in {
+  animation: hc-fade-in 0.3s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-fade-in {
+    animation: none;
+  }
 }

@@ -49,7 +49,8 @@ export function friendlyMessage(error: unknown): string {
     if (error.status === 0 || error.code === CLIENT_ERROR_CODES.badResponse) {
       return "We can't reach the shop right now. Please try again in a moment.";
     }
-    if (error.status >= 500) return "Something went wrong on our side. Please try again in a moment.";
+    if (error.status >= 500)
+      return "Something went wrong on our side. Please try again in a moment.";
     if (error.status === 429) return "Too many attempts. Please wait a minute and try again.";
     return error.message;
   }

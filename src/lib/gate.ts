@@ -7,12 +7,19 @@
 export const COMING_SOON_PATH = "/coming-soon";
 
 /** Files every site needs, served the same whether the shop is open or not. */
-const ALWAYS_SERVED = [/^\/robots\.txt$/, /^\/sitemap\.xml$/, /^\/(icon|apple-icon)(\.\w+)?$/, /^\/favicon\.ico$/];
+const ALWAYS_SERVED = [
+  // Lets monitoring check the storefront and API even before launch.
+  /^\/bff\/health$/,
+  /^\/robots\.txt$/,
+  /^\/sitemap\.xml$/,
+  /^\/(icon|apple-icon)(\.\w+)?$/,
+  /^\/favicon\.ico$/,
+  // Link previews (share images), so a shared link looks right even before launch.
+  /(^|\/)(opengraph|twitter)-image(-[\w-]+)?$/,
+];
 
 export type GateDecision =
-  | { action: "next" }
-  | { action: "rewrite"; to: string }
-  | { action: "redirect"; to: string };
+  { action: "next" } | { action: "rewrite"; to: string } | { action: "redirect"; to: string };
 
 export function gateDecision(pathname: string, storeOpen: boolean): GateDecision {
   if (ALWAYS_SERVED.some((pattern) => pattern.test(pathname))) return { action: "next" };
@@ -20,5 +27,7 @@ export function gateDecision(pathname: string, storeOpen: boolean): GateDecision
     // Old links to the coming-soon page go to the shop once it is open.
     return pathname === COMING_SOON_PATH ? { action: "redirect", to: "/" } : { action: "next" };
   }
-  return pathname === COMING_SOON_PATH ? { action: "next" } : { action: "rewrite", to: COMING_SOON_PATH };
+  return pathname === COMING_SOON_PATH
+    ? { action: "next" }
+    : { action: "rewrite", to: COMING_SOON_PATH };
 }

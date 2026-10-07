@@ -5,3 +5,5 @@ playwright-report
 test-results
 package-lock.json
 next-env.d.ts
+# The live coming-soon page is kept exactly as launched.
+src/app/coming-soon/coming-soon.tsx

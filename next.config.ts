@@ -10,6 +10,17 @@ const apiIsLocal = ["localhost", "127.0.0.1"].includes(apiOrigin.hostname);
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Link previews are drawn on the server with the brand fonts and logo, which
+  // it reads from disk: ship those files with every server route that may draw one.
+  outputFileTracingIncludes: {
+    "/**/opengraph-image*": ["./assets/fonts/**/*", "./public/images/logo.png"],
+  },
+  experimental: {
+    serverActions: {
+      // Review photos: up to 3 of 5 MB each, plus the form's own bytes.
+      bodySizeLimit: "16mb",
+    },
+  },
   images: {
     qualities: [75, 90],
     remotePatterns: [

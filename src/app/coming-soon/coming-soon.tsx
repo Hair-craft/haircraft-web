@@ -51,8 +51,8 @@ export default function ComingSoon() {
                 <Image
                   src="/images/logo.png"
                   alt="HairCraft"
-                  width={1240}
-                  height={1088}
+                  width={176}
+                  height={154}
                   preload
                   className="h-auto w-32 sm:w-44"
                 />

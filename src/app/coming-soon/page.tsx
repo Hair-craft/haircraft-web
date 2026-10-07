@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DEFAULT_SHARE_IMAGE } from "@/lib/seo/open-graph";
 import ComingSoon from "./coming-soon";
 
 const title = "HairCraft — Premium Hair Extensions | Coming Soon";
@@ -17,17 +18,17 @@ export const metadata: Metadata = {
   openGraph: {
     title,
     description,
-    url: "https://haircraft.in",
+    url: "/",
     siteName: "HairCraft",
     locale: "en_IN",
     type: "website",
-    images: [{ url: "/images/logo.png", width: 1240, height: 1088, alt: "HairCraft logo" }],
+    images: [DEFAULT_SHARE_IMAGE],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title,
     description,
-    images: ["/images/logo.png"],
+    images: [DEFAULT_SHARE_IMAGE.url],
   },
 };
 

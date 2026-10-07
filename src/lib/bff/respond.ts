@@ -32,7 +32,10 @@ export function bffError(error: unknown): NextResponse<BffError> {
 export async function bff<T>(work: () => Promise<T>, init?: ResponseInit): Promise<NextResponse> {
   try {
     const data = await work();
-    return NextResponse.json({ data }, { ...init, headers: { "Cache-Control": "no-store", ...init?.headers } });
+    return NextResponse.json(
+      { data },
+      { ...init, headers: { "Cache-Control": "no-store", ...init?.headers } },
+    );
   } catch (error) {
     return bffError(error);
   }
