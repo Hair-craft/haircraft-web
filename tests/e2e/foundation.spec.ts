@@ -30,7 +30,7 @@ test.describe("coming-soon gate (shop closed)", () => {
 test.describe("shop layout (shop open)", () => {
   test("home page with the real categories from the API", async ({ page }) => {
     await page.goto(OPEN + "/");
-    await expect(page).toHaveTitle("HairCraft — Premium Hair Extensions, Wigs & Ponytails");
+    await expect(page).toHaveTitle("HairCraft — Human Hair Extensions, Toppers & Wigs in India");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("crafted for");
     const nav = page.getByRole("navigation", { name: "Categories" });
     for (const name of TOP_CATEGORIES) {

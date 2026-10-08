@@ -21,6 +21,10 @@ import { productJsonLd } from "@/lib/product/structured-data";
 import { getShopPolicies } from "@/lib/api/shop";
 import { jsonLdScript } from "@/lib/seo/json-ld";
 import { openGraph } from "@/lib/seo/open-graph";
+import { productDescription, productTitle } from "@/lib/seo/titles";
+import { GuideCard } from "@/components/guides/guide-card";
+import { categoryGuide } from "@/content/categories";
+import { findGuide } from "@/content/guides";
 import { myReview, reviewEligibility } from "@/lib/reviews/api";
 import { getSession } from "@/lib/session/session";
 
@@ -55,15 +59,16 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await loadProduct(slug);
   if (!product) return { title: "Product" };
-  const description = product.shortDescription ?? product.description?.slice(0, 160) ?? undefined;
+  const title = productTitle(product);
+  const description = productDescription(product, await getShopPolicies());
   const photo = galleryFor(product.images, undefined)[0];
   return {
-    title: product.name,
+    title,
     description,
     // Every option (`?variant=`) shares the product's own address.
     alternates: { canonical: productPath(slug) },
     openGraph: openGraph({
-      title: `${product.name} | HairCraft`,
+      title: `${title} | HairCraft`,
       description,
       url: productPath(slug),
       images: photo ? [{ url: photo.urls.large, alt: photo.altText ?? product.name }] : undefined,
@@ -124,6 +129,16 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
   ]);
 
   const category = product.categories[0];
+  // Guides for this kind of hair (its category's), or the general ones.
+  const helpful = (
+    categoryGuide(product.categories.map((c) => c.slug))?.guides ?? [
+      "how-to-choose-hair-extensions",
+      "how-to-care-for-human-hair-extensions",
+    ]
+  )
+    .map(findGuide)
+    .filter((guide) => guide !== null)
+    .slice(0, 3);
   const trail = [
     { name: "Home", href: routes.home },
     { name: "Shop", href: routes.shop },
@@ -157,6 +172,21 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
             mine={mine ? { status: mine.status } : null}
           />
         </div>
+      ) : null}
+
+      {helpful.length > 0 ? (
+        <section aria-labelledby="guides-heading" className="mt-20">
+          <h2 id="guides-heading" className="text-center font-display text-4xl md:text-5xl">
+            Helpful guides
+          </h2>
+          <ul className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {helpful.map((guide) => (
+              <li key={guide.slug}>
+                <GuideCard guide={guide} headingLevel={3} />
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       {related.length > 0 ? (

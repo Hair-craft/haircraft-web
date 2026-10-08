@@ -25,7 +25,7 @@ export default async function FaqPage() {
         }}
       />
       <p className="mt-6 text-lg leading-relaxed text-deep/80">
-        <RichText text="Can't find your answer? [Contact us](/contact) and we'll help." />
+        <RichText text="Can't find your answer? Our [hair guides](/guides) go into more detail, or [contact us](/contact) and we'll help." />
       </p>
       <FaqList groups={groups} />
     </InfoPage>

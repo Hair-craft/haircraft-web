@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { openGraph } from "@/lib/seo/open-graph";
+import { HOME_DESCRIPTION, HOME_TITLE } from "@/lib/seo/titles";
 import { Suspense } from "react";
 import { Hero } from "@/components/home/hero";
 import {
@@ -18,16 +19,13 @@ import { getNewArrivals } from "@/lib/api/catalog";
 import { isApiError } from "@/lib/api/errors";
 import { settings } from "@/lib/env";
 
-const description =
-  "Shop premium human-hair extensions online: clip-ins, tape-ins, lace front wigs and ponytails in every length, colour and texture. Secure payments and delivery across India.";
-
 export const metadata: Metadata = {
-  title: { absolute: "HairCraft — Premium Hair Extensions, Wigs & Ponytails" },
-  description,
+  title: { absolute: HOME_TITLE },
+  description: HOME_DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: openGraph({
-    title: "HairCraft — Premium Hair Extensions",
-    description,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
     url: "/",
   }),
 };

@@ -213,7 +213,7 @@ describe("site-wide structured data", () => {
     const [site, organization] = siteJsonLd(SITE, "Premium hair");
     expect(site).toMatchObject({ "@type": "WebSite", url: "https://haircraft.in/" });
     expect(organization).toMatchObject({
-      "@type": "Organization",
+      "@type": "OnlineStore",
       logo: "https://haircraft.in/images/logo.png",
       contactPoint: { contactType: "customer service", areaServed: "IN" },
       hasMerchantReturnPolicy: { merchantReturnDays: 7 },

@@ -14,7 +14,7 @@ export function siteJsonLd(siteUrl: string, description: string) {
     },
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
+      "@type": "OnlineStore",
       name: business.tradingName,
       ...(business.legalName ? { legalName: business.legalName } : {}),
       alternateName: "Hair Craft",

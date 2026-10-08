@@ -99,7 +99,7 @@ function Summary({ points }: { points: string[] }) {
   );
 }
 
-function Contents({ sections }: { sections: InfoSection[] }) {
+export function Contents({ sections }: { sections: InfoSection[] }) {
   return (
     <nav aria-label="On this page" className="mt-8 print:hidden">
       <h2 className="text-xs tracking-[0.25em] text-deep-soft uppercase">On this page</h2>
@@ -119,7 +119,7 @@ function Contents({ sections }: { sections: InfoSection[] }) {
   );
 }
 
-function Section({ section }: { section: InfoSection }) {
+export function Section({ section }: { section: InfoSection }) {
   return (
     <section aria-labelledby={section.id} className="mt-10">
       <h2 id={section.id} className="scroll-mt-28 font-display text-2xl md:text-3xl">
@@ -137,6 +137,19 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
         <p key={i} className="mt-4 leading-relaxed text-deep/80">
           <RichText text={block} />
         </p>
+      );
+    if ("tip" in block)
+      return (
+        <aside
+          key={i}
+          aria-label="Tip"
+          className="mt-5 rounded-2xl border-l-4 border-gold bg-white/80 px-5 py-4 leading-relaxed text-deep/80 ring-1 ring-deep/5"
+        >
+          <span className="mr-2 text-xs font-semibold tracking-[0.2em] text-deep-soft uppercase">
+            Tip
+          </span>
+          <RichText text={block.tip} />
+        </aside>
       );
     const ordered = "steps" in block;
     const items = ordered ? block.steps : block.list;

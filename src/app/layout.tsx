@@ -26,7 +26,7 @@ const description =
  * is never indexed (ALLOW_INDEXING=true on the live site only).
  */
 export function generateMetadata(): Metadata {
-  const { siteUrl, allowIndexing, googleSiteVerification } = settings();
+  const { siteUrl, allowIndexing, googleSiteVerification, bingSiteVerification } = settings();
   return {
     metadataBase: new URL(siteUrl),
     title: { default: "HairCraft — Premium Hair Extensions", template: "%s | HairCraft" },
@@ -35,7 +35,10 @@ export function generateMetadata(): Metadata {
     robots: allowIndexing ? { index: true, follow: true } : { index: false, follow: false },
     openGraph: { siteName: "HairCraft", locale: "en_IN", type: "website" },
     twitter: { card: "summary_large_image" },
-    ...(googleSiteVerification ? { verification: { google: googleSiteVerification } } : {}),
+    verification: {
+      ...(googleSiteVerification ? { google: googleSiteVerification } : {}),
+      ...(bingSiteVerification ? { other: { "msvalidate.01": bingSiteVerification } } : {}),
+    },
   };
 }
 

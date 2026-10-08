@@ -32,7 +32,7 @@ test.describe("shop listing", () => {
     request,
   }) => {
     await page.goto(OPEN + "/shop");
-    await expect(page).toHaveTitle("Shop All Hair Extensions, Wigs & Ponytails | HairCraft");
+    await expect(page).toHaveTitle("Shop 100% Human Hair Extensions, Toppers & Wigs | HairCraft");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Shop all");
     await expectMatchesApi(page, request, "sort=createdAt:desc");
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/shop$/);
@@ -50,9 +50,7 @@ test.describe("shop listing", () => {
   }) => {
     await page.goto(OPEN + "/shop/clip-in-extensions");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Clip-in Extensions");
-    await expect(page).toHaveTitle(
-      /^Clip-in Extensions — Human Hair Clip-in Extensions \| HairCraft$/,
-    );
+    await expect(page).toHaveTitle(/^Human Hair Clip-in Extensions in India \| HairCraft$/);
     await expectMatchesApi(page, request, "category=clip-in-extensions");
     const types = page.getByRole("navigation", { name: "Clip-in Extensions types" });
     await expect(types.getByRole("link", { name: "All Clip-in Extensions" })).toHaveAttribute(

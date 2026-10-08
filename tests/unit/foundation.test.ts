@@ -21,6 +21,7 @@ describe("settings", () => {
       reviewsCacheSeconds: 120,
       allowIndexing: false,
       googleSiteVerification: null,
+      bingSiteVerification: null,
     });
     expect(parseSettings({ NODE_ENV: "development" })).toMatchObject({
       storeOpen: true,

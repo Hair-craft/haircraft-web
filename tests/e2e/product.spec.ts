@@ -44,7 +44,8 @@ test.describe("product page", () => {
       const first = defaultVariant(product.variants)!;
       await page.goto(`${OPEN}/product/${slug}`);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(product.name);
-      await expect(page).toHaveTitle(`${product.name} | HairCraft`);
+      // The name, then key facts (S15b), then the brand.
+      await expect(page).toHaveTitle(new RegExp(`^${product.name}( — .+)? \\| HairCraft$`));
       await expect(buyBox(page)).toContainText(price(first));
       const photo = page
         .getByRole("button", { name: /^View photo 1 of/ })

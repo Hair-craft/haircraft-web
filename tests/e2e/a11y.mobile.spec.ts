@@ -20,6 +20,8 @@ test.describe("accessibility on a phone", () => {
       "/cart",
       "/faq",
       "/returns",
+      "/guides",
+      "/guides/clip-in-vs-tape-in-vs-topper",
     ]) {
       await page.goto(OPEN + path);
       await page.evaluate(async () => {

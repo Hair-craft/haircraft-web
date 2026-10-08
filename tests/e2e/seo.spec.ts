@@ -108,7 +108,7 @@ test.describe("structured data", () => {
       expect(offer.hasMerchantReturnPolicy).toMatchObject({ merchantReturnDays: 7 });
     }
     expect(data.find((d) => d["@type"] === "BreadcrumbList")).toBeTruthy();
-    expect(data.find((d) => d["@type"] === "Organization")).toMatchObject({
+    expect(data.find((d) => d["@type"] === "OnlineStore")).toMatchObject({
       hasMerchantReturnPolicy: { applicableCountry: "IN" },
     });
   });

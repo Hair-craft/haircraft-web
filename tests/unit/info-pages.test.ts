@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { aboutContent } from "@/content/about";
+import { GUIDES } from "@/content/guides";
 import { business, sellerName, type Business } from "@/content/business";
 import { faqGroups, homeFaqs } from "@/content/faq";
 import { INFO_PAGES, LAST_UPDATED } from "@/content/pages";
@@ -7,7 +8,7 @@ import { privacyContent } from "@/content/privacy";
 import { returnsContent } from "@/content/returns";
 import { shippingContent } from "@/content/shipping";
 import { termsContent } from "@/content/terms";
-import type { Block, InfoContent } from "@/content/types";
+import { blockText, type Block, type InfoContent } from "@/content/types";
 import { faqJsonLd } from "@/components/home/content";
 import { deliveryAndReturns } from "@/components/product-page/content";
 import { contactMethods, displayPhone, telHref, whatsappHref } from "@/lib/info/contact";
@@ -140,8 +141,7 @@ describe("the pages' text", () => {
     privacyContent(),
     termsContent(policies()),
   ];
-  const strings = (blocks: Block[]) =>
-    blocks.flatMap((b) => (typeof b === "string" ? [b] : "list" in b ? b.list : b.steps));
+  const strings = (blocks: Block[]) => blocks.flatMap(blockText);
   const everything = [
     ...pages.flatMap((p) => [p.intro, ...p.sections.flatMap((s) => strings(s.blocks))]),
     ...faqGroups(policies()).flatMap((g) => g.faqs.map((f) => f.answer)),
@@ -154,6 +154,8 @@ describe("the pages' text", () => {
     "/account",
     "/account/orders",
     "/account/reviews",
+    "/guides",
+    ...GUIDES.map((g) => `/guides/${g.slug}`),
   ]);
 
   it("every link inside the shop goes to a page that exists", () => {

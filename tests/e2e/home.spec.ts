@@ -40,7 +40,7 @@ async function expectPhotosLoad(images: Locator, where: string) {
 test.describe("home page", () => {
   test("hero with a featured product photo and two ways in", async ({ page }) => {
     await page.goto(OPEN + "/");
-    await expect(page).toHaveTitle("HairCraft — Premium Hair Extensions, Wigs & Ponytails");
+    await expect(page).toHaveTitle("HairCraft — Human Hair Extensions, Toppers & Wigs in India");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Hair extensions, crafted for confidence",
     );
@@ -55,7 +55,7 @@ test.describe("home page", () => {
     // Exactly one h1 on the page; sections use h2.
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     const description = page.locator('meta[name="description"]');
-    await expect(description).toHaveAttribute("content", /human-hair extensions/);
+    await expect(description).toHaveAttribute("content", /100% human hair extensions in India/);
   });
 
   test("desktop: the 3D accent loads after the page and stays decorative", async ({ page }) => {

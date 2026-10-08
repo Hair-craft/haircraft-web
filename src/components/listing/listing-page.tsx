@@ -25,11 +25,15 @@ import { ActiveFilterChips, Breadcrumbs, NoResults, Pagination, type Crumb } fro
 import { FilterPanel } from "./filter-panel";
 import { itemListJsonLd } from "@/lib/seo/item-list";
 import { openGraph } from "@/lib/seo/open-graph";
+import { categoryDescription, categoryTitle } from "@/lib/seo/titles";
+import { categoryGuide } from "@/content/categories";
+import { CategoryGuideSection } from "./category-guide";
+import { getShopPolicies } from "@/lib/api/shop";
 import { jsonLdScript } from "@/lib/seo/json-ld";
 import { ListingProvider, ListingResults } from "./listing-provider";
 
 const SHOP_DESCRIPTION =
-  "Clip-ins, tape-ins, wigs and ponytails in 100% human hair, in every length, colour and texture.";
+  "Clip-ins, hair toppers, tape-ins, wigs and ponytails in 100% human hair, in every length, colour and texture. Shop online with delivery across India.";
 
 /** An API outage becomes `null` (the page shows a calm message instead of an error). */
 async function load<T>(work: () => Promise<T>): Promise<T | null> {
@@ -81,10 +85,13 @@ export async function listingMetadata(
   const page =
     typeof params.page === "string" && /^\d{1,4}$/.test(params.page) ? Number(params.page) : 1;
   const canonical = page > 1 ? `${base}?page=${page}` : base;
-  const title = name
-    ? `${name} — Human Hair ${name}`
-    : "Shop All Hair Extensions, Wigs & Ponytails";
-  const description = found?.category.description ?? SHOP_DESCRIPTION;
+  const policies = await getShopPolicies();
+  // Later pages say which page they are, so search results never show two identical titles.
+  const pageNote = page > 1 ? ` — Page ${page}` : "";
+  const title = `${name ? categoryTitle(name) : "Shop 100% Human Hair Extensions, Toppers & Wigs"}${pageNote}`;
+  const description = name
+    ? categoryDescription(name, found?.category.description ?? null, policies)
+    : SHOP_DESCRIPTION;
   return {
     title,
     description,
@@ -194,6 +201,11 @@ export async function ListingPage({
   // Any other spelling of this view (`?page=1`, the plain form's `length=18&length=20&min=`,
   // unknown values) is sent to its tidy address, so each view has exactly one.
   const tidy = listingHref(base, state);
+  // A category's buying guide: its own, or its nearest parent's (search has none).
+  const guide =
+    !search && found
+      ? categoryGuide([found.category.slug, ...[...found.ancestors].reverse().map((c) => c.slug)])
+      : null;
   if (tidy !== addressOf(base, params)) redirect(tidy);
 
   // A search that finds nothing on its own: just the help, full width (no empty filters or sort).
@@ -262,6 +274,8 @@ export async function ListingPage({
           </ListingResults>
         </section>
       </div>
+      {/* The category's buying guide, on its first page only (later pages would repeat it). */}
+      {guide && state.page === 1 ? <CategoryGuideSection guide={guide} /> : null}
     </ListingProvider>,
   );
 }

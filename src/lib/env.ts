@@ -40,6 +40,8 @@ export interface StoreSettings {
   allowIndexing: boolean;
   /** Google Search Console's HTML-tag verification code, or null. */
   googleSiteVerification: string | null;
+  /** Bing Webmaster Tools' HTML-tag verification code (msvalidate.01), or null. */
+  bingSiteVerification: string | null;
 }
 
 /** Razorpay Checkout's script, as Razorpay publishes it. */
@@ -150,15 +152,17 @@ export function parseSettings(env: Env): StoreSettings {
       );
   }
   const allowIndexing = parseBoolean("ALLOW_INDEXING", env.ALLOW_INDEXING, false, problems);
-  const verificationRaw = env.GOOGLE_SITE_VERIFICATION?.trim();
-  let googleSiteVerification: string | null = null;
-  if (verificationRaw) {
-    if (/^[\w-]{10,100}$/.test(verificationRaw)) googleSiteVerification = verificationRaw;
-    else
-      problems.push(
-        `GOOGLE_SITE_VERIFICATION must be the code from Search Console's HTML tag: letters, digits, - and _ only (got "${verificationRaw}")`,
-      );
-  }
+  const verificationCode = (name: string, where: string): string | null => {
+    const raw = env[name]?.trim();
+    if (!raw) return null;
+    if (/^[\w-]{10,100}$/.test(raw)) return raw;
+    problems.push(
+      `${name} must be the code from ${where}'s HTML tag: letters, digits, - and _ only (got "${raw}")`,
+    );
+    return null;
+  };
+  const googleSiteVerification = verificationCode("GOOGLE_SITE_VERIFICATION", "Search Console");
+  const bingSiteVerification = verificationCode("BING_SITE_VERIFICATION", "Bing Webmaster Tools");
   if (problems.length > 0) throw new ConfigError(problems);
   return {
     apiBaseUrl,
@@ -171,6 +175,7 @@ export function parseSettings(env: Env): StoreSettings {
     reviewsCacheSeconds,
     allowIndexing,
     googleSiteVerification,
+    bingSiteVerification,
   };
 }
 

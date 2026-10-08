@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { routes } from "@/components/layout/nav";
+import { GUIDES } from "@/content/guides";
 import { INFO_PAGES, LAST_UPDATED } from "@/content/pages";
 import { getCategories, getProducts } from "@/lib/api/catalog";
 import { isApiError } from "@/lib/api/errors";
@@ -37,6 +38,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(`${LAST_UPDATED[page.slug]}T00:00:00Z`),
       changeFrequency: "monthly",
       priority: 0.4,
+    });
+  entries.push({ url: url("/guides"), changeFrequency: "weekly", priority: 0.6 });
+  for (const guide of GUIDES)
+    entries.push({
+      url: url(`/guides/${guide.slug}`),
+      lastModified: new Date(`${guide.updated}T00:00:00Z`),
+      changeFrequency: "monthly",
+      priority: 0.6,
     });
   try {
     for (const category of withProducts(await getCategories()))

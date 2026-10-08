@@ -3,7 +3,9 @@ import Link from "next/link";
 import { business } from "@/content/business";
 import { INFO_PAGES } from "@/content/pages";
 import { socialName } from "@/lib/info/social";
-import { routes } from "./nav";
+import { getCategories } from "@/lib/api/catalog";
+import { isApiError } from "@/lib/api/errors";
+import { categoryNav, routes } from "./nav";
 
 const link = (slug: string) => {
   const page = INFO_PAGES.find((p) => p.slug === slug)!;
@@ -12,7 +14,21 @@ const link = (slug: string) => {
 const help = ["shipping", "returns", "faq", "contact"].map(link);
 const company = ["about", "privacy", "terms"].map(link);
 
-export function Footer() {
+/** Top-level categories with products, for the Shop column (none if the API is down). */
+async function categoryLinks(): Promise<{ label: string; href: string }[]> {
+  try {
+    return categoryNav(await getCategories()).map((item) => ({
+      label: item.label,
+      href: item.href,
+    }));
+  } catch (error) {
+    if (isApiError(error)) return [];
+    throw error;
+  }
+}
+
+export async function Footer() {
+  const categories = await categoryLinks();
   const year = new Date().getFullYear();
   return (
     <footer className="mt-auto bg-deep text-mint">
@@ -56,6 +72,8 @@ export function Footer() {
           title="Shop"
           links={[
             { label: "All products", href: routes.shop },
+            ...categories,
+            { label: "Hair guides", href: "/guides" },
             { label: "Search", href: routes.search },
           ]}
         />

@@ -26,7 +26,7 @@ const care: Faq[] = [
   {
     question: "How do I choose the right length and shade?",
     answer:
-      "Pick a length a little longer than your own hair for a seamless blend, and a shade that matches the middle and ends of your hair. Each product lists its lengths, colours and textures. If you're unsure, [send us a photo of your hair](/contact) and we'll suggest a match before you order.",
+      "Pick a length a little longer than your own hair for a seamless blend, and a shade that matches the middle and ends of your hair. Each product lists its lengths, colours and textures. If you're unsure, [send us a photo of your hair](/contact) and we'll suggest a match before you order. More in our [guide to choosing hair extensions](/guides/how-to-choose-hair-extensions).",
   },
   {
     question: "Is it real human hair?",

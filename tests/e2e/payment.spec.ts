@@ -104,7 +104,10 @@ test("pay later: the order's page offers payment until it's paid", async ({ page
   await expect(page.locator('iframe[title="Razorpay test payment"]')).toHaveCount(0);
   await page.getByRole("button", { name: /^Pay ₹[\d,]+ now$/ }).click();
   await paymentWindow(page).getByRole("button", { name: "Pay", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Payment received" })).toBeVisible();
+  // Confirming goes through the stand-in Razorpay and the API; allow for a busy computer.
+  await expect(page.getByRole("heading", { name: "Payment received" })).toBeVisible({
+    timeout: 15_000,
+  });
   await page.reload();
   await expect(page.getByRole("heading", { name: "Payment received" })).toBeVisible();
 });

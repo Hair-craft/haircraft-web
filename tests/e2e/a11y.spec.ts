@@ -38,6 +38,9 @@ test.describe("accessibility: guests", () => {
       "/about",
       "/privacy",
       "/terms",
+      "/guides",
+      "/guides/how-to-choose-hair-extensions",
+      "/guides/hair-toppers-for-thinning-hair",
       "/this-page-does-not-exist",
     ];
     for (const path of pages) {
