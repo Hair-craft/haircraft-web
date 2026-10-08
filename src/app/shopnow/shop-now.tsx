@@ -77,7 +77,7 @@ export default function ShopNow() {
             variants={fadeUp}
             className="mt-5 max-w-sm text-base leading-relaxed text-deep/75"
           >
-            Choose where you&apos;d like to shop: the same products at the same sale price.
+            Discover the styles everyone&apos;s loving.
           </motion.p>
 
           <motion.div
@@ -93,7 +93,7 @@ export default function ShopNow() {
             className="mt-9 flex items-center gap-4 whitespace-nowrap text-[0.65rem] uppercase tracking-[0.2em] text-deep-soft sm:text-xs sm:tracking-[0.25em]"
           >
             <span className="h-px w-6 bg-gold sm:w-10" />
-            100% human hair · Free shipping over ₹999
+            100% human hair · Premium quality
             <span className="h-px w-6 bg-gold sm:w-10" />
           </motion.div>
         </motion.section>
