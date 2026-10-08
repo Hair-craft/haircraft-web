@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { MotionConfig, motion, type Variants } from "framer-motion";
 
 const container: Variants = {
@@ -84,6 +85,27 @@ export default function ComingSoon() {
             Premium hair extensions, thoughtfully crafted for length, volume and
             confidence. Our store opens its doors very soon.
           </motion.p>
+
+          <motion.div variants={fadeUp} className="mt-8">
+            <Link
+              href="/shopnow"
+              className="group inline-flex min-h-12 items-center gap-3 rounded-full bg-deep px-7 py-3 text-sm font-medium tracking-wide text-mint shadow-lg shadow-deep/15 transition hover:bg-deep-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep active:scale-[0.98] sm:text-base"
+            >
+              Shop now on marketplace
+              <svg
+                aria-hidden
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="size-5 text-gold-light transition-transform duration-200 group-hover:translate-x-1"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </Link>
+          </motion.div>
 
           <motion.div
             variants={fadeUp}
