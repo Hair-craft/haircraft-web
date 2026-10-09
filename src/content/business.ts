@@ -18,6 +18,12 @@ export interface Business {
   phone: string | null;
   /** WhatsApp number in international format, if it differs or is used. */
   whatsapp: string | null;
+  /**
+   * WhatsApp's own chat link (wa.me/message/…), from WhatsApp Business →
+   * Short link. Used by the floating WhatsApp button and the Contact page;
+   * preferred over a number.
+   */
+  whatsappChat: string | null;
   /** When messages and calls are answered. */
   hours: string;
   /** How soon we reply. */
@@ -35,6 +41,7 @@ export const business: Business = {
   email: "care@haircraft.in",
   phone: null,
   whatsapp: null,
+  whatsappChat: "https://wa.me/message/5EXU5MQ2N5Y3B1",
   hours: "Monday to Saturday, 10 am to 6 pm (IST)",
   replyTime: "We reply within one working day.",
   grievanceOfficer: { name: null, email: "care@haircraft.in", phone: null },

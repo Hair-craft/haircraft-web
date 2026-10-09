@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DEFAULT_SHARE_IMAGE } from "@/lib/seo/open-graph";
+import { WhatsAppButton } from "@/components/layout/whatsapp-button";
 import ComingSoon from "./coming-soon";
 
 const title = "HairCraft — Premium Hair Extensions | Coming Soon";
@@ -33,5 +34,10 @@ export const metadata: Metadata = {
 };
 
 export default function ComingSoonPage() {
-  return <ComingSoon />;
+  return (
+    <>
+      <ComingSoon />
+      <WhatsAppButton />
+    </>
+  );
 }

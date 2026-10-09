@@ -11,7 +11,13 @@ import { termsContent } from "@/content/terms";
 import { blockText, type Block, type InfoContent } from "@/content/types";
 import { faqJsonLd } from "@/components/home/content";
 import { deliveryAndReturns } from "@/components/product-page/content";
-import { contactMethods, displayPhone, telHref, whatsappHref } from "@/lib/info/contact";
+import {
+  contactMethods,
+  displayPhone,
+  telHref,
+  whatsappChatHref,
+  whatsappHref,
+} from "@/lib/info/contact";
 import {
   cashOnDeliveryLine,
   deliveryLine,
@@ -106,7 +112,24 @@ describe("rich text", () => {
 });
 
 describe("contact details", () => {
-  const base: Business = { ...business, phone: null, whatsapp: null };
+  const base: Business = { ...business, phone: null, whatsapp: null, whatsappChat: null };
+
+  it("uses the WhatsApp chat link when there is one, else the number", () => {
+    const chat = contactMethods({ ...base, whatsappChat: "https://wa.me/message/ABC123" });
+    expect(chat.at(-1)).toEqual({
+      kind: "whatsapp",
+      label: "WhatsApp",
+      value: "Chat with us",
+      href: "https://wa.me/message/ABC123",
+      external: true,
+    });
+    expect(whatsappChatHref({ whatsapp: "9876543210", whatsappChat: null })).toBe(
+      "https://wa.me/919876543210",
+    );
+    // Only WhatsApp's own addresses are used as chat links.
+    expect(whatsappChatHref({ whatsapp: null, whatsappChat: "https://example.com/wa" })).toBeNull();
+    expect(business.whatsappChat).toBe("https://wa.me/message/5EXU5MQ2N5Y3B1");
+  });
 
   it("formats Indian numbers and builds call and WhatsApp links", () => {
     expect(displayPhone("+919876543210")).toBe("+91 98765 43210");

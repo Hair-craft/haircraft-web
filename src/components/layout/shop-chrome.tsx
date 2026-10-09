@@ -13,6 +13,7 @@ import { wishlistCount } from "@/lib/wishlist/server";
 import { AnnouncementBar } from "./announcement-bar";
 import { Footer } from "./footer";
 import { Header } from "./header";
+import { WhatsAppButton } from "./whatsapp-button";
 
 /** Header, main content and footer, with a skip link for keyboard users. */
 export async function ShopChrome({ children }: { children: ReactNode }) {
@@ -35,6 +36,7 @@ export async function ShopChrome({ children }: { children: ReactNode }) {
             {children}
           </main>
           <Footer />
+          <WhatsAppButton />
           {/* Keyed by the note, so a new note always shows (and the same one isn't shown twice). */}
           <FlashNote key={note ?? "none"} note={note} />
           <CartDrawer />

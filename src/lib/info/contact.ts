@@ -44,13 +44,21 @@ export function contactMethods(b: Business): ContactMethod[] {
       href: telHref(b.phone),
       external: false,
     });
-  if (b.whatsapp)
+  const chat = whatsappChatHref(b);
+  if (chat)
     methods.push({
       kind: "whatsapp",
       label: "WhatsApp",
-      value: displayPhone(b.whatsapp),
-      href: whatsappHref(b.whatsapp),
+      value: b.whatsapp ? displayPhone(b.whatsapp) : "Chat with us",
+      href: chat,
       external: true,
     });
   return methods;
+}
+
+/** Where "chat on WhatsApp" goes: the business's chat link, else its number, else nowhere. */
+export function whatsappChatHref(b: Pick<Business, "whatsapp" | "whatsappChat">): string | null {
+  if (b.whatsappChat && /^https:\/\/(wa\.me|api\.whatsapp\.com)\//.test(b.whatsappChat))
+    return b.whatsappChat;
+  return b.whatsapp ? whatsappHref(b.whatsapp) : null;
 }
