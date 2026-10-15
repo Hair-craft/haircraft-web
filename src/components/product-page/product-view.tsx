@@ -12,6 +12,7 @@ import {
   AXES,
   axisValues,
   choiceStatus,
+  detailRows,
   galleryFor,
   pick,
   pickerAxes,
@@ -201,7 +202,7 @@ export function ProductView({
         ) : null}
         <Fold title="Details">
           <dl className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-2">
-            {[
+            {detailRows([
               ...Object.entries(product.attributes),
               ...(variant
                 ? ([
@@ -213,9 +214,9 @@ export function ProductView({
                     ["Texture", variant.texture],
                     ["Weight", variant.weightGrams === null ? null : `${variant.weightGrams} g`],
                     ...Object.entries(variant.attributes),
-                  ].filter(([, value]) => value) as [string, string][])
+                  ] as [string, string | null][])
                 : []),
-            ].map(([name, value]) => (
+            ]).map(([name, value]) => (
               <div key={name} className="contents">
                 <dt className="text-deep/70">{name}</dt>
                 <dd>{value}</dd>

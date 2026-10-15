@@ -4,6 +4,7 @@ import { productJsonLd } from "@/lib/product/structured-data";
 import {
   axisValues,
   choiceStatus,
+  detailRows,
   defaultVariant,
   galleryFor,
   pick,
@@ -166,5 +167,22 @@ describe("structured data", () => {
     );
     expect(data).not.toHaveProperty("aggregateRating");
     expect(data.offers.availability).toBe("https://schema.org/OutOfStock");
+  });
+});
+
+describe("the Details list", () => {
+  it("drops empty rows and shows a detail given twice only once", () => {
+    expect(
+      detailRows([
+        ["Length", "10 inch"],
+        ["Colour", "Black"],
+        ["Texture", null],
+        ["Length", "25 cm"],
+        ["colour", "Black"],
+      ]),
+    ).toEqual([
+      ["Length", "10 inch / 25 cm"],
+      ["Colour", "Black"],
+    ]);
   });
 });

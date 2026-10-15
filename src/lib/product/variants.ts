@@ -118,3 +118,20 @@ export function saving(variant: PublicVariant): string | null {
   if (paise <= 0) return null;
   return `${Math.floor(paise / 100)}.${String(paise % 100).padStart(2, "0")}`;
 }
+
+/**
+ * The rows of the Details list: empty ones dropped, and a name given twice
+ * (an option's own "Length: 25 cm" beside its 10 inch length) shown once, as
+ * "10 inch / 25 cm".
+ */
+export function detailRows(rows: [string, string | null][]): [string, string][] {
+  const merged = new Map<string, [string, string]>();
+  for (const [name, value] of rows) {
+    if (!value) continue;
+    const key = name.trim().toLowerCase();
+    const seen = merged.get(key);
+    if (!seen) merged.set(key, [name, value]);
+    else if (!seen[1].split(" / ").includes(value)) seen[1] = `${seen[1]} / ${value}`;
+  }
+  return [...merged.values()];
+}

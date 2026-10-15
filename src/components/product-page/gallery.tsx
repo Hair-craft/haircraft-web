@@ -9,6 +9,13 @@ import { cx } from "@/lib/cx";
 /** The same `sizes` everywhere, so the phone row and the desktop photo share one download. */
 const SIZES = "(min-width: 1024px) 50vw, 100vw";
 
+/**
+ * Product photos are taken 3:4 (portrait). Every frame here is that shape, and
+ * photos are fitted, not cropped, so a photo of another shape is never cut
+ * (the measuring arrows on the length photos must show end to end).
+ */
+const FRAME = "aspect-[3/4] bg-white";
+
 /** What the full-screen view needs of a photo. */
 export type LightboxPhoto = Pick<ProductImage, "id" | "urls" | "altText">;
 
@@ -25,10 +32,24 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
   const [active, setActive] = useState(0);
   const [zoomed, setZoomed] = useState<number | null>(null);
   const row = useRef<HTMLUListElement>(null);
+  const thumbs = useRef<HTMLUListElement>(null);
   const total = images.length;
 
+  // Keep the chosen thumbnail in view when the column of thumbnails scrolls
+  // (scrolling only the column, never the page).
+  useEffect(() => {
+    const list = thumbs.current;
+    const item = list?.children[active] as HTMLElement | undefined;
+    if (!list || !item) return;
+    // The list is positioned, so this is measured from its own top.
+    const top = item.offsetTop;
+    if (top < list.scrollTop) list.scrollTo({ top, behavior: "smooth" });
+    else if (top + item.offsetHeight > list.scrollTop + list.clientHeight)
+      list.scrollTo({ top: top + item.offsetHeight - list.clientHeight, behavior: "smooth" });
+  }, [active]);
+
   if (total === 0)
-    return <div className="aspect-[4/5] rounded-[2rem] bg-mint-deep" aria-label="No photo yet" />;
+    return <div className="aspect-[3/4] rounded-[2rem] bg-mint-deep" aria-label="No photo yet" />;
 
   const show = (i: number) => setActive((i + total) % total);
   const onKeyDown = (event: KeyboardEvent) => {
@@ -44,36 +65,49 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
     <div>
       {/* Desktop */}
       <div className="hidden gap-4 lg:grid lg:grid-cols-[5rem_1fr]">
-        <ul className="flex flex-col gap-3" aria-label="Photos">
-          {images.map((image, i) => (
-            <li key={image.id}>
-              <button
-                type="button"
-                onClick={() => show(i)}
-                aria-label={`Photo ${i + 1} of ${total}`}
-                aria-current={i === active || undefined}
-                className={cx(
-                  "relative block aspect-[4/5] w-full overflow-hidden rounded-xl ring-2 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep",
-                  i === active ? "ring-deep" : "opacity-70 ring-transparent hover:opacity-100",
-                )}
-              >
-                <Image
-                  src={image.urls.thumbnail}
-                  alt=""
-                  fill
-                  sizes="80px"
-                  className="object-cover"
-                />
-              </button>
-            </li>
-          ))}
-        </ul>
+        {/* As tall as the large photo; more thumbnails than fit scroll inside it. */}
+        <div className="relative">
+          <ul
+            ref={thumbs}
+            aria-label="Photos"
+            className="absolute inset-0 flex flex-col gap-3 overflow-y-auto p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {images.map((image, i) => (
+              <li key={image.id} className="shrink-0">
+                <button
+                  type="button"
+                  onClick={() => show(i)}
+                  aria-label={`Photo ${i + 1} of ${total}`}
+                  aria-current={i === active || undefined}
+                  className={cx(
+                    "relative block w-full overflow-hidden rounded-xl ring-2 transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-deep",
+                    FRAME,
+                    i === active ? "ring-deep" : "opacity-70 ring-transparent hover:opacity-100",
+                  )}
+                >
+                  <Image
+                    src={image.urls.thumbnail}
+                    alt=""
+                    fill
+                    sizes="80px"
+                    className="object-contain"
+                  />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
         <div className="relative" onKeyDown={onKeyDown}>
           <button
             type="button"
             onClick={() => setZoomed(active)}
             aria-label={`View photo ${active + 1} of ${total} full screen`}
-            className="relative block aspect-[4/5] w-full cursor-zoom-in overflow-hidden rounded-[2rem] bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep"
+            className={cx(
+              "relative block w-full cursor-zoom-in overflow-hidden rounded-[2rem] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep",
+              FRAME,
+              // Never taller than the window (below the header), so the whole photo is seen.
+              "max-h-[calc(100dvh-14rem)] min-h-[28rem]",
+            )}
           >
             <Image
               key={images[active].id}
@@ -82,7 +116,7 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
               fill
               priority={active === 0}
               sizes={SIZES}
-              className="hc-fade-in object-cover"
+              className="hc-fade-in object-contain"
             />
           </button>
           {total > 1 ? (
@@ -94,8 +128,8 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
         </div>
       </div>
 
-      {/* Phones and tablets */}
-      <div className="lg:hidden">
+      {/* Phones: edge to edge. Tablets: a centred photo, not one taller than the screen. */}
+      <div className="sm:mx-auto sm:max-w-md lg:hidden">
         <ul
           ref={row}
           aria-label="Photos"
@@ -111,7 +145,7 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
                 type="button"
                 onClick={() => setZoomed(i)}
                 aria-label={`View photo ${i + 1} of ${total} full screen`}
-                className="relative block aspect-[4/5] w-full bg-white"
+                className={cx("relative block w-full", FRAME)}
               >
                 <Image
                   src={image.urls.large}
@@ -119,7 +153,7 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
                   fill
                   priority={i === 0}
                   sizes={SIZES}
-                  className="object-cover"
+                  className="object-contain"
                 />
               </button>
             </li>
