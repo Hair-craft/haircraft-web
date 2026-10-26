@@ -1,12 +1,14 @@
 import type { NextConfig } from "next";
 
 /**
- * Product photos come from the API: Cloudinary in production, and the API's
+ * Product photos come from the API's image storage: S3 behind CloudFront
+ * (MEDIA_BASE_URL) in production, Cloudinary for older images, and the API's
  * own /uploads folder in development. Only these hosts may be optimized by
  * next/image.
  */
 const apiOrigin = new URL(process.env.API_BASE_URL || "http://localhost:3000/api/v1");
 const apiIsLocal = ["localhost", "127.0.0.1"].includes(apiOrigin.hostname);
+const mediaOrigin = process.env.MEDIA_BASE_URL ? new URL(process.env.MEDIA_BASE_URL) : null;
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -25,6 +27,16 @@ const nextConfig: NextConfig = {
     qualities: [75, 90],
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
+      ...(mediaOrigin
+        ? [
+            {
+              protocol: mediaOrigin.protocol.replace(":", "") as "http" | "https",
+              hostname: mediaOrigin.hostname,
+              port: mediaOrigin.port,
+              pathname: "/**",
+            },
+          ]
+        : []),
       {
         protocol: apiOrigin.protocol.replace(":", "") as "http" | "https",
         hostname: apiOrigin.hostname,
