@@ -20,6 +20,8 @@ export const CLOSED = "http://localhost:3102";
 export const API_DOWN = "http://localhost:3103";
 /** The test API (tests compare pages against it). */
 export const API = "http://localhost:3100/api/v1";
+/** Shared by the test API and the open shop, for the cache refresh after admin changes. */
+const E2E_REVALIDATE_SECRET = "e2e-revalidate-secret-0123456789abcdef";
 /** Failed sign-ins before an account is locked, on the test API (kept low so the test is short). */
 export const TEST_MAX_FAILED_LOGINS = 3;
 
@@ -95,11 +97,19 @@ export default defineConfig({
         // Online payment through the stand-in Razorpay (no internet, no keys).
         ONLINE_PAYMENTS_ENABLED: "true",
         RAZORPAY_FAKE: "true",
+        // Admin changes refresh the open shop's caches at once (as on the live site).
+        STOREFRONT_URL: OPEN,
+        REVALIDATE_SECRET: E2E_REVALIDATE_SECRET,
         LOG_LEVEL: "warn",
       },
     },
     // The open shop behaves like the live site, which search engines may index.
-    server(3101, { STORE_OPEN: "true", API_BASE_URL: API, ALLOW_INDEXING: "true" }),
+    server(3101, {
+      STORE_OPEN: "true",
+      API_BASE_URL: API,
+      ALLOW_INDEXING: "true",
+      REVALIDATE_SECRET: E2E_REVALIDATE_SECRET,
+    }),
     server(3102, { STORE_OPEN: "false", API_BASE_URL: API }),
     server(3103, { STORE_OPEN: "true", API_BASE_URL: "http://localhost:3999/api/v1" }),
   ],

@@ -182,7 +182,7 @@ const wigs: CategoryGuide = {
     {
       question: "Can I return a wig?",
       answer:
-        "For hygiene reasons, wigs that have been tried on without their protective cap or worn can't be returned. Damaged or wrong items are always put right. See [Returns & refunds](" +
+        "For hygiene reasons, wigs can't be returned. A wig that arrives defective can be exchanged within 4 days of delivery if it hasn't been tried on without its protective cap or worn. See [Exchange policy](" +
         l.returns +
         ").",
     },

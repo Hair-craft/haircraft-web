@@ -1,16 +1,17 @@
 import Image from "next/image";
 import { routes } from "@/components/layout/nav";
 import { ButtonLink } from "@/components/ui/button";
-import type { ProductCard } from "@/lib/api/types";
 import { HeroAccent } from "./hero-accent";
+import { heroImage } from "./home-images";
 
 /**
  * Split hero, after the reference: words on the left, a large photo on the
- * right (below the words on phones). The text rises in with CSS (no waiting
+ * right (below the words on phones; a fixed photo, see home-images.ts). The
+ * text rises in with CSS (no waiting
  * for JavaScript, so it is visible at once); the photo settles from a slight
  * zoom; on desktop a lazy 3D accent of gold strands floats behind the photo.
  */
-export function Hero({ featured }: { featured: ProductCard | null }) {
+export function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-mint to-[#e4f3d9]">
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 lg:min-h-[42rem] lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:py-20">
@@ -36,21 +37,19 @@ export function Hero({ featured }: { featured: ProductCard | null }) {
           </div>
         </div>
 
-        {featured?.image ? (
-          <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-            <HeroAccent />
-            <div className="hc-rise hc-delay relative mx-auto aspect-[4/5] w-full max-w-[34rem] overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-1 shadow-deep/15 ring-gold/20">
-              <Image
-                src={featured.image.large}
-                alt={featured.imageAlt ?? featured.name}
-                fill
-                priority
-                sizes="(min-width: 1024px) 34rem, 90vw"
-                className="hc-settle object-cover"
-              />
-            </div>
+        <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+          <HeroAccent />
+          <div className="hc-rise hc-delay relative mx-auto aspect-[4/5] w-full max-w-[34rem] overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-1 shadow-deep/15 ring-gold/20">
+            <Image
+              src={heroImage.src}
+              alt={heroImage.alt}
+              fill
+              priority
+              sizes="(min-width: 1024px) 34rem, 90vw"
+              className="hc-settle object-cover"
+            />
           </div>
-        ) : null}
+        </div>
       </div>
     </section>
   );

@@ -10,6 +10,7 @@ import {
   lengthLabel,
   listingHref,
   priceBands,
+  sizeFilterLabel,
   slugify,
   toggle,
   withChange,
@@ -96,7 +97,7 @@ export function FilterPanel({
   };
 
   const bands = priceBands(options.price);
-  const { lengths, colors, textures } = draft.state;
+  const { lengths, colors, textures, sizes } = draft.state;
   const deferred = mode === "deferred";
 
   return (
@@ -152,6 +153,21 @@ export function FilterPanel({
               label={texture}
               checked={textures.includes(texture)}
               onChange={() => change({ textures: toggle(textures, texture) })}
+            />
+          ))}
+        </Group>
+      ) : null}
+
+      {(options.sizes ?? []).length > 0 ? (
+        <Group title="Size" count={sizes.length}>
+          {options.sizes.map((size) => (
+            <Tick
+              key={size}
+              name="size"
+              value={size}
+              label={sizeFilterLabel(size)}
+              checked={sizes.includes(size)}
+              onChange={() => change({ sizes: toggle(sizes, size) })}
             />
           ))}
         </Group>

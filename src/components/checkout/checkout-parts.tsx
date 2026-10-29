@@ -8,7 +8,8 @@ import { isFree, type CheckoutTotals } from "@/lib/checkout/rules";
 export interface SummaryLine {
   key: string;
   name: string;
-  slug: string;
+  /** null when the product no longer exists: the name shows without a link. */
+  slug: string | null;
   option: string;
   image: string | null;
   quantity: number;
@@ -32,12 +33,16 @@ export function SummaryLines({ lines }: { lines: SummaryLine[] }) {
             </span>
           </div>
           <div className="min-w-0 flex-1 text-sm">
-            <Link
-              href={`/product/${encodeURIComponent(line.slug)}`}
-              className="font-medium underline-offset-4 hover:underline"
-            >
-              {line.name}
-            </Link>
+            {line.slug ? (
+              <Link
+                href={`/product/${encodeURIComponent(line.slug)}`}
+                className="font-medium underline-offset-4 hover:underline"
+              >
+                {line.name}
+              </Link>
+            ) : (
+              <span className="font-medium">{line.name}</span>
+            )}
             <p className="text-deep/70">{line.option}</p>
             {line.problem ? <p className="mt-1 text-red-800">{line.problem}</p> : null}
           </div>

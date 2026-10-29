@@ -4,6 +4,7 @@ import { isApiError } from "@/lib/api/errors";
 import { ACCESS_COOKIE, sessionCookieOptions } from "@/lib/session/cookies";
 import {
   addCartItem,
+  clearCart,
   getCart,
   mergeCart,
   previewCart,
@@ -202,6 +203,26 @@ export async function rememberEmptyBag() {
     "0",
     sessionCookieOptions(KEEP_FOR_SECONDS, production()),
   );
+}
+
+/**
+ * Buy again: the signed-in customer's bag becomes exactly these lines (what
+ * can't be bought is left out). Returns how many lines were left out.
+ */
+export async function replaceBag(token: string, lines: GuestLine[]): Promise<number> {
+  await clearCart(token);
+  let skipped = 0;
+  let cart: Cart = EMPTY_CART;
+  for (const line of lines) {
+    try {
+      cart = await addCartItem(token, line.variantId, line.quantity);
+    } catch (error) {
+      if (cartProblemCode(error) === null || cartProblemCode(error) === "session") throw error;
+      skipped += 1;
+    }
+  }
+  await rememberCount(cart);
+  return skipped;
 }
 
 /** On sign-out: the shopper is a guest with an empty bag (the account keeps its own). */

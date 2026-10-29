@@ -38,7 +38,7 @@ type ProductBits = Pick<
 >;
 const product = (over: Partial<ProductBits> = {}): ProductBits => ({
   name: "Wrap-around Ponytail",
-  options: { lengths: [22], colors: [], textures: [], weights: [] },
+  options: { lengths: [22], colors: [], textures: [], weights: [], sizes: [] },
   shortDescription: "A full, sleek ponytail in seconds.",
   description: null,
   priceRange: { min: "4999.00", max: "6999.00" },
@@ -50,7 +50,9 @@ describe("titles", () => {
     expect(productTitle(product())).toBe("Wrap-around Ponytail — Human Hair, 22 inch");
     expect(
       productTitle(
-        product({ options: { lengths: [14, 22, 18], colors: [], textures: [], weights: [] } }),
+        product({
+          options: { lengths: [14, 22, 18], colors: [], textures: [], weights: [], sizes: [] },
+        }),
       ),
     ).toBe("Wrap-around Ponytail — Human Hair, 14–22 inch");
   });

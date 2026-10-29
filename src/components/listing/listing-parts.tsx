@@ -160,7 +160,7 @@ export function NoResults({ base, state }: { base: string; state: ListingState }
       </h2>
       <p className="mx-auto mt-3 max-w-md text-deep/70">
         {filtered
-          ? "Try removing a filter or two: lengths, colours and textures must all be on the same product option."
+          ? "Try removing a filter or two: lengths, colours, textures and sizes must all be on the same product option."
           : "New pieces are on their way. In the meantime, have a look at the rest of the shop."}
       </p>
       <div className="mt-6 flex justify-center">

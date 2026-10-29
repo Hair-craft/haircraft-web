@@ -3,19 +3,19 @@ import { InfoPage } from "@/components/info/info-page";
 import { returnsContent } from "@/content/returns";
 
 export const metadata: Metadata = {
-  title: "Returns & refunds",
+  title: "Exchange policy",
   description:
-    "Cancelling, returning or exchanging a HairCraft order, damaged or wrong items, and how refunds are paid.",
+    "Exchanging a defective HairCraft item within 4 days of delivery, cancelling an order before it ships, and how refunds for cancellations are paid.",
   alternates: { canonical: "/returns" },
 };
 
-/** `/returns`: returns, refunds and cancellations. */
+/** `/returns`: the exchange policy and cancellations. */
 export default function ReturnsPage() {
   return (
     <InfoPage
       slug="returns"
       eyebrow="Help"
-      title="Returns, refunds and cancellations"
+      title="Exchange policy and cancellations"
       content={returnsContent}
     />
   );

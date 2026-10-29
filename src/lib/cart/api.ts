@@ -27,6 +27,11 @@ export function removeCartItem(token: string, lineId: string): Promise<Cart> {
   return apiFetch<Cart>(`/cart/items/${encodeURIComponent(lineId)}`, { method: "DELETE", token });
 }
 
+/** Empties the signed-in customer's cart. */
+export function clearCart(token: string): Promise<Cart> {
+  return apiFetch<Cart>("/cart", { method: "DELETE", token });
+}
+
 /** A guest's lines priced like a signed-in cart (B12); nothing is saved. */
 export function previewCart(lines: GuestLine[]): Promise<Cart> {
   return apiFetch<Cart>("/cart/preview", { method: "POST", body: { items: lines } });

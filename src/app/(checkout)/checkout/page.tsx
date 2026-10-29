@@ -331,7 +331,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
           <p className="text-center text-xs leading-relaxed text-deep/70">
             By placing your order you agree to our{" "}
             <PolicyLink href="/terms">Terms of use</PolicyLink> and{" "}
-            <PolicyLink href="/returns">Returns &amp; refunds</PolicyLink> policy.
+            <PolicyLink href="/returns">Exchange policy</PolicyLink> policy.
           </p>
         </aside>
       </div>

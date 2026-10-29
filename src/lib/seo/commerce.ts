@@ -47,15 +47,16 @@ export function shippingDetails(policies: ShopPolicies, price: string) {
   };
 }
 
-/** schema.org returns policy, from the returns rules (S14). */
+/** schema.org returns policy: exchange only, for defective items, within a few days (`returns-rules.ts`). */
 export function returnPolicy(siteUrl: string) {
   return {
     "@type": "MerchantReturnPolicy",
     applicableCountry: "IN",
     returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-    merchantReturnDays: returnRules.changeOfMindDays,
+    merchantReturnDays: returnRules.exchangeDays,
+    refundType: "https://schema.org/ExchangeRefund",
     returnMethod: "https://schema.org/ReturnByMail",
-    returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
+    returnFees: "https://schema.org/FreeReturn",
     merchantReturnLink: new URL("/returns", siteUrl).toString(),
   };
 }

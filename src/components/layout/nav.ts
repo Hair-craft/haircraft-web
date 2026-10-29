@@ -26,3 +26,14 @@ export function categoryNav(categories: Category[]): NavItem[] {
   };
   return categories.map(toItem).filter((item): item is NavItem => item !== null);
 }
+
+/** How many categories the bar shows before the rest go under "More". */
+export const BAR_CATEGORIES = 5;
+
+/** The categories shown in the bar, and the ones under "More" (in the admin panel's order). */
+export function splitMenu(
+  items: NavItem[],
+  visible = BAR_CATEGORIES,
+): { shown: NavItem[]; more: NavItem[] } {
+  return { shown: items.slice(0, visible), more: items.slice(visible) };
+}

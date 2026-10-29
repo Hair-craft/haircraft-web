@@ -84,7 +84,7 @@ export async function moveToBagAction(productId: string, slug: string): Promise<
   try {
     const product = await getProduct(String(slug));
     if (product.id !== productId) return { kind: "error", error: CART_PROBLEMS.unavailable };
-    const plan = movePlan(product.variants);
+    const plan = movePlan(product.variants.filter((v) => v.purchasable !== false));
     if (plan.kind === "soldout") return { kind: "error", error: CART_PROBLEMS.out_of_stock };
     if (plan.kind === "choose")
       return { kind: "choose", href: `/product/${encodeURIComponent(product.slug)}` };

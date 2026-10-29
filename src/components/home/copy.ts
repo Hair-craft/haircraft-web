@@ -7,7 +7,7 @@ export interface BrandPromise {
   text: string;
 }
 
-/** "Free shipping above ₹1,999", or no amount when the setting is empty (0 = always free). */
+/** "Free shipping above ₹599", or no amount when the setting is empty (0 = always free). */
 export function shippingPromise(threshold: string | null): BrandPromise {
   if (threshold === null) {
     return {

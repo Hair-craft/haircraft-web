@@ -15,7 +15,7 @@ export interface StoreSettings {
   /** How long one API call may take before it is given up. */
   apiTimeoutMs: number;
   /**
-   * Free shipping from this order total, in rupees ("1999"), for marketing
+   * Free shipping from this order total, in rupees ("599"), for marketing
    * copy only: it must match the backend's FREE_SHIPPING_THRESHOLD, and
    * checkout always shows the real shipping from the API. null = don't
    * mention an amount.

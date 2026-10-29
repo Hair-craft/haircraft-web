@@ -6,7 +6,7 @@
 export type Block = string | { list: string[] } | { steps: string[] } | { tip: string };
 
 export interface InfoSection {
-  /** The section's address on the page (`/returns#damaged`). */
+  /** The section's address on the page (`/returns#exchange`). */
   id: string;
   heading: string;
   blocks: Block[];

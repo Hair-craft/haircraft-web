@@ -110,6 +110,8 @@ const FLASH_MESSAGES: Record<string, string> = {
   "signed-out": "You're signed out.",
   "signed-out-everywhere": "You're signed out on all your devices.",
   "cart-skipped": "Some items from your bag couldn't be added: they're no longer available.",
+  "again-none":
+    "None of this order's items can be bought right now: they're no longer available or sold out.",
   "address-added": "Address added.",
   "address-updated": "Address saved.",
   "address-deleted": "Address deleted.",
@@ -133,7 +135,8 @@ export function FlashNote({ note }: { note: string | null }) {
     if (!note) return;
     document.cookie = `${FLASH_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax`;
     const message = FLASH_MESSAGES[note];
-    if (message) show(message, note === "cart-skipped" ? "info" : "success");
+    if (message)
+      show(message, note === "cart-skipped" || note === "again-none" ? "info" : "success");
   }, [note, show]);
   return null;
 }

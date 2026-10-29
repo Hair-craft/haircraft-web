@@ -20,6 +20,7 @@ const options: FilterOptions = {
   lengths: [18, 20],
   colors: ["Natural Black"],
   textures: ["Body Wave"],
+  sizes: [],
   price: { min: "3999.00", max: "9999.00" },
 };
 const state = (patch: Partial<ListingState> = {}): ListingState => ({ ...EMPTY_STATE, ...patch });

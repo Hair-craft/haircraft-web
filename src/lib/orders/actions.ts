@@ -3,7 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { isApiError } from "@/lib/api/errors";
-import { cartProblemCode, changeCart } from "@/lib/cart/server";
+import { previewCart } from "@/lib/cart/api";
+import { replaceBag } from "@/lib/cart/server";
 import { ACCESS_COOKIE, clearedSessionCookies, flashCookie } from "@/lib/session/cookies";
 import { cancelOrder, getOrderDetail } from "./api";
 import { cancelReason } from "./rules";
@@ -64,8 +65,11 @@ export async function cancelOrderAction(
 }
 
 /**
- * Buy again: the order's items that are still available go back in the bag
- * (same options and quantities); a note says if any couldn't be added.
+ * Buy again: the bag becomes exactly this order's items that can still be
+ * bought (same options and quantities: deleted, hidden and sold-out ones are
+ * left out), and the customer goes straight to checkout, with a note when
+ * some were left out. When none can be bought, the bag is left alone and the
+ * order page says so.
  */
 export async function buyAgainAction(form: FormData): Promise<void> {
   const orderNumber = String(form.get("orderNumber") ?? "").toUpperCase();
@@ -73,7 +77,7 @@ export async function buyAgainAction(form: FormData): Promise<void> {
   const here = `/account/orders/${orderNumber}`;
   const token = (await cookies()).get(ACCESS_COOKIE)?.value;
   if (!token) return endSession(here);
-  let items: { variantId: string; quantity: number }[];
+  let items: { variantId: string | null; quantity: number }[];
   try {
     items = (await getOrderDetail(token, orderNumber)).items;
   } catch (error) {
@@ -81,18 +85,35 @@ export async function buyAgainAction(form: FormData): Promise<void> {
     if (error.status === 401 || error.code === "ACCOUNT_SUSPENDED") return endSession(here);
     redirect(here);
   }
-  let skipped = 0;
-  for (const item of items) {
-    try {
-      await changeCart({ kind: "add", variantId: item.variantId, quantity: item.quantity });
-    } catch (error) {
-      if (cartProblemCode(error) === null) throw error;
-      skipped += 1;
-    }
+  // A product deleted since has no variant left to buy.
+  const wanted = items
+    .filter((item): item is { variantId: string; quantity: number } => item.variantId !== null)
+    .map((item) => ({ variantId: item.variantId, quantity: item.quantity }));
+  let buyable: typeof wanted = [];
+  try {
+    const preview = wanted.length > 0 ? await previewCart(wanted) : null;
+    buyable = wanted.filter((line) =>
+      preview?.lines.some(
+        (l) => l.variantId === line.variantId.toLowerCase() && l.availability === "available",
+      ),
+    );
+  } catch (error) {
+    if (!isApiError(error)) throw error;
+    redirect(here);
   }
-  if (skipped > 0) {
-    const note = flashCookie("cart-skipped", production());
+  if (buyable.length === 0) {
+    const note = flashCookie("again-none", production());
     (await cookies()).set(note.name, note.value, note.options);
+    redirect(here);
   }
-  redirect("/cart");
+  let skipped: number;
+  try {
+    skipped = await replaceBag(token, buyable);
+  } catch (error) {
+    if (!isApiError(error)) throw error;
+    if (error.status === 401 || error.code === "ACCOUNT_SUSPENDED") return endSession(here);
+    redirect(here);
+  }
+  const left = items.length - buyable.length + skipped;
+  redirect(left > 0 ? "/checkout?notice=again-skipped" : "/checkout");
 }

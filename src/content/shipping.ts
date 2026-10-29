@@ -67,7 +67,7 @@ export function shippingContent(policies: ShopPolicies | null): InfoContent {
         heading: "If something goes wrong",
         blocks: [
           "If your parcel is late, looks damaged or opened when it arrives, or tracking hasn't moved for a few days, [contact us](/contact) and we'll sort it out with the courier.",
-          `If an item arrives damaged or isn't what you ordered, tell us within ${r.reportProblemHours} hours of delivery; see [Returns & refunds](/returns#damaged).`,
+          `If an item arrives defective or isn't what you ordered, tell us within ${r.exchangeDays} days of delivery and keep it unused; see [Exchange policy](/returns#exchange).`,
         ],
       },
     ],

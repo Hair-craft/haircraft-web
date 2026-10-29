@@ -10,6 +10,8 @@ export const COMING_SOON_PATH = "/coming-soon";
 const ALWAYS_SERVED = [
   // Lets monitoring check the storefront and API even before launch.
   /^\/bff\/health$/,
+  // The API's cache refresh after admin changes (secret-protected).
+  /^\/bff\/revalidate$/,
   /^\/robots\.txt$/,
   /^\/sitemap\.xml$/,
   /^\/(icon|apple-icon)(\.\w+)?$/,

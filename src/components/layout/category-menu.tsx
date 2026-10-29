@@ -2,29 +2,59 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { cx } from "@/lib/cx";
 import { ChevronDownIcon } from "@/components/ui/icons";
-import type { NavItem } from "./nav";
+import { splitMenu, type NavItem } from "./nav";
 
 /**
- * Desktop category bar. A category with sub-categories opens a small panel
- * (disclosure pattern): click or Enter/Space toggles it, Escape closes it
- * and returns focus, and it closes when focus or the pointer leaves.
+ * Category bar, from tablet width up (phones use the menu button). The
+ * first five categories sit in the bar; any more go under "More". A
+ * category with sub-categories opens a small panel (disclosure pattern):
+ * click or Enter/Space toggles it, Escape closes it and returns focus, and
+ * it closes when focus or the pointer leaves.
  */
 export function CategoryMenu({ items }: { items: NavItem[] }) {
+  const { shown, more } = splitMenu(items);
   return (
-    <nav aria-label="Categories" className="hidden lg:block">
-      <ul className="flex items-center gap-1">
-        {items.map((item) =>
+    <nav aria-label="Categories" className="hidden md:block">
+      <ul className="flex items-center gap-0.5 lg:gap-1">
+        {shown.map((item) =>
           item.children.length > 0 ? (
-            <MenuWithChildren key={item.href} item={item} />
+            <DropDown key={item.href} label={item.label}>
+              <PanelLink href={item.href} strong>
+                All {item.label}
+              </PanelLink>
+              {item.children.map((child) => (
+                <PanelLink key={child.href} href={child.href}>
+                  {child.label}
+                </PanelLink>
+              ))}
+            </DropDown>
           ) : (
             <li key={item.href}>
               <NavLink href={item.href} label={item.label} />
             </li>
           ),
         )}
+        {more.length > 0 ? (
+          <DropDown label="More" alignRight>
+            {more.map((item) => (
+              <li key={item.href}>
+                <ul>
+                  <PanelLink href={item.href} strong>
+                    {item.label}
+                  </PanelLink>
+                  {item.children.map((child) => (
+                    <PanelLink key={child.href} href={child.href} indent>
+                      {child.label}
+                    </PanelLink>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </DropDown>
+        ) : null}
       </ul>
     </nav>
   );
@@ -38,7 +68,7 @@ function NavLink({ href, label }: { href: string; label: string }) {
       href={href}
       aria-current={active ? "page" : undefined}
       className={cx(
-        "rounded-full px-3 py-2 text-sm tracking-wide transition-colors hover:bg-deep/5",
+        "rounded-full px-2 py-2 text-sm tracking-wide whitespace-nowrap transition-colors hover:bg-deep/5 lg:px-3",
         "focus-visible:outline-2 focus-visible:outline-deep",
         active && "font-semibold",
       )}
@@ -48,7 +78,44 @@ function NavLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-function MenuWithChildren({ item }: { item: NavItem }) {
+function PanelLink({
+  href,
+  strong,
+  indent,
+  children,
+}: {
+  href: string;
+  strong?: boolean;
+  indent?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className={cx(
+          "block rounded-xl px-3 py-2 text-sm hover:bg-mint focus-visible:outline-2 focus-visible:outline-deep",
+          strong && "font-semibold",
+          indent && "pl-6",
+        )}
+      >
+        {children}
+      </Link>
+    </li>
+  );
+}
+
+/** A bar item that opens a panel of links. */
+function DropDown({
+  label,
+  alignRight,
+  children,
+}: {
+  label: string;
+  /** "More" sits at the end of the bar: its panel opens towards the left. */
+  alignRight?: boolean;
+  children: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const container = useRef<HTMLLIElement>(null);
@@ -99,35 +166,22 @@ function MenuWithChildren({ item }: { item: NavItem }) {
           }
           setOpen((value) => !value);
         }}
-        className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm tracking-wide hover:bg-deep/5 focus-visible:outline-2 focus-visible:outline-deep"
+        className="inline-flex items-center gap-1 rounded-full px-2 py-2 text-sm tracking-wide whitespace-nowrap hover:bg-deep/5 focus-visible:outline-2 focus-visible:outline-deep lg:px-3"
       >
-        {item.label}
+        {label}
         <ChevronDownIcon
           width={14}
           height={14}
           className={cx("transition-transform", open && "rotate-180")}
         />
       </button>
-      <div id={panelId} hidden={!open} className="absolute top-full left-0 z-40 min-w-56 pt-2">
-        <ul className="rounded-2xl border border-deep/10 bg-white p-2 shadow-xl">
-          <li>
-            <Link
-              href={item.href}
-              className="block rounded-xl px-3 py-2 text-sm font-semibold hover:bg-mint focus-visible:outline-2 focus-visible:outline-deep"
-            >
-              All {item.label}
-            </Link>
-          </li>
-          {item.children.map((child) => (
-            <li key={child.href}>
-              <Link
-                href={child.href}
-                className="block rounded-xl px-3 py-2 text-sm hover:bg-mint focus-visible:outline-2 focus-visible:outline-deep"
-              >
-                {child.label}
-              </Link>
-            </li>
-          ))}
+      <div
+        id={panelId}
+        hidden={!open}
+        className={cx("absolute top-full z-40 min-w-56 pt-2", alignRight ? "right-0" : "left-0")}
+      >
+        <ul className="max-h-[70vh] overflow-y-auto rounded-2xl border border-deep/10 bg-white p-2 shadow-xl">
+          {children}
         </ul>
       </div>
     </li>

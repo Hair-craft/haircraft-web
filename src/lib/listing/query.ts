@@ -1,6 +1,6 @@
 /**
  * The product listing's state lives in the address, e.g.
- * `/shop/wigs?length=18,22&color=natural-black&min=4000&sort=price-asc&page=2`,
+ * `/shop/wigs?length=18,22&color=natural-black&size=13x15&min=4000&sort=price-asc&page=2`,
  * so a view can be shared, bookmarked and stepped through with Back.
  *
  * Pure (no React, no server code), so the rules are unit-tested. Anything
@@ -49,6 +49,8 @@ export interface FilterOptions {
   lengths: number[];
   colors: string[];
   textures: string[];
+  /** Sizes in cm as height x width, e.g. `13x15` (smallest first). */
+  sizes: string[];
   price: { min: string; max: string } | null;
 }
 
@@ -59,6 +61,8 @@ export interface ListingState {
   /** Colour and texture names exactly as the API spells them. */
   colors: string[];
   textures: string[];
+  /** Sizes as `13x15` (cm), as the API spells them. */
+  sizes: string[];
   /** Whole rupees. */
   min: number | null;
   max: number | null;
@@ -74,6 +78,7 @@ export const EMPTY_STATE: ListingState = {
   lengths: [],
   colors: [],
   textures: [],
+  sizes: [],
   min: null,
   max: null,
   inStock: false,
@@ -118,6 +123,7 @@ export function parseListing(params: SearchParams, options: FilterOptions): List
   const lengths = pick(options.lengths, new Set(values(params, "length")), String);
   const colors = pick(options.colors, new Set(values(params, "color")), slugify);
   const textures = pick(options.textures, new Set(values(params, "texture")), slugify);
+  const sizes = pick(options.sizes ?? [], new Set(values(params, "size")), String);
 
   const rupees = (key: string) => {
     const value = single(params, key);
@@ -145,6 +151,7 @@ export function parseListing(params: SearchParams, options: FilterOptions): List
     lengths,
     colors,
     textures,
+    sizes,
     min,
     max,
     inStock: single(params, "instock") === "1",
@@ -166,6 +173,7 @@ export function listingHref(base: string, state: ListingState): string {
   add("length", state.lengths);
   add("color", state.colors.map(slugify));
   add("texture", state.textures.map(slugify));
+  add("size", state.sizes);
   if (state.min !== null) add("min", [state.min]);
   if (state.max !== null) add("max", [state.max]);
   if (state.inStock) add("instock", [1]);
@@ -204,6 +212,7 @@ export function hasFilters(state: ListingState): boolean {
     state.lengths.length > 0 ||
     state.colors.length > 0 ||
     state.textures.length > 0 ||
+    state.sizes.length > 0 ||
     state.min !== null ||
     state.max !== null ||
     state.inStock
@@ -223,6 +232,7 @@ export function toApiQuery(state: ListingState, perPage: number, category?: stri
     length: state.lengths.length > 0 ? state.lengths : undefined,
     color: state.colors.length > 0 ? state.colors : undefined,
     texture: state.textures.length > 0 ? state.textures : undefined,
+    size: state.sizes.length > 0 ? state.sizes : undefined,
     minPrice: state.min ?? undefined,
     maxPrice: state.max ?? undefined,
     inStock: state.inStock || undefined,
@@ -242,6 +252,9 @@ export function priceLabel(min: number | null, max: number | null): string {
 }
 
 export const lengthLabel = (inches: number) => `${inches} inch`;
+
+/** `13x15` → "13 × 15 cm". */
+export const sizeFilterLabel = (size: string) => `${size.replace("x", " × ")} cm`;
 
 export interface PriceBand {
   label: string;
@@ -301,6 +314,11 @@ export function activeFilters(state: ListingState): ActiveFilter[] {
     chips.push({
       label: `Texture: ${texture}`,
       without: withChange(state, { textures: state.textures.filter((t) => t !== texture) }),
+    });
+  for (const size of state.sizes)
+    chips.push({
+      label: `Size: ${sizeFilterLabel(size)}`,
+      without: withChange(state, { sizes: state.sizes.filter((x) => x !== size) }),
     });
   if (state.min !== null || state.max !== null)
     chips.push({

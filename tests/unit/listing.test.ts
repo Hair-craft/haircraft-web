@@ -25,6 +25,7 @@ const options: FilterOptions = {
   lengths: [14, 16, 18, 20.5],
   colors: ["Dark Brown", "Natural Black"],
   textures: ["Body Wave", "Straight"],
+  sizes: ["13x15", "15x16"],
   price: { min: "3999.00", max: "21999.00" },
 };
 
@@ -38,6 +39,7 @@ describe("reading the address", () => {
           length: "18,14",
           color: "natural-black",
           texture: ["body-wave", "straight"],
+          size: "15x16,20x20",
           min: "4000",
           max: "9000",
           instock: "1",
@@ -51,12 +53,25 @@ describe("reading the address", () => {
       lengths: [14, 18],
       colors: ["Natural Black"],
       textures: ["Body Wave", "Straight"],
+      // Only sizes the filters offer.
+      sizes: ["15x16"],
       min: 4000,
       max: 9000,
       inStock: true,
       sort: "price-asc",
       page: 2,
     });
+  });
+
+  it("writes and reads the size filter, with a removable chip", () => {
+    const state = parseListing({ size: "13x15" }, options);
+    expect(state.sizes).toEqual(["13x15"]);
+    expect(listingHref("/shop", state)).toBe("/shop?size=13x15");
+    expect(toApiQuery(state, 24).size).toEqual(["13x15"]);
+    expect(hasFilters(state)).toBe(true);
+    const [chip] = activeFilters(state);
+    expect(chip.label).toBe("Size: 13 × 15 cm");
+    expect(chip.without.sizes).toEqual([]);
   });
 
   it("drops anything unknown or malformed instead of failing", () => {

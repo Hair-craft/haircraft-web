@@ -105,7 +105,7 @@ test.describe("structured data", () => {
       expect(offer.shippingDetails).toMatchObject({
         shippingDestination: { addressCountry: "IN" },
       });
-      expect(offer.hasMerchantReturnPolicy).toMatchObject({ merchantReturnDays: 7 });
+      expect(offer.hasMerchantReturnPolicy).toMatchObject({ merchantReturnDays: 4 });
     }
     expect(data.find((d) => d["@type"] === "BreadcrumbList")).toBeTruthy();
     expect(data.find((d) => d["@type"] === "OnlineStore")).toMatchObject({

@@ -107,7 +107,14 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
   // One address per option: `?variant=<SKU>` exactly as the catalogue spells it, nothing else.
   const asked = typeof query.variant === "string" ? query.variant : undefined;
   const variant = variantFromSku(product.variants, asked);
-  const known = asked !== undefined && variant?.sku.toLowerCase() === asked.trim().toLowerCase();
+  const askedVariant =
+    asked === undefined
+      ? undefined
+      : product.variants.find((v) => v.sku.toLowerCase() === asked.trim().toLowerCase());
+  // A main variant with sub-variants isn't sold itself: its address leads to one of them.
+  const known =
+    askedVariant !== undefined &&
+    (askedVariant.id === variant?.id || variant?.parentVariantId === askedVariant.id);
   const tidy = known && variant ? `?variant=${variant.sku}` : "";
   const extra = Object.keys(query).some((key) => key !== "variant");
   if (extra || (asked !== undefined && `?variant=${asked}` !== tidy))

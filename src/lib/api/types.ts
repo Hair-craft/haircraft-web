@@ -120,8 +120,15 @@ export interface PublicVariant {
   color: string | null;
   texture: string | null;
   weightGrams: number | null;
+  /** Size in cm (height × width), both or neither. */
+  sizeHeightCm: number | null;
+  sizeWidthCm: number | null;
+  /** The main variant this is a sub-variant of; null for a main variant. */
+  parentVariantId: string | null;
   attributes: Record<string, string>;
   inStock: boolean;
+  /** false for a main variant with sub-variants: one of those is bought instead. */
+  purchasable: boolean;
 }
 
 /** `GET /products/:slug`: everything the product page needs. */
@@ -129,13 +136,22 @@ export interface PublicProduct {
   id: string;
   name: string;
   slug: string;
+  /** One line shown in bold above the short description (optional). */
+  headline: string | null;
   shortDescription: string | null;
   description: string | null;
   attributes: Record<string, string>;
   categories: { id: string; name: string; slug: string }[];
   images: ProductImage[];
   variants: PublicVariant[];
-  options: { lengths: number[]; colors: string[]; textures: string[]; weights: number[] };
+  options: {
+    lengths: number[];
+    colors: string[];
+    textures: string[];
+    weights: number[];
+    /** Sizes as height x width in cm, e.g. `13x15`. */
+    sizes: string[];
+  };
   priceRange: { min: Money; max: Money };
   inStock: boolean;
   rating: number;

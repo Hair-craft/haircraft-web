@@ -7,9 +7,12 @@ import {
   detailRows,
   defaultVariant,
   galleryFor,
+  mainChoices,
   pick,
   pickerAxes,
   saving,
+  settle,
+  subVariantLabel,
   valueLabel,
   variantFromSku,
 } from "@/lib/product/variants";
@@ -25,6 +28,10 @@ const variant = (sku: string, patch: Partial<PublicVariant> = {}): PublicVariant
   color: "Natural Black",
   texture: "Straight",
   weightGrams: 100,
+  sizeHeightCm: null,
+  sizeWidthCm: null,
+  parentVariantId: null,
+  purchasable: true,
   attributes: {},
   inStock: true,
   ...patch,
@@ -130,13 +137,14 @@ describe("structured data", () => {
     id: "p",
     name: "Silky Tape-ins",
     slug: "silky-tape-ins",
+    headline: null,
     shortDescription: "Short",
     description: "Long description",
     attributes: {},
     categories: [{ id: "c", name: "Tape-in Extensions", slug: "tape-in-extensions" }],
     images: [],
     variants,
-    options: { lengths: [18, 20], colors: [], textures: [], weights: [] },
+    options: { lengths: [18, 20], colors: [], textures: [], weights: [], sizes: [] },
     priceRange: { min: "5000.00", max: "5000.00" },
     inStock: true,
     rating: 4.5,
@@ -183,6 +191,86 @@ describe("the Details list", () => {
     ).toEqual([
       ["Length", "10 inch / 25 cm"],
       ["Colour", "Black"],
+    ]);
+  });
+});
+
+describe("sub-variants and size", () => {
+  // TOP-NB (Natural Black) has sub-variants 13 × 15 cm (sold out) and 15 × 16 cm;
+  // TOP-BR (Brown) has none.
+  const main = variant("TOP-NB", { purchasable: false, inStock: false, lengthInches: null });
+  const small = variant("TOP-NB-S", {
+    parentVariantId: "TOP-NB",
+    lengthInches: null,
+    sizeHeightCm: 13,
+    sizeWidthCm: 15,
+    inStock: false,
+  });
+  const large = variant("TOP-NB-L", {
+    parentVariantId: "TOP-NB",
+    lengthInches: null,
+    sizeHeightCm: 15,
+    sizeWidthCm: 16,
+    price: "5999.00",
+    effectivePrice: "5999.00",
+  });
+  const brown = variant("TOP-BR", { color: "Brown", lengthInches: null, inStock: false });
+  const all = [main, small, large, brown];
+
+  it("never starts on a main variant that has sub-variants", () => {
+    expect(defaultVariant(all)?.sku).toBe("TOP-NB-L");
+    expect(variantFromSku(all, "top-nb")?.sku).toBe("TOP-NB-L");
+    expect(variantFromSku(all, "TOP-NB-S")?.sku).toBe("TOP-NB-S");
+    expect(settle(all, brown)).toBe(brown);
+  });
+
+  it("offers main variants first, in stock when any sub-variant is", () => {
+    const mains = mainChoices(all);
+    expect(mains.map((v) => [v.sku, v.inStock])).toEqual([
+      ["TOP-NB", true],
+      ["TOP-BR", false],
+    ]);
+    expect(pickerAxes(mains)).toEqual(["color"]);
+  });
+
+  it("labels a sub-variant by what it adds to its main variant", () => {
+    expect(subVariantLabel(small, main)).toBe("13 × 15 cm");
+    expect(
+      subVariantLabel(variant("X", { parentVariantId: "TOP-NB", lengthInches: null }), main),
+    ).toBe("X");
+  });
+
+  it("treats size as an option, smallest first", () => {
+    expect(axisValues([large, small], "size")).toEqual(["13x15", "15x16"]);
+    expect(valueLabel("size", "13x15")).toBe("13 × 15 cm");
+    expect(pickerAxes([small, large])).toEqual(["size"]);
+  });
+
+  it("gives search engines only what can be bought", () => {
+    const ld = productJsonLd(
+      {
+        id: "p",
+        name: "Silk Topper",
+        slug: "silk-topper",
+        headline: null,
+        shortDescription: null,
+        description: null,
+        attributes: {},
+        categories: [],
+        images: [],
+        variants: all,
+        options: { lengths: [], colors: [], textures: [], weights: [], sizes: ["13x15", "15x16"] },
+        priceRange: { min: "5000.00", max: "5999.00" },
+        inStock: true,
+        rating: 0,
+        reviewCount: 0,
+      },
+      "https://shop.example",
+    );
+    expect(ld.offers.offers.map((o: { sku: string }) => o.sku)).toEqual([
+      "TOP-NB-S",
+      "TOP-NB-L",
+      "TOP-BR",
     ]);
   });
 });

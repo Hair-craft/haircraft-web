@@ -23,6 +23,7 @@ import { faqJsonLd, faqs, trustPoints, whyCards } from "./content";
 import { story } from "@/content/about";
 import { brandPromises, type BrandPromise } from "./copy";
 import { FaqAccordion } from "./faq-accordion";
+import { storyImage, whyImages } from "./home-images";
 import { ProductTabs } from "./product-tabs";
 import { RangeExplorer, type RangeItem } from "./range-explorer";
 import { SectionHeader } from "./section-header";
@@ -194,13 +195,9 @@ export async function MostLovedSection() {
 
 // ── Why HairCraft (stacking cards) ──────────────────────────────────────
 
-export async function WhySection() {
-  const products = (await load(() => getNewArrivals(8))) ?? [];
-  const photos = products.map(photo).filter((p): p is NonNullable<typeof p> => p !== null);
-  const cards = whyCards.map((card, i) => ({
-    ...card,
-    image: photos.length > 0 ? photos[i % photos.length] : null,
-  }));
+export function WhySection() {
+  // Fixed photos (home-images.ts), not the newest products'.
+  const cards = whyCards.map((card, i) => ({ ...card, image: whyImages[i % whyImages.length] }));
   return (
     <section aria-labelledby="why-heading" className={`${shell} py-20`}>
       <SectionHeader
@@ -284,22 +281,19 @@ export function PromiseStrip({ freeShippingThreshold }: { freeShippingThreshold:
 // ── Our story ───────────────────────────────────────────────────────────
 
 /** HairCraft's story (shared with /about, src/content/about.ts). */
-export async function StorySection() {
-  const products = (await load(() => getNewArrivals(8))) ?? [];
-  const cover = photo(products.find((p) => p.image) ?? null);
+export function StorySection() {
+  const cover = storyImage;
   return (
     <section aria-labelledby="story-heading" className="bg-[#f6efe4]">
       <div className={`${shell} grid items-center gap-10 py-20 lg:grid-cols-2 lg:gap-20`}>
         <Reveal className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-mint-deep lg:aspect-[5/6]">
-          {cover ? (
-            <Image
-              src={cover.src}
-              alt={cover.alt}
-              fill
-              sizes="(min-width: 1024px) 45vw, 92vw"
-              className="object-cover"
-            />
-          ) : null}
+          <Image
+            src={cover.src}
+            alt={cover.alt}
+            fill
+            sizes="(min-width: 1024px) 45vw, 92vw"
+            className="object-cover"
+          />
         </Reveal>
         <Reveal delay={0.1}>
           <p className="text-xs tracking-[0.35em] text-deep-soft uppercase">Our story</p>

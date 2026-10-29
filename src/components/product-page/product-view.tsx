@@ -13,11 +13,20 @@ import {
   axisValues,
   choiceStatus,
   detailRows,
+  defaultVariant,
   galleryFor,
+  mainChoices,
+  mainOf,
   pick,
   pickerAxes,
   saving,
+  settle,
+  sizeKey,
+  sizeLabel,
+  subVariantLabel,
+  subVariantsOf,
   valueLabel,
+  valueOf,
 } from "@/lib/product/variants";
 import { RichText } from "@/components/info/rich-text";
 import { deliveryAndReturns } from "./content";
@@ -41,7 +50,7 @@ export function ProductView({
 }) {
   const { addedToBag } = useWishlist();
   const [variant, setVariant] = useState(
-    () => product.variants.find((v) => v.sku === initialSku) ?? product.variants[0],
+    () => product.variants.find((v) => v.sku === initialSku) ?? defaultVariant(product.variants),
   );
   const choose = (event: MouseEvent, next: PublicVariant) => {
     // Without JavaScript these are plain links; with it, no reload.
@@ -51,7 +60,19 @@ export function ProductView({
   };
 
   const images = galleryFor(product.images, variant?.id);
-  const axes = pickerAxes(product.variants);
+  // With sub-variants: the option rows choose a main variant, then a row of
+  // its sub-variants chooses what is bought. Without, they choose the variant.
+  const hasSubs = product.variants.some((v) => v.parentVariantId !== null);
+  const mains = hasSubs ? mainChoices(product.variants) : product.variants;
+  const main = variant
+    ? (mains.find((m) => m.id === mainOf(product.variants, variant).id) ?? variant)
+    : undefined;
+  const subs = hasSubs && main ? subVariantsOf(product.variants, main.id) : [];
+  const subPricesDiffer = new Set(subs.map((v) => v.effectivePrice)).size > 1;
+  /** The variant bought when a main-level choice is clicked. */
+  const bought = (choice: PublicVariant) =>
+    settle(product.variants, product.variants.find((v) => v.id === choice.id) ?? choice);
+  const axes = pickerAxes(mains);
   const saved = variant ? saving(variant) : null;
 
   return (
@@ -115,16 +136,21 @@ export function ProductView({
             </div>
           ) : null}
 
+          {product.headline ? (
+            <p className="mt-5 text-lg leading-snug font-bold text-deep">{product.headline}</p>
+          ) : null}
           {product.shortDescription ? (
-            <p className="mt-5 leading-relaxed text-deep/75">{product.shortDescription}</p>
+            <p className={cx("leading-relaxed text-deep/75", product.headline ? "mt-2" : "mt-5")}>
+              {product.shortDescription}
+            </p>
           ) : null}
 
-          {variant ? (
+          {variant && main ? (
             <div className="mt-6 flex flex-col gap-5">
               {AXES.map(({ key, label }) => {
-                const values = axisValues(product.variants, key);
+                const values = axisValues(mains, key);
                 if (values.length === 0) return null;
-                const current = variant[key];
+                const current = valueOf(main, key);
                 if (!axes.includes(key))
                   return (
                     <p key={key} className="text-sm">
@@ -139,8 +165,8 @@ export function ProductView({
                     current={current === null ? "" : valueLabel(key, current)}
                   >
                     {values.map((value) => {
-                      const target = pick(product.variants, variant, key, value);
-                      const status = choiceStatus(product.variants, variant, key, value);
+                      const target = bought(pick(mains, main, key, value));
+                      const status = choiceStatus(mains, main, key, value);
                       const chosen = value === current;
                       return (
                         <a
@@ -171,6 +197,39 @@ export function ProductView({
                   </OptionRow>
                 );
               })}
+              {subs.length > 0 ? (
+                <OptionRow
+                  label="Option"
+                  current={variant.id === main.id ? "" : subVariantLabel(variant, main)}
+                >
+                  {subs.map((sub) => {
+                    const chosen = sub.id === variant.id;
+                    return (
+                      <a
+                        key={sub.id}
+                        href={variantHref(product.slug, sub)}
+                        onClick={(event) => choose(event, sub)}
+                        aria-current={chosen || undefined}
+                        className={cx(
+                          "inline-flex h-10 min-w-12 items-center justify-center gap-1.5 rounded-full border px-4 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep",
+                          chosen
+                            ? "border-deep bg-deep text-mint"
+                            : "border-deep/20 bg-white/70 hover:border-deep/60",
+                          !sub.inStock && "line-through decoration-1",
+                        )}
+                      >
+                        {subVariantLabel(sub, main)}
+                        {subPricesDiffer ? (
+                          <span className={chosen ? "text-mint/80" : "text-deep/70"}>
+                            {formatPrice(sub.effectivePrice)}
+                          </span>
+                        ) : null}
+                        {!sub.inStock ? <span className="sr-only">, sold out</span> : null}
+                      </a>
+                    );
+                  })}
+                </OptionRow>
+              ) : null}
             </div>
           ) : null}
 
@@ -212,6 +271,7 @@ export function ProductView({
                     ],
                     ["Colour", variant.color],
                     ["Texture", variant.texture],
+                    ["Size", sizeKey(variant) === null ? null : sizeLabel(sizeKey(variant)!)],
                     ["Weight", variant.weightGrams === null ? null : `${variant.weightGrams} g`],
                     ...Object.entries(variant.attributes),
                   ] as [string, string | null][])
@@ -224,7 +284,7 @@ export function ProductView({
             ))}
           </dl>
         </Fold>
-        <Fold title="Delivery & returns">
+        <Fold title="Delivery & exchange">
           {deliveryAndReturns.map((paragraph) => (
             <p key={paragraph} className="mt-3 first:mt-0">
               <RichText text={paragraph} />

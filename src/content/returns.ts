@@ -2,78 +2,55 @@ import { returnRules as r } from "./returns-rules";
 import type { InfoContent } from "./types";
 
 /**
- * DRAFT — OWNER TO CONFIRM: the returns, refunds and cancellations policy
- * approved as the starting draft (S14, open question 3). Cancelling before
- * shipping and refunds to the original payment method are how the shop
- * already works; the rest is the owner's to confirm or change.
+ * The exchange policy (owner's decision, 2026-10-28): exchange only, within
+ * a few days of delivery, for defective (or wrong) items that are unused.
+ * No returns or refunds after delivery; cancelling before shipping is still
+ * refunded, which is how the shop already works.
  */
 export const returnsContent: InfoContent = {
   intro:
-    "Hair is a personal-care product, so we can only take back hair that hasn't been used. If anything is wrong with your order, we'll put it right.",
+    "Hair is a personal-care product, so we don't take back hair once it has been delivered. If an item arrives defective, we exchange it.",
   summary: [
-    "Cancel any time before it ships",
-    `Damaged or wrong item? Tell us within ${r.reportProblemHours} hours`,
-    `Unused hair: return within ${r.changeOfMindDays} days`,
+    "Cancel any time before it ships, with a full refund",
+    `Defective and unused? Exchange within ${r.exchangeDays} days of delivery`,
+    "No returns or refunds after delivery",
   ],
   sections: [
+    {
+      id: "exchange",
+      heading: "Exchange for defective items",
+      blocks: [
+        `If an item arrives **defective** (or isn't what you ordered), you can exchange it within **${r.exchangeDays} days of delivery**, as long as it is **unused**:`,
+        {
+          list: [
+            "it hasn't been worn, washed, cut, coloured, heat-styled or treated",
+            "it's in its original packaging, with the seal and any tags intact",
+          ],
+        },
+        {
+          steps: [
+            `[Contact us](/contact) within ${r.exchangeDays} days of delivery, with your order number.`,
+            "Send photos of the defect and the packaging, or an unboxing video if you made one.",
+            "Once we've checked it, we arrange the collection at no cost to you and send a replacement: the same item, or another of the same value if it's sold out.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "no-returns",
+      heading: "No returns or refunds after delivery",
+      blocks: [
+        "For hygiene reasons, we don't accept returns or give refunds once an order has been delivered, including for a change of mind.",
+        "Items that have been worn, washed, cut, coloured, heat-styled or treated, wigs tried on without their protective cap, and items without their original packaging and seal can't be exchanged.",
+      ],
+    },
     {
       id: "cancel",
       heading: "Cancelling an order",
       blocks: [
         "You can cancel an order yourself until it ships: open it in [My orders](/account/orders) and choose **Cancel order**.",
-        "If you paid online, the full amount goes back to the way you paid. If you chose cash on delivery, there's nothing to refund.",
-        "Once an order has shipped it can't be cancelled, but you may be able to return it (below).",
-      ],
-    },
-    {
-      id: "damaged",
-      heading: "Damaged, faulty or wrong items",
-      blocks: [
-        `If your order arrives damaged, faulty, or isn't what you ordered, tell us within **${r.reportProblemHours} hours of delivery**. We'll send a replacement or give you a full refund, including delivery.`,
-        {
-          steps: [
-            "[Contact us](/contact) with your order number.",
-            "Send photos of the item and the packaging, or an unboxing video if you made one.",
-            "We'll reply within one working day and arrange the collection, at no cost to you.",
-          ],
-        },
-      ],
-    },
-    {
-      id: "change-of-mind",
-      heading: "Changed your mind?",
-      blocks: [
-        `You can return or exchange hair within **${r.changeOfMindDays} days of delivery** if:`,
-        {
-          list: [
-            "it hasn't been worn, washed, cut, coloured or styled",
-            "it's in its original packaging, with the seal and any tags intact",
-          ],
-        },
-        "Tell us first through [Contact us](/contact) and we'll explain how to send it back. You pay for the return delivery. When it reaches us and passes our check, we refund the price of the item (not the original delivery charge) or send the exchange.",
-      ],
-    },
-    {
-      id: "not-returnable",
-      heading: "What we can't take back",
-      blocks: [
-        "For hygiene reasons, we can't accept returns of:",
-        {
-          list: [
-            "wigs that have been tried on without their protective cap or worn",
-            "hair that has been worn, washed, cut, coloured, heat-styled or treated",
-            "items without their original packaging and seal",
-          ],
-        },
-        "This doesn't affect your right to a refund or replacement for damaged, faulty or wrong items.",
-      ],
-    },
-    {
-      id: "refunds",
-      heading: "How refunds are paid",
-      blocks: [
-        `Refunds go back to the way you paid (UPI, card, net banking or wallet) within **${r.refundWorkingDays} working days** of being approved. Your bank may take a few more days to show it.`,
-        "You can see a refund's progress on the order in [My orders](/account/orders).",
+        `If you paid online, the full amount goes back to the way you paid (UPI, card, net banking or wallet) within **${r.refundWorkingDays} working days**. Your bank may take a few more days to show it. If you chose cash on delivery, there's nothing to refund.`,
+        "Once an order has shipped it can't be cancelled.",
       ],
     },
     {

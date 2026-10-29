@@ -10,11 +10,19 @@ export interface WhyStackCard extends WhyCard {
 
 /**
  * "Why HairCraft": large photo-and-text cards. On desktop (and only when
- * motion is welcome) each card sticks near the top and the next one slides
- * over it, while GSAP ScrollTrigger gently shrinks and dims the card below,
- * like the reference's stacking cards. On phones, and with reduced motion,
- * it is a plain list: no sticking, no scripted motion.
+ * motion is welcome) each card sticks just below the header, a step lower
+ * than the one before, and the next one slides over it while GSAP
+ * ScrollTrigger gently shrinks the card below, like the reference's stacking
+ * cards. On phones, and with reduced motion, it is a plain list: no sticking,
+ * no scripted motion.
+ *
+ * Cards stay fully opaque (fading them let the text of the card below show
+ * through the next one), and only `transform` is animated, with a little
+ * smoothing, so scrolling stays smooth.
  */
+/** Where card `i` sticks, in rem: below the sticky header (about 5.6rem), each a step lower. */
+const stickyTop = (i: number) => 7 + i * 1.5;
+
 export function WhyStack({ cards }: { cards: WhyStackCard[] }) {
   const root = useRef<HTMLDivElement>(null);
 
@@ -44,19 +52,26 @@ export function WhyStack({ cards }: { cards: WhyStackCard[] }) {
         const items = gsap.utils.toArray<HTMLElement>("[data-why-card]", element);
         items.slice(0, -1).forEach((card, i) => {
           gsap.to(card.querySelector("[data-why-inner]"), {
-            scale: 0.92,
-            opacity: 0.55,
+            scale: 0.94,
             ease: "none",
             scrollTrigger: {
               trigger: items[i + 1],
               start: "top bottom",
-              end: "top top+=160",
-              scrub: true,
+              end: `top top+=${stickyTop(i + 1) * 16}`,
+              // Follows the scroll with a short catch-up instead of every jitter.
+              scrub: 0.6,
             },
           });
         });
       });
-      revert = () => mm.revert();
+      // Positions are measured once fonts and photos have settled.
+      const refresh = () => ScrollTrigger.refresh();
+      if (document.readyState === "complete") refresh();
+      else window.addEventListener("load", refresh, { once: true });
+      revert = () => {
+        window.removeEventListener("load", refresh);
+        mm.revert();
+      };
     };
     if (wanted.matches) void load();
     else wanted.addEventListener("change", start);
@@ -75,11 +90,11 @@ export function WhyStack({ cards }: { cards: WhyStackCard[] }) {
           key={card.title}
           data-why-card
           className="lg:motion-safe:sticky"
-          style={{ top: `${7 + i * 1.25}rem` }}
+          style={{ top: `${stickyTop(i)}rem` }}
         >
           <article
             data-why-inner
-            className="grid origin-top overflow-hidden rounded-[2rem] bg-white shadow-xl ring-1 shadow-deep/5 ring-deep/5 lg:min-h-[28rem] lg:grid-cols-2"
+            className="grid origin-top overflow-hidden rounded-[2rem] bg-white shadow-xl ring-1 shadow-deep/5 ring-deep/5 will-change-transform lg:min-h-[28rem] lg:grid-cols-2"
           >
             <div className="relative aspect-[4/3] bg-mint-deep lg:aspect-auto">
               {card.image ? (

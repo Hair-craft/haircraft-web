@@ -11,6 +11,9 @@ function optionName(variant: PublicVariant): string {
     variant.lengthInches === null ? null : `${variant.lengthInches} in`,
     variant.color,
     variant.texture,
+    variant.sizeHeightCm == null || variant.sizeWidthCm == null
+      ? null
+      : `${variant.sizeHeightCm} × ${variant.sizeWidthCm} cm`,
     variant.weightGrams === null ? null : `${variant.weightGrams} g`,
   ]
     .filter(Boolean)
@@ -33,7 +36,9 @@ export function productJsonLd(
   extra: { policies?: ShopPolicies | null; reviews?: PublicReview[] } = {},
 ) {
   const url = new URL(`/product/${encodeURIComponent(product.slug)}`, siteUrl).toString();
-  const available = product.variants.filter((v) => v.inStock).length;
+  // Only what can be bought (not a main variant that has sub-variants).
+  const variants = product.variants.filter((v) => v.purchasable !== false);
+  const available = variants.filter((v) => v.inStock).length;
   const policies = extra.policies ?? null;
   const reviews =
     product.reviewCount > 0 ? (extra.reviews ?? []).slice(0, MAX_JSON_LD_REVIEWS) : [];
@@ -44,7 +49,7 @@ export function productJsonLd(
     description: product.description ?? product.shortDescription ?? undefined,
     image: product.images.map((image) => image.urls.large),
     url,
-    ...(product.variants.length === 1 ? { sku: product.variants[0].sku } : {}),
+    ...(variants.length === 1 ? { sku: variants[0].sku } : {}),
     brand: { "@type": "Brand", name: "HairCraft" },
     category: product.categories[0]?.name,
     offers: {
@@ -52,10 +57,10 @@ export function productJsonLd(
       priceCurrency: "INR",
       lowPrice: product.priceRange.min,
       highPrice: product.priceRange.max,
-      offerCount: product.variants.length,
+      offerCount: variants.length,
       availability: available > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       url,
-      offers: product.variants.map((variant) => ({
+      offers: variants.map((variant) => ({
         "@type": "Offer",
         sku: variant.sku,
         name: optionName(variant) || undefined,

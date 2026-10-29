@@ -15,8 +15,6 @@ import {
   TrustMarquee,
   WhySection,
 } from "@/components/home/sections";
-import { getNewArrivals } from "@/lib/api/catalog";
-import { isApiError } from "@/lib/api/errors";
 import { settings } from "@/lib/env";
 
 export const metadata: Metadata = {
@@ -30,26 +28,15 @@ export const metadata: Metadata = {
   }),
 };
 
-/** The featured hero photo: the newest product that has one (the API being down just hides it). */
-async function featuredProduct() {
-  try {
-    return (await getNewArrivals(8)).find((product) => product.image) ?? null;
-  } catch (error) {
-    if (isApiError(error)) return null;
-    throw error;
-  }
-}
-
 /**
  * The home page, after the two references (gemeriahair.in, 1hairstop.in).
  * The hero renders first; each data section below streams in on its own,
  * so a slow or failing section never holds up (or blanks) the page.
  */
-export default async function HomePage() {
-  const featured = await featuredProduct();
+export default function HomePage() {
   return (
     <>
-      <Hero featured={featured} />
+      <Hero />
       <TrustMarquee />
       <Suspense fallback={<SectionSkeleton title="Shop by category" tall />}>
         <CategorySection />

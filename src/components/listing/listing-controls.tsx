@@ -36,6 +36,9 @@ export function SortSelect({ base, state }: { base: string; state: ListingState 
       {state.textures.length > 0 ? (
         <input type="hidden" name="texture" value={state.textures.map(slugify).join(",")} />
       ) : null}
+      {state.sizes.length > 0 ? (
+        <input type="hidden" name="size" value={state.sizes.join(",")} />
+      ) : null}
       {state.min !== null ? <input type="hidden" name="min" value={state.min} /> : null}
       {state.max !== null ? <input type="hidden" name="max" value={state.max} /> : null}
       {state.inStock ? <input type="hidden" name="instock" value="1" /> : null}

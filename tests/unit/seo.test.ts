@@ -34,6 +34,10 @@ const variant = (sku: string, price: string, inStock = true): PublicVariant => (
   color: "Natural Black",
   texture: "Straight",
   weightGrams: null,
+  sizeHeightCm: null,
+  sizeWidthCm: null,
+  parentVariantId: null,
+  purchasable: true,
   attributes: {},
   inStock,
 });
@@ -42,13 +46,20 @@ const product: PublicProduct = {
   id: "p1",
   name: "Silky Tape-ins",
   slug: "silky-tape-ins",
+  headline: null,
   shortDescription: "Seamless",
   description: null,
   attributes: {},
   categories: [{ id: "c1", name: "Tape-ins", slug: "tape-ins" }],
   images: [],
   variants: [variant("ST-18", "1499.00"), variant("ST-22", "2499.00", false)],
-  options: { lengths: [18, 22], colors: ["Natural Black"], textures: ["Straight"], weights: [] },
+  options: {
+    lengths: [18, 22],
+    colors: ["Natural Black"],
+    textures: ["Straight"],
+    weights: [],
+    sizes: [],
+  },
   priceRange: { min: "1499.00", max: "2499.00" },
   inStock: true,
   rating: 4.5,
@@ -151,8 +162,9 @@ describe("delivery and returns for search engines", () => {
     expect(returnPolicy(SITE)).toMatchObject({
       "@type": "MerchantReturnPolicy",
       applicableCountry: "IN",
-      merchantReturnDays: 7,
-      returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
+      merchantReturnDays: 4,
+      refundType: "https://schema.org/ExchangeRefund",
+      returnFees: "https://schema.org/FreeReturn",
       merchantReturnLink: "https://haircraft.in/returns",
     });
   });
@@ -171,7 +183,7 @@ describe("product structured data", () => {
       availability: "https://schema.org/InStock",
       url: "https://haircraft.in/product/silky-tape-ins?variant=ST-18",
       shippingDetails: { shippingRate: { value: "99.00" } },
-      hasMerchantReturnPolicy: { merchantReturnDays: 7 },
+      hasMerchantReturnPolicy: { merchantReturnDays: 4 },
     });
     expect(data.offers.offers[1]).toMatchObject({
       availability: "https://schema.org/OutOfStock",
@@ -216,7 +228,7 @@ describe("site-wide structured data", () => {
       "@type": "OnlineStore",
       logo: "https://haircraft.in/images/logo.png",
       contactPoint: { contactType: "customer service", areaServed: "IN" },
-      hasMerchantReturnPolicy: { merchantReturnDays: 7 },
+      hasMerchantReturnPolicy: { merchantReturnDays: 4 },
     });
     expect(organization).not.toHaveProperty("sameAs");
   });

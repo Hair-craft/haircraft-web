@@ -19,7 +19,7 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
   }
 
   return (
-    <div className="lg:hidden">
+    <div className="md:hidden">
       <button
         type="button"
         onClick={() => setOpen(true)}

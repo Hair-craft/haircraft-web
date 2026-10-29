@@ -4,7 +4,7 @@ import { placeOrderByApi, shopper, signIn } from "./support/shop";
 
 const PAGES = [
   { link: "Shipping", path: "/shipping", heading: "Shipping and delivery" },
-  { link: "Returns & refunds", path: "/returns", heading: "Returns, refunds and cancellations" },
+  { link: "Exchange policy", path: "/returns", heading: "Exchange policy and cancellations" },
   { link: "FAQ", path: "/faq", heading: "Frequently asked questions" },
   { link: "Contact us", path: "/contact", heading: "Contact us" },
   { link: "About HairCraft", path: "/about", heading: "About HairCraft" },
@@ -72,12 +72,14 @@ test("FAQ: answers open with the mouse and the keyboard, one at a time per group
   await expect(groups.getByRole("link")).toHaveText([
     "Ordering and payment",
     "Delivery",
-    "Returns and refunds",
+    "Cancellations and exchanges",
     "Choosing and caring for your hair",
   ]);
 
   const cancel = page.locator("details", { hasText: "Can I cancel my order?" });
-  const refund = page.locator("details", { hasText: "When will I get my refund?" });
+  const refund = page.locator("details", {
+    hasText: "When will I get my refund for a cancelled order?",
+  });
   await cancel.locator("summary").click();
   await expect(cancel).toHaveAttribute("open", "");
   await expect(cancel.getByRole("link", { name: "My orders" })).toBeVisible();
@@ -141,7 +143,7 @@ test("the bag, checkout and an order link to the policies", async ({ page, reque
     "href",
     "/shipping",
   );
-  await expect(summary.getByRole("link", { name: "Returns & refunds" })).toHaveAttribute(
+  await expect(summary.getByRole("link", { name: "Exchange policy" })).toHaveAttribute(
     "href",
     "/returns",
   );
@@ -150,25 +152,25 @@ test("the bag, checkout and an order link to the policies", async ({ page, reque
   const terms = page.getByRole("link", { name: "Terms of use (opens in a new tab)" });
   await expect(terms).toHaveAttribute("target", "_blank");
   await expect(
-    page.getByRole("link", { name: "Returns & refunds (opens in a new tab)" }),
+    page.getByRole("link", { name: "Exchange policy (opens in a new tab)" }),
   ).toHaveAttribute("href", "/returns");
 
   const order = await placeOrderByApi(request, token, addressId, { pay: "COD", skipAdd: true });
   await page.goto(`${OPEN}/account/orders/${order.orderNumber}`);
   await expect(
-    page.locator("#main").getByRole("link", { name: "Returns & refunds" }),
+    page.locator("#main").getByRole("link", { name: "Exchange policy" }),
   ).toHaveAttribute("href", "/returns");
 });
 
-test("the product page's Delivery & returns links to both policies", async ({ page }) => {
+test("the product page's Delivery & exchange links to both policies", async ({ page }) => {
   await page.goto(OPEN + "/shop");
   await page.locator('a[href^="/product/"]').first().click();
-  await page.getByText("Delivery & returns").click();
+  await page.getByText("Delivery & exchange").click();
   await expect(page.getByRole("link", { name: "Shipping details" })).toHaveAttribute(
     "href",
     "/shipping",
   );
-  await expect(page.getByRole("link", { name: "Returns & refunds" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Exchange policy" }).first()).toBeVisible();
 });
 
 test("with the API down, Shipping still shows, without numbers", async ({ page }) => {

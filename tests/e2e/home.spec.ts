@@ -38,7 +38,7 @@ async function expectPhotosLoad(images: Locator, where: string) {
 }
 
 test.describe("home page", () => {
-  test("hero with a featured product photo and two ways in", async ({ page }) => {
+  test("hero with its fixed photo and two ways in", async ({ page }) => {
     await page.goto(OPEN + "/");
     await expect(page).toHaveTitle("HairCraft — Human Hair Extensions, Toppers & Wigs in India");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(

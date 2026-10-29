@@ -98,7 +98,7 @@ export function faqGroups(policies: ShopPolicies | null): FaqGroup[] {
     },
     {
       id: "returns",
-      heading: "Returns and refunds",
+      heading: "Cancellations and exchanges",
       faqs: [
         {
           question: "Can I cancel my order?",
@@ -107,15 +107,15 @@ export function faqGroups(policies: ShopPolicies | null): FaqGroup[] {
         },
         {
           question: "Can I return or exchange my order?",
-          answer: `Unused hair in its sealed packaging can be returned or exchanged within ${r.changeOfMindDays} days of delivery. For hygiene reasons, hair or wigs that have been worn, washed, cut, coloured or styled can't be returned. See [Returns & refunds](/returns).`,
+          answer: `We don't accept returns or give refunds after delivery. If an item arrives defective, you can exchange it within ${r.exchangeDays} days of delivery, as long as it's unused and in its original packaging. See [Exchange policy](/returns).`,
         },
         {
-          question: "My order arrived damaged or wrong. What do I do?",
-          answer: `Tell us within ${r.reportProblemHours} hours of delivery, with photos, and we'll replace it or refund you in full. [Here's how](/returns#damaged).`,
+          question: "My order arrived defective or wrong. What do I do?",
+          answer: `Tell us within ${r.exchangeDays} days of delivery, with photos, and keep it unused: we'll collect it and send a replacement. [Here's how](/returns#exchange).`,
         },
         {
-          question: "When will I get my refund?",
-          answer: `Refunds go back to the way you paid within ${r.refundWorkingDays} working days of being approved; your bank may take a few more days to show it.`,
+          question: "When will I get my refund for a cancelled order?",
+          answer: `If you cancel before your order ships, the refund goes back to the way you paid within ${r.refundWorkingDays} working days; your bank may take a few more days to show it.`,
         },
       ],
     },
@@ -135,6 +135,6 @@ export const homeFaqs: Faq[] = [
   },
   {
     question: "Can I return or exchange my order?",
-    answer: `Unused hair in its sealed packaging can be returned within ${r.changeOfMindDays} days of delivery, and damaged or wrong items are always put right. See [Returns & refunds](/returns).`,
+    answer: `We don't accept returns after delivery, but a defective item can be exchanged within ${r.exchangeDays} days of delivery if it's unused. See [Exchange policy](/returns).`,
   },
 ];

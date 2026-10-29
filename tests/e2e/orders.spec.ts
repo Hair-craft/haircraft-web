@@ -182,7 +182,10 @@ test.describe("an order's page", () => {
     await expect(page.getByRole("heading", { level: 1 }).locator("..")).toContainText("Confirmed");
   });
 
-  test("Buy again puts the still-available items back in the bag", async ({ page, request }) => {
+  test("Buy again goes to checkout with the still-available items only", async ({
+    page,
+    request,
+  }) => {
     const { email, token, addressId } = await shopper(request, "orders");
     // Two products in one order.
     const pony = defaultVariant((await product(request, PONYTAIL)).variants)!;
@@ -197,14 +200,13 @@ test.describe("an order's page", () => {
       await signIn(page, email);
       await page.goto(`${OPEN}/account/orders/${order.orderNumber}`);
       await page.getByRole("button", { name: "Buy again" }).click();
-      await expect(page).toHaveURL(OPEN + "/cart");
+      await expect(page).toHaveURL(OPEN + "/checkout?notice=again-skipped");
       await expect(
-        page.getByText("Some items from your bag couldn't be added: they're no longer available."),
+        page.getByText("Some items from your order couldn't be added", { exact: false }),
       ).toBeVisible();
-      await expect(
-        main(page).getByRole("list", { name: "Items in your bag" }).getByRole("listitem"),
-      ).toHaveCount(1);
       await expect(main(page)).toContainText("Classic Straight Clip-in Set");
+      const bag = (await (await request.get(`${API}/cart`, { headers: auth(token) })).json()).data;
+      expect(bag.lines).toHaveLength(1);
     } finally {
       await setProductStatus(request, ponytail.id, "ACTIVE");
     }

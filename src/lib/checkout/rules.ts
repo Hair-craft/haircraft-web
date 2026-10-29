@@ -82,6 +82,8 @@ export const CHECKOUT_NOTICES = {
   "already-placed": "This order has already been placed.",
   unavailable: "We can't reach the shop at the moment. Please try again in a minute.",
   failed: "That didn't work. Please try again.",
+  "again-skipped":
+    "Some items from your order couldn't be added: they're no longer available or sold out.",
 } as const;
 
 export type CheckoutNotice = keyof typeof CHECKOUT_NOTICES;

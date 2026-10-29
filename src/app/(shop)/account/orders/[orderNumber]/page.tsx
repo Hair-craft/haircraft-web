@@ -117,7 +117,7 @@ export default async function OrderPage({ params }: PageProps<"/account/orders/[
             lines={order.items.map((item, index) => ({
               key: `${index}`,
               name: item.productName,
-              slug: item.productSlug,
+              slug: item.productId ? item.productSlug : null,
               option: item.variantLabel,
               image: item.imageUrl,
               quantity: item.quantity,
@@ -138,18 +138,22 @@ export default async function OrderPage({ params }: PageProps<"/account/orders/[
             <div className="rounded-2xl bg-mint px-4 py-3 text-sm">
               <p className="font-medium">How was it?</p>
               <ul className="mt-1 flex flex-wrap gap-x-5 gap-y-1">
-                {[...new Map(order.items.map((item) => [item.productSlug, item])).values()].map(
-                  (item) => (
-                    <li key={item.productSlug}>
-                      <Link
-                        href={`/product/${encodeURIComponent(item.productSlug)}/review?back=${encodeURIComponent(here)}`}
-                        className="underline underline-offset-4 hover:text-deep"
-                      >
-                        Review {item.productName}
-                      </Link>
-                    </li>
-                  ),
-                )}
+                {[
+                  ...new Map(
+                    order.items
+                      .filter((item) => item.productId)
+                      .map((item) => [item.productSlug, item]),
+                  ).values(),
+                ].map((item) => (
+                  <li key={item.productSlug}>
+                    <Link
+                      href={`/product/${encodeURIComponent(item.productSlug)}/review?back=${encodeURIComponent(here)}`}
+                      className="underline underline-offset-4 hover:text-deep"
+                    >
+                      Review {item.productName}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           ) : null}
@@ -194,7 +198,7 @@ export default async function OrderPage({ params }: PageProps<"/account/orders/[
               </Link>{" "}
               or read{" "}
               <Link href="/returns" className="underline underline-offset-4 hover:text-deep">
-                Returns &amp; refunds
+                Exchange policy
               </Link>
               .
             </p>

@@ -53,7 +53,7 @@ export function CartPageView({ initial, problem }: { initial: Cart; problem: str
               </Link>{" "}
               ·{" "}
               <Link href="/returns" className="underline underline-offset-2 hover:text-deep">
-                Returns &amp; refunds
+                Exchange policy
               </Link>
             </p>
           </aside>

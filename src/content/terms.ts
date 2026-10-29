@@ -11,7 +11,7 @@ import type { InfoContent } from "./types";
 export function termsContent(policies: ShopPolicies | null): InfoContent {
   const seller = sellerName();
   return {
-    intro: `These terms apply when you use this website or buy from ${seller}. By creating an account or placing an order, you agree to them. Please read them with our [Privacy policy](/privacy) and [Returns & refunds](/returns) policy.`,
+    intro: `These terms apply when you use this website or buy from ${seller}. By creating an account or placing an order, you agree to them. Please read them with our [Privacy policy](/privacy) and [Exchange policy](/returns).`,
     sections: [
       {
         id: "seller",
@@ -56,7 +56,7 @@ export function termsContent(policies: ShopPolicies | null): InfoContent {
         id: "cancel-return",
         heading: "Cancelling, returns and refunds",
         blocks: [
-          "You can cancel an order until it ships. Returns, exchanges and refunds follow our [Returns & refunds](/returns) policy, which is part of these terms. Nothing in these terms takes away your rights under consumer law.",
+          "You can cancel an order until it ships. Exchanges and refunds follow our [Exchange policy](/returns), which is part of these terms. Nothing in these terms takes away your rights under consumer law.",
         ],
       },
       {

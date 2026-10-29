@@ -1,24 +1,86 @@
 /**
  * Choosing a product option (variant) on the product page, one property at
- * a time: Length, Colour, Texture. Pure, so the rules are unit-tested.
+ * a time: Length, Colour, Texture, Size. A main variant with sub-variants is
+ * chosen first, then one of its sub-variants (which is what is bought).
+ * Pure, so the rules are unit-tested.
  */
 import type { ProductImage, PublicVariant } from "@/lib/api/types";
 
-export type Axis = "lengthInches" | "color" | "texture";
+export type Axis = "lengthInches" | "color" | "texture" | "size";
 type Value = number | string;
 
 export const AXES: { key: Axis; label: string }[] = [
   { key: "lengthInches", label: "Length" },
   { key: "color", label: "Colour" },
   { key: "texture", label: "Texture" },
+  { key: "size", label: "Size" },
 ];
 
-export const valueLabel = (axis: Axis, value: Value) =>
-  axis === "lengthInches" ? `${value} inch` : String(value);
+type Sized = Pick<PublicVariant, "sizeHeightCm" | "sizeWidthCm">;
 
-/** The option shown first: the first in stock, else the first. */
+/** The size as the address and filters write it (`13x15`), or null without one. */
+export function sizeKey(variant: Sized): string | null {
+  return variant.sizeHeightCm === null || variant.sizeWidthCm === null
+    ? null
+    : `${variant.sizeHeightCm}x${variant.sizeWidthCm}`;
+}
+
+/** `13x15` → "13 × 15 cm". */
+export const sizeLabel = (key: string) => `${key.replace("x", " × ")} cm`;
+
+/** A variant's value on an axis (its size as `13x15`). */
+export function valueOf(variant: PublicVariant, axis: Axis): Value | null {
+  return axis === "size" ? sizeKey(variant) : variant[axis];
+}
+
+export const valueLabel = (axis: Axis, value: Value) =>
+  axis === "lengthInches"
+    ? `${value} inch`
+    : axis === "size"
+      ? sizeLabel(String(value))
+      : String(value);
+
+/** Can be bought as itself (not a main variant with sub-variants). */
+const buyable = (v: PublicVariant) => v.purchasable !== false;
+
+/** The main variants (those not under another one). */
+export function mainVariants<V extends PublicVariant>(variants: V[]): V[] {
+  const ids = new Set(variants.map((v) => v.id));
+  return variants.filter((v) => v.parentVariantId === null || !ids.has(v.parentVariantId));
+}
+
+/** The sub-variants of a main variant, in the catalogue's order. */
+export function subVariantsOf<V extends PublicVariant>(variants: V[], mainId: string): V[] {
+  return variants.filter((v) => v.parentVariantId === mainId);
+}
+
+/** The main variant a variant belongs to (itself when it is a main one). */
+export function mainOf<V extends PublicVariant>(variants: V[], variant: V): V {
+  return variants.find((v) => v.id === variant.parentVariantId) ?? variant;
+}
+
+/** What is bought when `variant` is chosen: itself, or for a main variant with sub-variants its first one in stock. */
+export function settle<V extends PublicVariant>(variants: V[], variant: V): V {
+  if (buyable(variant)) return variant;
+  const subs = subVariantsOf(variants, variant.id);
+  return subs.find((v) => v.inStock) ?? subs[0] ?? variant;
+}
+
+/**
+ * The main variants as the first step shows them: one with sub-variants is
+ * in stock when any of them is.
+ */
+export function mainChoices<V extends PublicVariant>(variants: V[]): V[] {
+  return mainVariants(variants).map((main) => {
+    const subs = subVariantsOf(variants, main.id);
+    return subs.length > 0 ? { ...main, inStock: subs.some((v) => v.inStock) } : main;
+  });
+}
+
+/** The option shown first: the first in stock that can be bought, else the first that can be. */
 export function defaultVariant<V extends PublicVariant>(variants: V[]): V | undefined {
-  return variants.find((v) => v.inStock) ?? variants[0];
+  const options = variants.filter(buyable);
+  return options.find((v) => v.inStock) ?? options[0] ?? variants[0];
 }
 
 /** The option for `?variant=<SKU>` (any case), or the default when the SKU is unknown or missing. */
@@ -27,17 +89,43 @@ export function variantFromSku<V extends PublicVariant>(
   sku: string | undefined,
 ): V | undefined {
   const wanted = sku?.trim().toLowerCase();
-  return (
-    (wanted && variants.find((v) => v.sku.toLowerCase() === wanted)) || defaultVariant(variants)
-  );
+  const found = wanted ? variants.find((v) => v.sku.toLowerCase() === wanted) : undefined;
+  return found ? settle(variants, found) : defaultVariant(variants);
 }
 
-/** The values an axis offers, in a sensible order (lengths shortest first); empty when no option has one. */
+/**
+ * A sub-variant's button text: what it adds to or changes from its main
+ * variant ("18 inch", "13 × 15 cm"), else its SKU.
+ */
+export function subVariantLabel(sub: PublicVariant, main: PublicVariant): string {
+  const parts: string[] = [];
+  for (const { key } of AXES) {
+    const value = valueOf(sub, key);
+    if (value !== null && value !== valueOf(main, key)) parts.push(valueLabel(key, value));
+  }
+  if (sub.weightGrams !== null && sub.weightGrams !== main.weightGrams)
+    parts.push(`${sub.weightGrams} g`);
+  for (const [name, value] of Object.entries(sub.attributes)) {
+    if (main.attributes[name] !== value) parts.push(value);
+  }
+  return parts.length > 0 ? parts.join(" · ") : sub.sku;
+}
+
+/** The values an axis offers, in a sensible order (lengths and sizes smallest first); empty when no option has one. */
 export function axisValues(variants: PublicVariant[], axis: Axis): Value[] {
-  const values = [...new Set(variants.map((v) => v[axis]).filter((v) => v !== null))] as Value[];
-  return axis === "lengthInches"
-    ? (values as number[]).sort((a, b) => a - b)
-    : (values as string[]).sort((a, b) => a.localeCompare(b));
+  const values = [
+    ...new Set(variants.map((v) => valueOf(v, axis)).filter((v) => v !== null)),
+  ] as Value[];
+  if (axis === "lengthInches") return (values as number[]).sort((a, b) => a - b);
+  if (axis === "size") {
+    const dims = (key: string) => key.split("x").map(Number);
+    return (values as string[]).sort((a, b) => {
+      const [ah, aw] = dims(a);
+      const [bh, bw] = dims(b);
+      return ah - bh || aw - bw;
+    });
+  }
+  return (values as string[]).sort((a, b) => a.localeCompare(b));
 }
 
 /** The axes worth a row of buttons: those with more than one value. */
@@ -58,9 +146,10 @@ export function pick<V extends PublicVariant>(
   axis: Axis,
   value: Value,
 ): V {
-  const candidates = variants.filter((v) => v[axis] === value);
+  const candidates = variants.filter((v) => valueOf(v, axis) === value);
   const score = (v: V) =>
-    others(axis).filter((a) => v[a] === current[a]).length * 2 + (v.inStock ? 1 : 0);
+    others(axis).filter((a) => valueOf(v, a) === valueOf(current, a)).length * 2 +
+    (v.inStock ? 1 : 0);
   return candidates.reduce(
     (best, v) => (score(v) > score(best) ? v : best),
     candidates[0] ?? current,
@@ -82,7 +171,9 @@ export function choiceStatus(
   value: Value,
 ): ChoiceStatus {
   const exact = variants.find(
-    (v) => v[axis] === value && others(axis).every((a) => v[a] === current[a]),
+    (v) =>
+      valueOf(v, axis) === value &&
+      others(axis).every((a) => valueOf(v, a) === valueOf(current, a)),
   );
   if (!exact) return "elsewhere";
   return exact.inStock ? "available" : "soldout";

@@ -19,7 +19,8 @@ export interface OrderSummary {
 
 /** One order in full (the confirmation page's fields, and more). */
 export interface OrderDetail extends PlacedOrder {
-  items: (PlacedOrder["items"][number] & { variantId: string; productId: string })[];
+  /** `productId` and `variantId` are null once the product has been deleted (the line keeps its own copy). */
+  items: (PlacedOrder["items"][number] & { variantId: string | null; productId: string | null })[];
   tracking: { carrier: string; trackingNumber: string; trackingUrl: string | null } | null;
   shippedAt: string | null;
   deliveredAt: string | null;

@@ -73,7 +73,7 @@ export function ProductCard({
           ) : null}
         </div>
         <div className="flex flex-col gap-1 px-1">
-          <h3 className="font-display text-xl leading-snug group-hover:underline group-hover:decoration-gold group-hover:underline-offset-4">
+          <h3 className="line-clamp-2 font-display text-xl leading-snug font-semibold text-deep group-hover:underline group-hover:decoration-gold group-hover:underline-offset-4 lg:text-[1.35rem]">
             {product.name}
           </h3>
           <PriceRange
