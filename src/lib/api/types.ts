@@ -111,10 +111,11 @@ export interface ProductImage {
 export interface PublicVariant {
   id: string;
   sku: string;
-  price: Money;
+  /** null: no price yet, so it is not sold (`purchasable` false). */
+  price: Money | null;
   salePrice: Money | null;
-  /** The price paid: the sale price when on sale. */
-  effectivePrice: Money;
+  /** The price paid: the sale price when on sale (null without a price). */
+  effectivePrice: Money | null;
   onSale: boolean;
   lengthInches: number | null;
   color: string | null;

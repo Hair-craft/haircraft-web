@@ -37,7 +37,10 @@ export function productJsonLd(
 ) {
   const url = new URL(`/product/${encodeURIComponent(product.slug)}`, siteUrl).toString();
   // Only what can be bought (not a main variant that has sub-variants).
-  const variants = product.variants.filter((v) => v.purchasable !== false);
+  const variants = product.variants.filter(
+    (v): v is typeof v & { effectivePrice: string } =>
+      v.purchasable !== false && v.effectivePrice !== null,
+  );
   const available = variants.filter((v) => v.inStock).length;
   const policies = extra.policies ?? null;
   const reviews =

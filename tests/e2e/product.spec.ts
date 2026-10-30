@@ -32,7 +32,7 @@ async function richProduct(request: APIRequestContext): Promise<PublicProduct> {
 }
 
 const buyBox = (page: Page) => page.locator("main");
-const price = (variant: PublicVariant) => formatPrice(variant.effectivePrice);
+const price = (variant: PublicVariant) => formatPrice(variant.effectivePrice!);
 
 test.describe("product page", () => {
   test("every product page shows its name, price and photos, linked from the shop", async ({
@@ -151,7 +151,7 @@ test.describe("product page", () => {
 
     await page.goto(`${OPEN}/product/${onSale!.product.slug}?variant=${onSale!.variant.sku}`);
     const v = onSale!.variant;
-    await expect(page.locator("main s").first()).toContainText(formatPrice(v.price));
+    await expect(page.locator("main s").first()).toContainText(formatPrice(v.price!));
     await expect(page.getByText(/^Save ₹/)).toBeVisible();
   });
 

@@ -1,8 +1,8 @@
 /**
  * Choosing a product option (variant) on the product page, one property at
  * a time: Length, Colour, Texture, Size. A main variant with sub-variants is
- * chosen first, then one of its sub-variants (which is what is bought).
- * Pure, so the rules are unit-tested.
+ * never offered: its sub-variants are the choices. Pure, so the rules are
+ * unit-tested.
  */
 import type { ProductImage, PublicVariant } from "@/lib/api/types";
 
@@ -40,23 +40,17 @@ export const valueLabel = (axis: Axis, value: Value) =>
       ? sizeLabel(String(value))
       : String(value);
 
-/** Can be bought as itself (not a main variant with sub-variants). */
-const buyable = (v: PublicVariant) => v.purchasable !== false;
+/** Can be bought as itself: priced, and not a main variant with sub-variants. */
+const buyable = (v: PublicVariant) => v.purchasable !== false && v.price !== null;
 
-/** The main variants (those not under another one). */
-export function mainVariants<V extends PublicVariant>(variants: V[]): V[] {
-  const ids = new Set(variants.map((v) => v.id));
-  return variants.filter((v) => v.parentVariantId === null || !ids.has(v.parentVariantId));
+/** The options a shopper chooses from: everything except main variants that have sub-variants. */
+export function shopVariants<V extends PublicVariant>(variants: V[]): V[] {
+  return variants.filter(buyable);
 }
 
 /** The sub-variants of a main variant, in the catalogue's order. */
-export function subVariantsOf<V extends PublicVariant>(variants: V[], mainId: string): V[] {
+function subVariantsOf<V extends PublicVariant>(variants: V[], mainId: string): V[] {
   return variants.filter((v) => v.parentVariantId === mainId);
-}
-
-/** The main variant a variant belongs to (itself when it is a main one). */
-export function mainOf<V extends PublicVariant>(variants: V[], variant: V): V {
-  return variants.find((v) => v.id === variant.parentVariantId) ?? variant;
 }
 
 /** What is bought when `variant` is chosen: itself, or for a main variant with sub-variants its first one in stock. */
@@ -64,17 +58,6 @@ export function settle<V extends PublicVariant>(variants: V[], variant: V): V {
   if (buyable(variant)) return variant;
   const subs = subVariantsOf(variants, variant.id);
   return subs.find((v) => v.inStock) ?? subs[0] ?? variant;
-}
-
-/**
- * The main variants as the first step shows them: one with sub-variants is
- * in stock when any of them is.
- */
-export function mainChoices<V extends PublicVariant>(variants: V[]): V[] {
-  return mainVariants(variants).map((main) => {
-    const subs = subVariantsOf(variants, main.id);
-    return subs.length > 0 ? { ...main, inStock: subs.some((v) => v.inStock) } : main;
-  });
 }
 
 /** The option shown first: the first in stock that can be bought, else the first that can be. */
@@ -91,24 +74,6 @@ export function variantFromSku<V extends PublicVariant>(
   const wanted = sku?.trim().toLowerCase();
   const found = wanted ? variants.find((v) => v.sku.toLowerCase() === wanted) : undefined;
   return found ? settle(variants, found) : defaultVariant(variants);
-}
-
-/**
- * A sub-variant's button text: what it adds to or changes from its main
- * variant ("18 inch", "13 × 15 cm"), else its SKU.
- */
-export function subVariantLabel(sub: PublicVariant, main: PublicVariant): string {
-  const parts: string[] = [];
-  for (const { key } of AXES) {
-    const value = valueOf(sub, key);
-    if (value !== null && value !== valueOf(main, key)) parts.push(valueLabel(key, value));
-  }
-  if (sub.weightGrams !== null && sub.weightGrams !== main.weightGrams)
-    parts.push(`${sub.weightGrams} g`);
-  for (const [name, value] of Object.entries(sub.attributes)) {
-    if (main.attributes[name] !== value) parts.push(value);
-  }
-  return parts.length > 0 ? parts.join(" · ") : sub.sku;
 }
 
 /** The values an axis offers, in a sensible order (lengths and sizes smallest first); empty when no option has one. */
@@ -184,12 +149,21 @@ export function choiceStatus(
  * product's general photos, then other options' photos (each group keeping
  * the catalogue's order, the primary photo first).
  */
-export function galleryFor(images: ProductImage[], variantId: string | undefined): ProductImage[] {
+export function galleryFor(
+  images: ProductImage[],
+  variantId: string | undefined,
+  /** A sub-variant's main variant: its photos count as the option's own. */
+  mainId?: string | null,
+): ProductImage[] {
   const ordered = [...images].sort(
     (a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.sortOrder - b.sortOrder,
   );
   const rank = (image: ProductImage) =>
-    image.variantId === null ? 1 : image.variantId === variantId ? 0 : 2;
+    image.variantId === null
+      ? 1
+      : image.variantId === variantId || (mainId && image.variantId === mainId)
+        ? 0
+        : 2;
   return ordered
     .map((image, i) => ({ image, i }))
     .sort((a, b) => rank(a.image) - rank(b.image) || a.i - b.i)
@@ -204,7 +178,7 @@ function toPaise(amount: string): number {
 
 /** How much a sale saves, as an amount ("600.00"), or null when not on sale. */
 export function saving(variant: PublicVariant): string | null {
-  if (!variant.onSale || variant.salePrice === null) return null;
+  if (!variant.onSale || variant.salePrice === null || variant.price === null) return null;
   const paise = toPaise(variant.price) - toPaise(variant.salePrice);
   if (paise <= 0) return null;
   return `${Math.floor(paise / 100)}.${String(paise % 100).padStart(2, "0")}`;

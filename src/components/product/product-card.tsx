@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
 import Link from "next/link";
 import { Badge, PriceRange } from "@/components/ui/display";
 import { HeartButton } from "@/components/wishlist/wishlist-ui";
@@ -58,12 +59,7 @@ export function ProductCard({
               )}
             />
           ) : (
-            <div
-              aria-hidden
-              className="flex h-full items-center justify-center font-display text-4xl text-deep/20"
-            >
-              HC
-            </div>
+            <PhotoPlaceholder />
           )}
           {badges.length > 0 ? (
             <div className="absolute top-3 left-3 flex gap-2">

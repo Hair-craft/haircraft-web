@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
@@ -356,7 +357,9 @@ export function HeaderSearch({ className }: { className?: string }) {
                                   sizes="48px"
                                   className="object-cover"
                                 />
-                              ) : null}
+                              ) : (
+                                <PhotoPlaceholder size="small" />
+                              )}
                             </span>
                             <span className="min-w-0 flex-1">
                               <span className="block truncate">

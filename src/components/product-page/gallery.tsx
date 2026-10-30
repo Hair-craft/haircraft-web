@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ChevronRightIcon, CloseIcon } from "@/components/ui/icons";
 import type { ProductImage } from "@/lib/api/types";
@@ -29,6 +30,17 @@ const alt = (image: LightboxPhoto, name: string, i: number, total: number) =>
  * starts again from that option's first photo.
  */
 export function Gallery({ images, name }: { images: ProductImage[]; name: string }) {
+  // Photos are optional: without any, one placeholder in the photo's place.
+  if (images.length === 0)
+    return (
+      <div className={cx("relative overflow-hidden rounded-[2rem]", FRAME)}>
+        <PhotoPlaceholder />
+      </div>
+    );
+  return <PhotoGallery images={images} name={name} />;
+}
+
+function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }) {
   const [active, setActive] = useState(0);
   const [zoomed, setZoomed] = useState<number | null>(null);
   const row = useRef<HTMLUListElement>(null);

@@ -15,16 +15,12 @@ import {
   detailRows,
   defaultVariant,
   galleryFor,
-  mainChoices,
-  mainOf,
   pick,
   pickerAxes,
   saving,
-  settle,
+  shopVariants,
   sizeKey,
   sizeLabel,
-  subVariantLabel,
-  subVariantsOf,
   valueLabel,
   valueOf,
 } from "@/lib/product/variants";
@@ -59,20 +55,12 @@ export function ProductView({
     window.history.replaceState(null, "", variantHref(product.slug, next));
   };
 
-  const images = galleryFor(product.images, variant?.id);
-  // With sub-variants: the option rows choose a main variant, then a row of
-  // its sub-variants chooses what is bought. Without, they choose the variant.
-  const hasSubs = product.variants.some((v) => v.parentVariantId !== null);
-  const mains = hasSubs ? mainChoices(product.variants) : product.variants;
-  const main = variant
-    ? (mains.find((m) => m.id === mainOf(product.variants, variant).id) ?? variant)
-    : undefined;
-  const subs = hasSubs && main ? subVariantsOf(product.variants, main.id) : [];
-  const subPricesDiffer = new Set(subs.map((v) => v.effectivePrice)).size > 1;
-  /** The variant bought when a main-level choice is clicked. */
-  const bought = (choice: PublicVariant) =>
-    settle(product.variants, product.variants.find((v) => v.id === choice.id) ?? choice);
-  const axes = pickerAxes(mains);
+  // A sub-variant's main variant's photos count as its own.
+  const images = galleryFor(product.images, variant?.id, variant?.parentVariantId);
+  // The choices are what can be bought: a main variant with sub-variants is
+  // left out (only its sub-variants are offered), others are as they are.
+  const options = shopVariants(product.variants);
+  const axes = pickerAxes(options);
   const saved = variant ? saving(variant) : null;
 
   return (
@@ -104,7 +92,7 @@ export function ProductView({
             </a>
           ) : null}
 
-          {variant ? (
+          {variant?.effectivePrice ? (
             <div className="mt-6" aria-live="polite">
               <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-2xl">
                 <Price
@@ -145,12 +133,12 @@ export function ProductView({
             </p>
           ) : null}
 
-          {variant && main ? (
+          {variant ? (
             <div className="mt-6 flex flex-col gap-5">
               {AXES.map(({ key, label }) => {
-                const values = axisValues(mains, key);
+                const values = axisValues(options, key);
                 if (values.length === 0) return null;
-                const current = valueOf(main, key);
+                const current = valueOf(variant, key);
                 if (!axes.includes(key))
                   return (
                     <p key={key} className="text-sm">
@@ -165,8 +153,8 @@ export function ProductView({
                     current={current === null ? "" : valueLabel(key, current)}
                   >
                     {values.map((value) => {
-                      const target = bought(pick(mains, main, key, value));
-                      const status = choiceStatus(mains, main, key, value);
+                      const target = pick(options, variant, key, value);
+                      const status = choiceStatus(options, variant, key, value);
                       const chosen = value === current;
                       return (
                         <a
@@ -197,43 +185,10 @@ export function ProductView({
                   </OptionRow>
                 );
               })}
-              {subs.length > 0 ? (
-                <OptionRow
-                  label="Option"
-                  current={variant.id === main.id ? "" : subVariantLabel(variant, main)}
-                >
-                  {subs.map((sub) => {
-                    const chosen = sub.id === variant.id;
-                    return (
-                      <a
-                        key={sub.id}
-                        href={variantHref(product.slug, sub)}
-                        onClick={(event) => choose(event, sub)}
-                        aria-current={chosen || undefined}
-                        className={cx(
-                          "inline-flex h-10 min-w-12 items-center justify-center gap-1.5 rounded-full border px-4 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep",
-                          chosen
-                            ? "border-deep bg-deep text-mint"
-                            : "border-deep/20 bg-white/70 hover:border-deep/60",
-                          !sub.inStock && "line-through decoration-1",
-                        )}
-                      >
-                        {subVariantLabel(sub, main)}
-                        {subPricesDiffer ? (
-                          <span className={chosen ? "text-mint/80" : "text-deep/70"}>
-                            {formatPrice(sub.effectivePrice)}
-                          </span>
-                        ) : null}
-                        {!sub.inStock ? <span className="sr-only">, sold out</span> : null}
-                      </a>
-                    );
-                  })}
-                </OptionRow>
-              ) : null}
             </div>
           ) : null}
 
-          {variant ? (
+          {variant?.effectivePrice ? (
             <AddToBag
               variantId={variant.id}
               price={variant.effectivePrice}

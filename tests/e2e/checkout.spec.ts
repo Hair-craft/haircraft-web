@@ -272,7 +272,7 @@ test.describe("placing an order", () => {
       page.getByRole("heading", { name: "Confirmed: pay when it arrives" }),
     ).toBeVisible();
     await expect(page.getByText("Instructions: Please call first.")).toBeVisible();
-    await expect(page.getByText(formatPrice(variant.effectivePrice)).first()).toBeVisible();
+    await expect(page.getByText(formatPrice(variant.effectivePrice!)).first()).toBeVisible();
 
     const orderNumber = page.url().split("/").pop()!;
     const order = (

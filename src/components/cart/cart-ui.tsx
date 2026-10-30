@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -118,7 +119,9 @@ function Line({ line, roomy }: { line: CartLine; roomy?: boolean }) {
       >
         {line.image ? (
           <Image src={line.image.thumbnail} alt="" fill sizes="112px" className="object-cover" />
-        ) : null}
+        ) : (
+          <PhotoPlaceholder size="small" />
+        )}
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-3">

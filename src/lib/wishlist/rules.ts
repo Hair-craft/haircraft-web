@@ -34,7 +34,10 @@ export type MovePlan =
 export function movePlan(
   variants: Pick<PublicVariant, "id" | "inStock" | "effectivePrice">[],
 ): MovePlan {
-  const inStock = variants.filter((v) => v.inStock);
+  // Only what can be bought (a variant without a price isn't sold).
+  const inStock = variants.filter(
+    (v): v is typeof v & { effectivePrice: string } => v.inStock && v.effectivePrice !== null,
+  );
   if (inStock.length === 0) return { kind: "soldout" };
   if (inStock.length === 1)
     return { kind: "direct", variantId: inStock[0].id, price: inStock[0].effectivePrice };

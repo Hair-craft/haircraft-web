@@ -95,7 +95,7 @@ async function deleteProduct(request: APIRequestContext, id: string) {
   expect([200, 404], "test product deleted").toContain(res.status());
 }
 
-test("a sub-variant is picked under its main variant, with its size; the shop filters by size", async ({
+test("sub-variants are the choices (not their main variant, no Option row); the shop filters by size", async ({
   page,
   request,
 }) => {
@@ -103,39 +103,33 @@ test("a sub-variant is picked under its main variant, with its size; the shop fi
   try {
     await page.goto(`${OPEN}/product/${topper.slug}`);
     const colour = page.getByRole("group", { name: "Colour" });
-    const option = page.getByRole("group", { name: "Option" });
-    // Brown (no sub-variants) is the first option in stock: no second row yet.
+    const size = page.getByRole("group", { name: "Size" });
+    // No second "Option" row: the sub-variants fill the usual rows.
+    await expect(page.getByRole("group", { name: "Option" })).toHaveCount(0);
+    // Brown (no sub-variants) is the first option in stock.
     await expect(colour.getByRole("link", { name: "Brown" })).toHaveAttribute(
       "aria-current",
       "true",
     );
-    await expect(option).toHaveCount(0);
+    await expect(size.getByRole("link")).toHaveCount(2);
+
     await colour.getByRole("link", { name: "Natural Black" }).click();
     await expect(page).toHaveURL(new RegExp(`variant=${topper.sku("S")}$`));
-    // Its first sub-variant in stock is chosen; prices differ, so each shows its own.
-    await expect(option.getByRole("link", { name: /13 × 15 cm/ })).toHaveAttribute(
+    await expect(size.getByRole("link", { name: "13 × 15 cm" })).toHaveAttribute(
       "aria-current",
       "true",
     );
-    await expect(option.getByRole("link", { name: /15 × 16 cm/ })).toContainText("₹5,999");
-
-    await option.getByRole("link", { name: /15 × 16 cm/ }).click();
+    await size.getByRole("link", { name: "15 × 16 cm" }).click();
     await expect(page).toHaveURL(new RegExp(`variant=${topper.sku("L")}$`));
     await expect(page.getByText("₹5,999").first()).toBeVisible();
     await page.locator("summary", { hasText: "Details" }).click();
     await expect(page.locator("dd", { hasText: "15 × 16 cm" })).toBeVisible();
-
-    // Brown has no sub-variants: the Option row goes away.
-    await colour.getByRole("link", { name: "Brown" }).click();
-    await expect(page).toHaveURL(new RegExp(`variant=${topper.sku("BR")}$`));
-    await expect(option).toHaveCount(0);
+    await expect(page.getByRole("group", { name: "Option" })).toHaveCount(0);
     await expectAccessible(page, "product with sub-variants");
 
     // A main variant's own address leads to one of its sub-variants (it isn't sold itself).
     await page.goto(`${OPEN}/product/${topper.slug}?variant=${topper.sku("NB")}`);
-    await expect(
-      page.getByRole("group", { name: "Option" }).getByRole("link", { name: /13 × 15 cm/ }),
-    ).toHaveAttribute("aria-current", "true");
+    await expect(page).toHaveURL(new RegExp(`variant=${topper.sku("S")}$`));
 
     // The shop's Size filter (the API refreshed the shop's caches when the topper went live).
     await expect(async () => {
@@ -148,6 +142,55 @@ test("a sub-variant is picked under its main variant, with its size; the shop fi
     await expect(page.getByRole("checkbox", { name: "13 × 15 cm" })).toBeVisible();
   } finally {
     await deleteProduct(request, topper.id);
+  }
+});
+
+test("a product without photos or with an unpriced variant: a placeholder, and only priced options", async ({
+  page,
+  request,
+}) => {
+  const headers = auth(await adminToken(request));
+  const tag = `E2E${Date.now().toString(36).toUpperCase()}`;
+  const categories = (await (await request.get(`${API}/categories`)).json()).data as Category[];
+  const name = `Test Plain Wig ${tag}`;
+  const created = await request.post(`${API}/admin/products`, {
+    headers,
+    data: {
+      name,
+      description: "A wig with no photos, made by an end-to-end test.",
+      categoryIds: [categories[0].id],
+      variants: [
+        // No price: never offered.
+        { sku: `${tag}-BL`, color: "Blonde", initialStock: 5 },
+        { sku: `${tag}-NB`, price: "3999", color: "Natural Black", initialStock: 5 },
+      ],
+    },
+  });
+  expect(created.status()).toBe(201);
+  const { id, slug } = (await created.json()).data as { id: string; slug: string };
+  try {
+    // No photo needed to go live.
+    const live = await request.patch(`${API}/admin/products/${id}/status`, {
+      headers,
+      data: { status: "ACTIVE" },
+    });
+    expect(live.ok(), "live without photos").toBe(true);
+
+    await page.goto(`${OPEN}/product/${slug}`);
+    await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
+    await expect(
+      page.getByTestId("photo-placeholder").filter({ visible: true }).first(),
+    ).toBeVisible();
+    await expect(page.getByText("Blonde")).toHaveCount(0);
+    await expect(page.getByText("₹3,999").first()).toBeVisible();
+
+    await expect(async () => {
+      await page.goto(`${OPEN}/search?q=${encodeURIComponent(tag)}`);
+      const card = page.locator(`a[href="/product/${slug}"]`).first();
+      await expect(card.getByTestId("photo-placeholder")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 20_000 });
+  } finally {
+    await deleteProduct(request, id);
   }
 });
 

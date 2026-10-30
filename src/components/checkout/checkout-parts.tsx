@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
@@ -26,7 +27,9 @@ export function SummaryLines({ lines }: { lines: SummaryLine[] }) {
           <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-white">
             {line.image ? (
               <Image src={line.image} alt="" fill sizes="64px" className="object-cover" />
-            ) : null}
+            ) : (
+              <PhotoPlaceholder size="small" />
+            )}
             <span className="absolute -top-0 -right-0 flex min-w-5 items-center justify-center rounded-bl-xl bg-deep px-1 text-[0.7rem] leading-5 font-semibold text-mint">
               <span className="sr-only">Quantity </span>
               {line.quantity}

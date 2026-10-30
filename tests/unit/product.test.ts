@@ -7,12 +7,11 @@ import {
   detailRows,
   defaultVariant,
   galleryFor,
-  mainChoices,
   pick,
   pickerAxes,
   saving,
   settle,
-  subVariantLabel,
+  shopVariants,
   valueLabel,
   variantFromSku,
 } from "@/lib/product/variants";
@@ -224,20 +223,45 @@ describe("sub-variants and size", () => {
     expect(settle(all, brown)).toBe(brown);
   });
 
-  it("offers main variants first, in stock when any sub-variant is", () => {
-    const mains = mainChoices(all);
-    expect(mains.map((v) => [v.sku, v.inStock])).toEqual([
-      ["TOP-NB", true],
-      ["TOP-BR", false],
-    ]);
-    expect(pickerAxes(mains)).toEqual(["color"]);
+  it("offers the sub-variants, not their main variant, as the choices (no second row)", () => {
+    const options = shopVariants(all);
+    expect(options.map((v) => v.sku)).toEqual(["TOP-NB-S", "TOP-NB-L", "TOP-BR"]);
+    // Colour and Size rows from the sub-variants and the variants without any.
+    expect(pickerAxes(options)).toEqual(["color", "size"]);
+    expect(axisValues(options, "size")).toEqual(["13x15", "15x16"]);
+    // Choosing Brown from 15 × 16 cm picks Brown; choosing 13 × 15 cm keeps Natural Black.
+    expect(pick(options, large, "color", "Brown").sku).toBe("TOP-BR");
+    expect(pick(options, large, "size", "13x15").sku).toBe("TOP-NB-S");
   });
 
-  it("labels a sub-variant by what it adds to its main variant", () => {
-    expect(subVariantLabel(small, main)).toBe("13 × 15 cm");
-    expect(
-      subVariantLabel(variant("X", { parentVariantId: "TOP-NB", lengthInches: null }), main),
-    ).toBe("X");
+  it("never offers a variant without a price", () => {
+    const unpriced = variant("TOP-XX", {
+      color: "Blonde",
+      price: null,
+      effectivePrice: null,
+      purchasable: false,
+    });
+    expect(shopVariants([...all, unpriced]).map((v) => v.sku)).not.toContain("TOP-XX");
+    expect(defaultVariant([unpriced, brown])?.sku).toBe("TOP-BR");
+    expect(saving(unpriced)).toBeNull();
+  });
+
+  it("shows a main variant's photos first for its sub-variants", () => {
+    const photo = (id: string, variantId: string | null): ProductImage =>
+      ({
+        id,
+        variantId,
+        isPrimary: false,
+        sortOrder: 0,
+        altText: null,
+        urls: { thumbnail: "", medium: "", large: "", original: "" },
+      }) as ProductImage;
+    const images = [photo("general", null), photo("main", "TOP-NB"), photo("brown", "TOP-BR")];
+    expect(galleryFor(images, "TOP-NB-S", "TOP-NB").map((i) => i.id)).toEqual([
+      "main",
+      "general",
+      "brown",
+    ]);
   });
 
   it("treats size as an option, smallest first", () => {
