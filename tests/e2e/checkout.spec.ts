@@ -136,7 +136,7 @@ test.describe("opening checkout", () => {
     await page.goto(`${OPEN}/product/${CLIP_INS}`);
     await page.getByRole("button", { name: "Add to bag" }).click();
     const drawer = page.getByRole("dialog", { name: /^Your bag/ });
-    await drawer.getByRole("link", { name: "Checkout" }).click();
+    await drawer.getByRole("link", { name: /^Secure checkout/ }).click();
     await expect(page).toHaveURL(`${OPEN}/sign-in?next=${encodeURIComponent("/checkout")}`);
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);

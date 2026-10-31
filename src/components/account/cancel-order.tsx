@@ -16,10 +16,10 @@ export function CancelOrder({ orderNumber, paid }: { orderNumber: string; paid: 
   const [state, action, pending] = useActionState(cancelOrderAction, EMPTY);
   return (
     <details
-      className="group rounded-[2rem] bg-white/60 p-5 ring-1 ring-deep/5"
+      className="group rounded-2xl bg-white p-5 ring-1 ring-deep/5"
       open={Boolean(state.error)}
     >
-      <summary className="cursor-pointer list-none text-sm text-deep/70 underline-offset-4 hover:text-deep hover:underline">
+      <summary className="cursor-pointer list-none text-sm text-muted underline-offset-4 hover:text-deep hover:underline">
         Cancel this order
       </summary>
       {/* Keyed by what was sent: React resets a form after its action and ignores new defaults, so it starts afresh with the shopper's choices. */}
@@ -46,7 +46,7 @@ export function CancelOrder({ orderNumber, paid }: { orderNumber: string; paid: 
           ))}
         </fieldset>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor={`details-${orderNumber}`} className="text-sm text-deep/70">
+          <label htmlFor={`details-${orderNumber}`} className="text-sm text-muted">
             Anything to add? (needed for Other)
           </label>
           <textarea
@@ -55,10 +55,10 @@ export function CancelOrder({ orderNumber, paid }: { orderNumber: string; paid: 
             rows={2}
             maxLength={400}
             defaultValue={state.details ?? ""}
-            className="w-full rounded-xl border border-deep/20 bg-white/80 px-4 py-2.5 focus-visible:border-deep focus-visible:outline-2 focus-visible:outline-deep/40"
+            className="w-full rounded-lg border border-line bg-sand px-4 py-2.5 shadow-sm focus-visible:border-deep focus-visible:bg-white focus-visible:outline-2 focus-visible:outline-deep/40"
           />
         </div>
-        <p className="text-sm text-deep/70">
+        <p className="text-sm text-muted">
           {paid
             ? "Your payment will be refunded to the method you paid with, usually within 5–7 working days."
             : "Nothing has been charged, so there's nothing to refund."}

@@ -54,7 +54,13 @@ export function PlaceOrderButton({
 }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="lg" className="w-full" disabled={disabled} loading={pending}>
+    <Button
+      type="submit"
+      size="lg"
+      className="h-14 w-full text-sm font-bold tracking-wider uppercase shadow-md"
+      disabled={disabled}
+      loading={pending}
+    >
       {pending ? "Placing your order…" : children}
     </Button>
   );

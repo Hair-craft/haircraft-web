@@ -63,7 +63,7 @@ export function PasswordField({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="text-sm font-medium text-deep">
+        <label htmlFor={id} className="text-xs font-semibold tracking-wide text-deep">
           {label}
           <span aria-hidden className="ml-0.5 text-gold">
             *
@@ -74,7 +74,7 @@ export function PasswordField({
           onClick={() => setVisible((v) => !v)}
           aria-controls={id}
           aria-pressed={visible}
-          className="rounded-md px-1 text-xs font-medium text-deep/70 hover:text-deep focus-visible:outline-2 focus-visible:outline-deep"
+          className="rounded-md px-1 text-xs font-medium text-muted hover:text-deep focus-visible:outline-2 focus-visible:outline-deep"
         >
           {visible ? "Hide" : "Show"}
           <span className="sr-only"> password</span>
@@ -95,20 +95,43 @@ export function PasswordField({
           undefined
         }
         className={cx(
-          "h-11 w-full rounded-xl border bg-white/80 px-4 text-deep transition-colors focus-visible:border-deep focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-deep/40",
-          error ? "border-red-600" : "border-deep/20",
+          "h-12 w-full rounded-lg border bg-sand px-4 text-deep shadow-sm transition-colors focus-visible:border-deep focus-visible:bg-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-deep/40",
+          error ? "border-red-600" : "border-line",
         )}
       />
       {showRules ? (
-        <ul id={rulesId} className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-          {passwordChecks(value).map((rule) => (
-            <li key={rule.label} className={rule.met ? "text-emerald-700" : "text-deep/70"}>
-              <span aria-hidden>{rule.met ? "✓ " : "○ "}</span>
-              {rule.label}
-              <span className="sr-only">{rule.met ? " (done)" : " (needed)"}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-1 flex flex-col gap-2 rounded-lg bg-sand p-3">
+          <p className="flex items-center justify-between text-[0.625rem] font-semibold tracking-wider text-muted uppercase">
+            Password strength
+            <span className="font-bold text-sage-ink">
+              {passwordChecks(value).filter((rule) => rule.met).length} of{" "}
+              {passwordChecks(value).length}
+            </span>
+          </p>
+          <div aria-hidden className="flex h-1.5 gap-1 overflow-hidden rounded-full bg-[#eee7dc]">
+            {passwordChecks(value).map((rule) => (
+              <span
+                key={rule.label}
+                className={cx(
+                  "h-full flex-1 rounded-full transition-colors",
+                  rule.met ? "bg-deep" : "bg-transparent",
+                )}
+              />
+            ))}
+          </div>
+          <ul id={rulesId} className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            {passwordChecks(value).map((rule) => (
+              <li
+                key={rule.label}
+                className={rule.met ? "font-medium text-sage-ink" : "text-muted"}
+              >
+                <span aria-hidden>{rule.met ? "✓ " : "○ "}</span>
+                {rule.label}
+                <span className="sr-only">{rule.met ? " (done)" : " (needed)"}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
       {error ? (
         <p id={`${id}-error`} role="alert" className="text-xs font-medium text-red-700">
@@ -148,15 +171,32 @@ export function SignInForm({ next, notice }: { next: string | null; notice?: str
       <div className="-mt-2 text-right">
         <Link
           href="/forgot-password"
-          className="text-sm text-deep/70 underline-offset-4 hover:text-deep hover:underline"
+          className="text-xs font-semibold text-gold-ink underline-offset-4 transition-colors hover:text-deep hover:underline"
         >
           Forgot your password?
         </Link>
       </div>
-      <Button type="submit" size="lg" loading={pending} className="w-full">
+      <Button
+        type="submit"
+        size="lg"
+        loading={pending}
+        className="mt-2 h-12 w-full text-sm tracking-wider uppercase shadow-lg hover:shadow-xl"
+      >
         Sign in
       </Button>
     </form>
+  );
+}
+
+/** India's flag, drawn (emoji flags show as letters on Windows). */
+function IndiaFlag() {
+  return (
+    <svg viewBox="0 0 640 480" className="h-3.5 w-5 overflow-hidden rounded-[2px]">
+      <path d="M0 0h640v160H0z" fill="#f93" />
+      <path d="M0 160h640v160H0z" fill="#fff" />
+      <path d="M0 320h640v160H0z" fill="#128807" />
+      <circle cx="320" cy="240" r="40" fill="#008" />
+    </svg>
   );
 }
 
@@ -211,6 +251,13 @@ export function RegisterForm({ next }: { next: string | null }) {
         type="tel"
         autoComplete="tel-national"
         inputMode="tel"
+        addon={
+          <>
+            <IndiaFlag />
+            +91
+          </>
+        }
+        placeholder="98765 43210"
         hint="Optional. For delivery updates, e.g. 98765 43210."
         defaultValue={state.values.phone}
         error={state.fields.phone}
@@ -221,8 +268,24 @@ export function RegisterForm({ next }: { next: string | null }) {
         error={state.fields.password}
         showRules
       />
-      <Button type="submit" size="lg" loading={pending} className="w-full">
-        Create account
+      <p className="text-sm leading-relaxed text-muted">
+        By creating an account you agree to our{" "}
+        <Link href="/terms" className="font-semibold text-deep underline underline-offset-2">
+          Terms of use
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="font-semibold text-deep underline underline-offset-2">
+          Privacy policy
+        </Link>
+        .
+      </p>
+      <Button
+        type="submit"
+        size="lg"
+        loading={pending}
+        className="h-14 w-full text-sm tracking-wider uppercase shadow-lg hover:shadow-xl"
+      >
+        Create account <span aria-hidden>→</span>
       </Button>
     </form>
   );

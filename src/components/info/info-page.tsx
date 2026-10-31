@@ -48,8 +48,8 @@ export function InfoPage({
                   className={cx(
                     "block rounded-full px-3 py-1.5 text-xs ring-1 transition-colors focus-visible:outline-2 focus-visible:outline-deep sm:text-sm lg:rounded-xl lg:px-3.5 lg:py-2 lg:ring-0",
                     current
-                      ? "bg-deep font-medium text-mint ring-deep"
-                      : "text-deep/75 ring-deep/15 hover:bg-mint hover:text-deep",
+                      ? "bg-deep font-medium text-white ring-deep"
+                      : "text-muted ring-deep/15 hover:bg-mint hover:text-deep",
                   )}
                 >
                   {page.label}
@@ -60,14 +60,18 @@ export function InfoPage({
         </ul>
       </nav>
       <article className="max-w-[68ch] min-w-0">
-        <p className="text-xs tracking-[0.35em] text-deep-soft uppercase">{eyebrow}</p>
-        <h1 className="mt-3 font-display text-4xl leading-tight md:text-5xl">{title}</h1>
-        <p className="mt-3 text-sm text-deep/70">
+        <p className="text-[0.7rem] font-bold tracking-[0.2em] text-gold-ink uppercase">
+          {eyebrow}
+        </p>
+        <h1 className="mt-3 font-display text-3xl leading-tight font-semibold sm:text-4xl">
+          {title}
+        </h1>
+        <p className="mt-3 text-sm text-muted">
           Last updated <time dateTime={LAST_UPDATED[slug]}>{updatedDate(LAST_UPDATED[slug])}</time>
         </p>
         {content ? (
           <>
-            <p className="mt-6 text-lg leading-relaxed text-deep/80">
+            <p className="mt-6 text-lg leading-relaxed text-muted">
               <RichText text={content.intro} />
             </p>
             {content.summary ? <Summary points={content.summary} /> : null}
@@ -108,7 +112,7 @@ export function Contents({ sections }: { sections: InfoSection[] }) {
           <li key={section.id}>
             <a
               href={`#${section.id}`}
-              className="text-deep/75 underline decoration-deep/20 underline-offset-4 hover:text-deep hover:decoration-deep"
+              className="text-muted underline decoration-deep/20 underline-offset-4 hover:text-deep hover:decoration-deep"
             >
               {section.heading}
             </a>
@@ -134,7 +138,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
   return blocks.map((block, i) => {
     if (typeof block === "string")
       return (
-        <p key={i} className="mt-4 leading-relaxed text-deep/80">
+        <p key={i} className="mt-4 leading-relaxed text-muted">
           <RichText text={block} />
         </p>
       );
@@ -143,7 +147,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
         <aside
           key={i}
           aria-label="Tip"
-          className="mt-5 rounded-2xl border-l-4 border-gold bg-white/80 px-5 py-4 leading-relaxed text-deep/80 ring-1 ring-deep/5"
+          className="mt-5 rounded-2xl border-l-4 border-gold bg-white/80 px-5 py-4 leading-relaxed text-muted ring-1 ring-deep/5"
         >
           <span className="mr-2 text-xs font-semibold tracking-[0.2em] text-deep-soft uppercase">
             Tip
@@ -158,7 +162,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
       <List
         key={i}
         className={cx(
-          "mt-4 space-y-2 pl-6 leading-relaxed text-deep/80",
+          "mt-4 space-y-2 pl-6 leading-relaxed text-muted",
           ordered
             ? "list-decimal marker:font-medium marker:text-deep"
             : "list-disc marker:text-gold",

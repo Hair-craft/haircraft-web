@@ -79,7 +79,7 @@ export default async function ReviewPage({
           ) : null}
         </div>
         <div>
-          <p className="text-xs tracking-[0.35em] text-deep-soft uppercase">
+          <p className="text-[0.7rem] font-bold tracking-[0.2em] text-gold-ink uppercase">
             {existing ? "Edit your review" : "Write a review"}
           </p>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl">
@@ -97,7 +97,7 @@ export default async function ReviewPage({
           {problem}
         </p>
       ) : null}
-      <div className="mt-8 rounded-[2rem] bg-white/80 p-6 ring-1 ring-deep/5 sm:p-8">
+      <div className="mt-8 rounded-2xl bg-white/80 p-6 ring-1 ring-deep/5 sm:p-8">
         <ReviewForm
           productId={product.id}
           review={existing}

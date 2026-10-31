@@ -62,7 +62,7 @@ export default function ComingSoon() {
 
           <motion.p
             variants={fadeUp}
-            className="mt-10 rounded-full bg-deep px-5 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-mint sm:text-xs"
+            className="mt-10 rounded-full bg-deep px-5 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-white sm:text-xs"
           >
             HairCraft · Launching soon
           </motion.p>
@@ -79,7 +79,7 @@ export default function ComingSoon() {
 
           <motion.p
             variants={fadeUp}
-            className="mt-6 max-w-md text-base leading-relaxed text-deep/70 sm:text-lg"
+            className="mt-6 max-w-md text-base leading-relaxed text-muted sm:text-lg"
           >
             Premium hair extensions, thoughtfully crafted for length, volume and
             confidence. Our store opens its doors very soon.
@@ -95,7 +95,7 @@ export default function ComingSoon() {
           </motion.div>
         </motion.section>
 
-        <footer className="relative z-10 bg-deep px-6 py-5 text-center text-xs text-mint/80">
+        <footer className="relative z-10 bg-deep px-6 py-5 text-center text-xs text-white/80">
           © {new Date().getFullYear()} Hair Craft. All rights reserved.
         </footer>
       </main>

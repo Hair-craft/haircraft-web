@@ -31,8 +31,10 @@ export default async function CartPage({ searchParams }: PageProps<"/cart">) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
-      <p className="text-xs tracking-[0.35em] text-deep-soft uppercase">Shopping bag</p>
-      <h1 className="mt-3 font-display text-5xl">Your bag</h1>
+      <p className="text-[0.7rem] font-bold tracking-[0.2em] text-gold-ink uppercase">
+        Shopping bag
+      </p>
+      <h1 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Your bag</h1>
       {cart ? (
         <CartPageView initial={cart} problem={problem} />
       ) : (

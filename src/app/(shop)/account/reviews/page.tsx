@@ -38,7 +38,7 @@ export default async function MyReviewsPage({ searchParams }: PageProps<"/accoun
       {reviews.length === 0 ? (
         <AccountCard className="flex flex-col items-center gap-4 py-12 text-center">
           <p className="font-display text-3xl">No reviews yet</p>
-          <p className="text-deep/70">
+          <p className="text-muted">
             Bought something you love (or don&apos;t)? Write a review from its page or from your
             orders.
           </p>
@@ -61,7 +61,7 @@ export default async function MyReviewsPage({ searchParams }: PageProps<"/accoun
                     </Link>
                     <Badge tone={status.tone}>{status.label}</Badge>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-deep/70">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
                     <RatingStars
                       rating={review.rating}
                       reviewCount={1}
@@ -74,7 +74,7 @@ export default async function MyReviewsPage({ searchParams }: PageProps<"/accoun
                   </div>
                   {review.title ? <p className="font-medium">{review.title}</p> : null}
                   {review.body ? (
-                    <p className="line-clamp-4 whitespace-pre-line text-deep/80">{review.body}</p>
+                    <p className="line-clamp-4 whitespace-pre-line text-muted">{review.body}</p>
                   ) : null}
                   {review.photos.length > 0 ? (
                     <ul aria-label="Your photos" className="flex flex-wrap gap-2">
@@ -91,7 +91,7 @@ export default async function MyReviewsPage({ searchParams }: PageProps<"/accoun
                       ))}
                     </ul>
                   ) : null}
-                  <p className="text-sm text-deep/70">{status.text}</p>
+                  <p className="text-sm text-muted">{status.text}</p>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
                     <Link
                       href={`${productHref}/review?back=${encodeURIComponent("/account/reviews")}`}

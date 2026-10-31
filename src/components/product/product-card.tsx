@@ -5,7 +5,8 @@ import { Badge, PriceRange } from "@/components/ui/display";
 import { HeartButton } from "@/components/wishlist/wishlist-ui";
 import type { ProductCard as ProductCardData } from "@/lib/api/types";
 import { cx } from "@/lib/cx";
-import { RatingStars } from "./rating-stars";
+import { BagIcon } from "@/components/ui/icons";
+import { ratingLabel } from "./rating-stars";
 
 /** Where a product's page lives (the page itself is phase S5). */
 export const productHref = (slug: string) => `/product/${encodeURIComponent(slug)}`;
@@ -40,12 +41,17 @@ export function ProductCard({
 }) {
   const badges = cardBadges(product);
   return (
-    <div className={cx("relative", className)}>
+    <div
+      className={cx(
+        "group relative h-full rounded-2xl bg-white p-3 shadow-sm transition-shadow duration-300 hover:shadow-xl sm:p-4",
+        className,
+      )}
+    >
       <Link
         href={productHref(product.slug)}
-        className="group flex flex-col gap-3 rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep"
+        className="flex h-full flex-col gap-3 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep"
       >
-        <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-white/70">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-sand">
           {product.image ? (
             <Image
               src={product.image.medium}
@@ -54,7 +60,7 @@ export function ProductCard({
               sizes={sizes}
               priority={priority}
               className={cx(
-                "object-cover transition-transform duration-500 group-hover:scale-[1.03]",
+                "object-cover transition-transform duration-500 group-hover:scale-105",
                 !product.inStock && "opacity-60",
               )}
             />
@@ -62,31 +68,57 @@ export function ProductCard({
             <PhotoPlaceholder />
           )}
           {badges.length > 0 ? (
-            <div className="absolute top-3 left-3 flex gap-2">
+            <div className="absolute top-2.5 left-2.5 flex gap-2">
               {badges.includes("soldOut") ? <Badge tone="deep">Sold out</Badge> : null}
               {badges.includes("sale") ? <Badge tone="gold">Sale</Badge> : null}
             </div>
           ) : null}
         </div>
-        <div className="flex flex-col gap-1 px-1">
-          <h3 className="line-clamp-2 font-display text-xl leading-snug font-semibold text-deep group-hover:underline group-hover:decoration-gold group-hover:underline-offset-4 lg:text-[1.35rem]">
+        <div className="flex flex-1 flex-col gap-1">
+          {product.reviewCount > 0 ? (
+            // One gold star, the rating and the count, as in the design.
+            <span
+              role="img"
+              aria-label={ratingLabel(product.rating, product.reviewCount)}
+              className="flex items-center gap-1.5 text-xs"
+            >
+              <svg aria-hidden viewBox="0 0 24 24" width={16} height={16} fill="var(--gold)">
+                <path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" />
+              </svg>
+              <span className="font-bold">{product.rating.toFixed(1)}</span>
+              <span className="text-[0.8125rem] text-muted">
+                ({product.reviewCount} {product.reviewCount === 1 ? "review" : "reviews"})
+              </span>
+            </span>
+          ) : null}
+          <h3 className="line-clamp-2 font-display text-lg leading-6 font-semibold text-deep transition-colors group-hover:text-gold-ink">
             {product.name}
           </h3>
-          <PriceRange
-            min={product.priceRange.min}
-            max={product.priceRange.max}
-            className="text-sm"
-          />
-          {product.reviewCount > 0 ? (
-            <RatingStars rating={product.rating} reviewCount={product.reviewCount} />
+          {product.shortDescription ? (
+            <p className="line-clamp-1 text-[0.8125rem] text-muted">{product.shortDescription}</p>
           ) : null}
+          <div className="mt-auto flex flex-col gap-3 pt-3">
+            <PriceRange
+              min={product.priceRange.min}
+              max={product.priceRange.max}
+              className="text-lg font-bold tracking-tight"
+            />
+            {/* The options (length, shade…) are chosen on the product page. */}
+            <span
+              aria-hidden
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-deep px-4 py-2.5 text-xs font-semibold tracking-wide text-white transition-colors group-hover:bg-deep-hover"
+            >
+              <BagIcon width={16} height={16} />
+              Choose options
+            </span>
+          </div>
         </div>
       </Link>
       {heart ? (
         <HeartButton
           productId={product.id}
           name={product.name}
-          className="absolute top-3 right-3"
+          className="absolute top-5 right-5 sm:top-6 sm:right-6"
         />
       ) : null}
     </div>

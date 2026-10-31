@@ -62,7 +62,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             role={toast.tone === "error" ? "alert" : "status"}
             className={cx(
               "pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl px-5 py-3 text-sm shadow-lg",
-              toast.tone === "error" ? "bg-red-700 text-white" : "bg-deep text-mint",
+              toast.tone === "error" ? "bg-red-700 text-white" : "bg-deep text-white",
             )}
           >
             <p className="flex-1">{toast.message}</p>

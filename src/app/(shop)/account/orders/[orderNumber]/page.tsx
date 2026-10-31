@@ -55,21 +55,21 @@ export default async function OrderPage({ params }: PageProps<"/account/orders/[
     <>
       <Link
         href="/account/orders"
-        className="text-sm text-deep/70 underline-offset-4 hover:text-deep hover:underline"
+        className="text-sm text-muted underline-offset-4 hover:text-deep hover:underline"
       >
         ‹ All orders
       </Link>
       <div className="mt-3 mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-4xl sm:text-5xl">{order.orderNumber}</h1>
+        <h1 className="font-display text-3xl font-semibold sm:text-4xl">{order.orderNumber}</h1>
         <StatusBadge status={order.status} />
       </div>
-      <p className="-mt-4 mb-6 text-sm text-deep/70">Placed on {orderDate(order.placedAt)}</p>
+      <p className="-mt-4 mb-6 text-sm text-muted">Placed on {orderDate(order.placedAt)}</p>
 
       <div className="flex flex-col gap-5">
         {cancelled ? (
           <AccountCard>
             <h2 className="font-display text-2xl">Cancelled</h2>
-            <p className="mt-2 text-sm text-deep/75">
+            <p className="mt-2 text-sm text-muted">
               {order.cancelledAt ? `On ${orderDateTime(order.cancelledAt)}. ` : ""}
               {order.cancellationReason ? `Reason: ${order.cancellationReason}` : ""}
             </p>
@@ -170,16 +170,16 @@ export default async function OrderPage({ params }: PageProps<"/account/orders/[
             <h2 className="font-display text-2xl">Delivery address</h2>
             <address className="mt-3 text-sm not-italic">
               <p className="font-medium">{a.fullName}</p>
-              <p className="text-deep/75">{a.line1}</p>
-              {a.line2 ? <p className="text-deep/75">{a.line2}</p> : null}
-              {a.landmark ? <p className="text-deep/75">Near {a.landmark}</p> : null}
-              <p className="text-deep/75">
+              <p className="text-muted">{a.line1}</p>
+              {a.line2 ? <p className="text-muted">{a.line2}</p> : null}
+              {a.landmark ? <p className="text-muted">Near {a.landmark}</p> : null}
+              <p className="text-muted">
                 {a.city}, {a.state} {a.postalCode}
               </p>
-              <p className="mt-1 text-deep/75">Mobile: {localMobile(a.phone)}</p>
+              <p className="mt-1 text-muted">Mobile: {localMobile(a.phone)}</p>
             </address>
             {order.notes ? (
-              <p className="mt-3 text-sm text-deep/75">
+              <p className="mt-3 text-sm text-muted">
                 <span className="font-medium text-deep">Instructions:</span> {order.notes}
               </p>
             ) : null}
@@ -191,7 +191,7 @@ export default async function OrderPage({ params }: PageProps<"/account/orders/[
               {paidOnline ? " · Paid" : ""}
             </p>
             {!cancelled && refund ? <p className="mt-2 text-sm">{refund}</p> : null}
-            <p className="mt-4 text-sm text-deep/70">
+            <p className="mt-4 text-sm text-muted">
               Need help with this order?{" "}
               <Link href="/contact" className="underline underline-offset-4 hover:text-deep">
                 Contact us

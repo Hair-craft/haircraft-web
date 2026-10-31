@@ -23,12 +23,12 @@ export default function ShopError({
       role="alert"
       className="mx-auto my-20 flex max-w-xl flex-col items-center gap-4 px-4 text-center"
     >
-      <h1 className="font-display text-4xl">Something went wrong</h1>
-      <p className="text-deep/75">
+      <h1 className="font-display text-3xl font-semibold">Something went wrong</h1>
+      <p className="text-muted">
         Sorry, this page didn&apos;t load properly. Please try again; if it keeps happening, come
         back in a few minutes.
       </p>
-      {error.digest ? <p className="text-xs text-deep/70">Reference: {error.digest}</p> : null}
+      {error.digest ? <p className="text-xs text-muted">Reference: {error.digest}</p> : null}
       <div className="mt-2 flex gap-3">
         <Button onClick={() => retry()}>Try again</Button>
         <ButtonLink href="/" variant="secondary">

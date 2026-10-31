@@ -13,6 +13,8 @@ import { cx } from "@/lib/cx";
 import { formatPriceRange } from "@/lib/format";
 import { cleanSearch, MAX_SEARCH_LENGTH, MIN_SUGGEST_LENGTH } from "@/lib/listing/query";
 import { highlight } from "@/lib/search/highlight";
+import { business } from "@/content/business";
+import { whatsappChatHref } from "@/lib/info/contact";
 
 /** Wait this long after the last key before asking for suggestions. */
 const PAUSE_MS = 250;
@@ -47,7 +49,15 @@ function Highlighted({ text, query }: { text: string; query: string }) {
  * (WAI combobox: ↑ ↓ move, Enter opens, Escape closes). It is a real form to
  * `/search`, and without JavaScript the icon is simply a link to that page.
  */
-export function HeaderSearch({ className }: { className?: string }) {
+export function HeaderSearch({
+  className,
+  popular = [],
+}: {
+  className?: string;
+  /** Categories to offer before (and beside) the suggestions: the menu's. */
+  popular?: { label: string; href: string }[];
+}) {
+  const whatsapp = whatsappChatHref(business);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -178,12 +188,6 @@ export function HeaderSearch({ className }: { className?: string }) {
     onMouseEnter: () => setActive(options.indexOf(option)),
     "data-href": option.href,
   });
-  const optionClass = (option: Option) =>
-    cx(
-      "flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2",
-      activeOption?.id === option.id ? "bg-mint-deep" : "hover:bg-mint",
-    );
-
   const count =
     shown === null
       ? ""
@@ -209,204 +213,326 @@ export function HeaderSearch({ className }: { className?: string }) {
             setOpen(true);
           }
         }}
-        className="inline-flex rounded-full p-2 transition-colors hover:bg-deep/5 focus-visible:outline-2 focus-visible:outline-deep"
+        className="inline-flex items-center gap-2 rounded-full p-2 transition-colors hover:bg-deep/5 focus-visible:outline-2 focus-visible:outline-deep xl:w-60 xl:border xl:border-line xl:bg-sand xl:px-3 xl:py-1.5 xl:hover:bg-sand-deep"
       >
-        <SearchIcon />
+        <SearchIcon width={18} height={18} className="shrink-0 xl:text-[#727973]" />
+        <span aria-hidden className="hidden truncate text-sm text-muted xl:inline">
+          Search clip-ins, toppers, shades…
+        </span>
       </Link>
 
       {open
         ? createPortal(
+            // The dimmed backdrop; a click on it (outside the card) closes the search.
             <div
-              ref={panel}
               style={{ "--search-top": `${headerBottom}px` } as CSSProperties}
-              id={panelId}
-              role="region"
-              aria-label="Search"
-              className="hc-search-panel fixed inset-0 z-40 overflow-y-auto bg-mint sm:top-(--search-top) sm:bottom-auto sm:max-h-[80vh] sm:border-b sm:border-deep/10 sm:shadow-2xl sm:shadow-deep/10"
+              className="hc-search-panel fixed inset-0 z-40 overflow-y-auto bg-[#071b11]/55 backdrop-blur-sm sm:px-6 sm:pt-[calc(var(--search-top)+1rem)] sm:pb-10"
             >
-              <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6 sm:py-6">
-                <form
-                  method="get"
-                  action={routes.search}
-                  role="search"
-                  aria-label="Search the shop"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    if (q !== null) go(searchHref(q));
-                  }}
-                  className="flex items-center gap-3 rounded-full border border-deep/25 bg-white py-1.5 pr-1.5 pl-5 focus-within:border-deep"
-                >
-                  <SearchIcon
-                    width={20}
-                    height={20}
-                    aria-hidden
-                    className="shrink-0 text-deep/70"
-                  />
-                  <input
-                    ref={input}
-                    type="search"
-                    name="q"
-                    role="combobox"
-                    aria-label="Search the shop"
-                    aria-autocomplete="list"
-                    aria-expanded={expanded}
-                    aria-controls={listId}
-                    aria-activedescendant={activeOption?.id}
-                    autoComplete="off"
-                    maxLength={MAX_SEARCH_LENGTH}
-                    placeholder="Search clip-ins, wigs, colours…"
-                    value={query}
-                    onChange={(event) => {
-                      setQuery(event.target.value);
-                      setActive(-1);
-                    }}
-                    onKeyDown={onKeyDown}
-                    className="h-11 min-w-0 flex-1 bg-transparent text-lg text-deep placeholder:text-deep/45 focus:outline-none"
-                  />
-                  <button
-                    type="submit"
-                    className="h-11 shrink-0 rounded-full bg-deep px-5 text-sm font-medium text-mint hover:bg-deep-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
-                  >
-                    Search
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Close search"
-                    onClick={() => close()}
-                    className="shrink-0 rounded-full p-2 hover:bg-deep/5 focus-visible:outline-2 focus-visible:outline-deep"
-                  >
-                    <CloseIcon />
-                  </button>
-                </form>
+              <div
+                ref={panel}
+                id={panelId}
+                role="region"
+                aria-label="Search"
+                className="mx-auto min-h-full max-w-[1140px] overflow-hidden bg-white shadow-2xl sm:min-h-0 sm:rounded-2xl sm:border sm:border-line"
+              >
+                {/* The search box, on cream. */}
+                <div className="border-b border-line bg-cream p-4 sm:p-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <form
+                      method="get"
+                      action={routes.search}
+                      role="search"
+                      aria-label="Search the shop"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        if (q !== null) go(searchHref(q));
+                      }}
+                      className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border-2 border-deep bg-white px-3 py-2 shadow-sm sm:gap-3 sm:px-4"
+                    >
+                      <SearchIcon width={24} height={24} aria-hidden className="shrink-0" />
+                      <input
+                        ref={input}
+                        type="search"
+                        name="q"
+                        role="combobox"
+                        aria-label="Search the shop"
+                        aria-autocomplete="list"
+                        aria-expanded={expanded}
+                        aria-controls={listId}
+                        aria-activedescendant={activeOption?.id}
+                        autoComplete="off"
+                        maxLength={MAX_SEARCH_LENGTH}
+                        placeholder="Search clip-ins, toppers, shades…"
+                        value={query}
+                        onChange={(event) => {
+                          setQuery(event.target.value);
+                          setActive(-1);
+                        }}
+                        onKeyDown={onKeyDown}
+                        className="h-10 min-w-0 flex-1 bg-transparent font-display text-lg font-semibold tracking-tight text-deep placeholder:font-sans placeholder:text-base placeholder:font-normal placeholder:text-muted focus:outline-none"
+                      />
+                      {query ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuery("");
+                            setActive(-1);
+                            input.current?.focus();
+                          }}
+                          className="inline-flex shrink-0 items-center gap-1 rounded-md bg-sand px-2 py-1 text-[0.625rem] font-semibold text-muted transition-colors hover:bg-sand-deep hover:text-deep"
+                        >
+                          <CloseIcon width={14} height={14} aria-hidden />
+                          Clear
+                        </button>
+                      ) : null}
+                      <span
+                        aria-hidden
+                        className="hidden shrink-0 rounded bg-sand-deep px-2 py-0.5 text-[0.6875rem] font-bold text-muted sm:inline-block"
+                      >
+                        ESC to close
+                      </span>
+                      <button
+                        type="submit"
+                        className="h-10 shrink-0 rounded-full bg-deep px-4 text-sm font-semibold text-white hover:bg-deep-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
+                      >
+                        Search
+                      </button>
+                    </form>
+                    <button
+                      type="button"
+                      aria-label="Close search"
+                      onClick={() => close()}
+                      className="flex size-11 shrink-0 items-center justify-center rounded-full border border-line bg-white shadow-sm transition-colors hover:bg-sand-deep focus-visible:outline-2 focus-visible:outline-deep"
+                    >
+                      <CloseIcon width={22} height={22} />
+                    </button>
+                  </div>
+                </div>
 
                 <p role="status" className="sr-only">
                   {count}
                 </p>
 
-                <div
-                  id={listId}
-                  role="listbox"
-                  onClick={(event) => {
-                    // One handler for every option (each carries its address in data-href).
-                    const option = (event.target as HTMLElement).closest<HTMLElement>(
-                      "[data-href]",
-                    );
-                    if (option?.dataset.href) go(option.dataset.href);
-                  }}
-                  aria-label="Suggestions"
-                  className={cx(
-                    "mt-4 transition-opacity",
-                    loading && "opacity-60",
-                    !expanded && "hidden",
-                  )}
-                >
-                  {shown && shown.data.categories.length > 0 ? (
-                    <div role="group" aria-label="Categories" className="mb-3">
-                      <p
-                        aria-hidden
-                        className="px-3 pb-2 text-xs tracking-[0.25em] text-deep/70 uppercase"
-                      >
-                        Categories
-                      </p>
-                      <div className="flex flex-wrap gap-2 px-1">
-                        {shown.data.categories.map((category) => {
-                          const option = options.find(
-                            (o) => o.href === routes.category(category.slug),
-                          )!;
-                          return (
-                            <div
-                              key={category.slug}
-                              {...optionProps(option)}
-                              className={cx(
-                                "cursor-pointer rounded-full border px-4 py-1.5 text-sm",
-                                activeOption?.id === option.id
-                                  ? "border-deep bg-deep text-mint"
-                                  : "border-deep/20 bg-white hover:border-deep/60",
-                              )}
-                            >
-                              <Highlighted text={category.name} query={shown.q} />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {shown && shown.data.products.length > 0 ? (
-                    <div role="group" aria-label="Products">
-                      <p
-                        aria-hidden
-                        className="px-3 pb-1 text-xs tracking-[0.25em] text-deep/70 uppercase"
-                      >
-                        Products
-                      </p>
-                      {shown.data.products.map((product) => {
-                        const option = options.find((o) => o.href === `/product/${product.slug}`)!;
-                        return (
-                          <div
-                            key={product.slug}
-                            {...optionProps(option)}
-                            className={optionClass(option)}
-                          >
-                            <span className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-mint-deep">
-                              {product.image ? (
-                                <Image
-                                  src={product.image.thumbnail}
-                                  alt=""
-                                  fill
-                                  sizes="48px"
-                                  className="object-cover"
-                                />
-                              ) : (
-                                <PhotoPlaceholder size="small" />
-                              )}
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate">
-                                <Highlighted text={product.name} query={shown.q} />
-                              </span>
-                              <span className="block text-sm text-deep/70">
-                                {formatPriceRange(product.priceRange.min, product.priceRange.max)}
-                              </span>
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-
-                  {shown && expanded ? (
-                    <div
-                      {...optionProps(options[options.length - 1])}
-                      className={cx(optionClass(options[options.length - 1]), "mt-2 font-medium")}
-                    >
-                      <SearchIcon width={16} height={16} aria-hidden />
-                      See all results for &ldquo;{shown.q}&rdquo;
-                    </div>
-                  ) : null}
-                </div>
-
-                {shown && shown.data.products.length + shown.data.categories.length === 0 ? (
-                  <p className="mt-4 px-3 text-deep/70">
-                    No suggestions for &ldquo;{shown.q}&rdquo;
-                    {shown.data.didYouMean ? (
-                      <>
-                        {" "}
-                        — did you mean{" "}
+                <div className="grid gap-8 p-4 sm:p-6 lg:grid-cols-12">
+                  {/* Left: popular categories and shade help. */}
+                  <div className="flex flex-col gap-6 border-line pb-6 lg:col-span-4 lg:border-r lg:pr-6 lg:pb-0">
+                    {shown && shown.data.didYouMean ? (
+                      <p className="text-sm text-muted">
+                        Did you mean{" "}
                         <button
                           type="button"
                           onClick={() => go(searchHref(shown.data.didYouMean!))}
-                          className="font-medium text-deep underline decoration-gold decoration-2 underline-offset-4"
+                          className="font-semibold text-deep underline decoration-gold decoration-2 underline-offset-4"
                         >
                           {shown.data.didYouMean}
                         </button>
                         ?
-                      </>
-                    ) : (
-                      ". Press Enter to search anyway."
-                    )}
-                  </p>
-                ) : null}
+                      </p>
+                    ) : null}
+                    {popular.length > 0 ? (
+                      <div>
+                        <p className="mb-2.5 text-[0.625rem] font-bold tracking-[0.08em] text-muted uppercase">
+                          Popular categories
+                        </p>
+                        <ul className="flex flex-wrap gap-2">
+                          {popular.map((item) => (
+                            <li key={item.href}>
+                              <Link
+                                href={item.href}
+                                onClick={() => close(false)}
+                                className="flex items-center gap-1 rounded-full bg-sand px-3 py-1 text-xs font-semibold transition-colors hover:bg-sand-deep focus-visible:outline-2 focus-visible:outline-deep"
+                              >
+                                <span aria-hidden className="text-gold">
+                                  ✦
+                                </span>
+                                {item.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                    {whatsapp ? (
+                      <div className="rounded-xl border border-line bg-mint p-4">
+                        <p className="text-xs font-bold">Unsure of your shade?</p>
+                        <p className="mt-0.5 text-xs text-muted">
+                          Send us a daylight photo of your hair, and we&apos;ll help you choose.
+                        </p>
+                        <a
+                          href={whatsapp}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 inline-flex text-xs font-bold hover:underline"
+                        >
+                          Free advice on WhatsApp →
+                          <span className="sr-only"> (opens in a new tab)</span>
+                        </a>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Right: the suggestions (the combobox's list). */}
+                  <div className="lg:col-span-8">
+                    {shown === null ? (
+                      <p className="py-6 text-center text-sm text-muted">
+                        {wanted === null
+                          ? `Type at least ${MIN_SUGGEST_LENGTH} letters to see products.`
+                          : "Looking…"}
+                      </p>
+                    ) : null}
+                    {shown && !expanded ? (
+                      <p className="py-6 text-center text-sm text-muted">
+                        No suggestions for &ldquo;{shown.q}&rdquo;. Press Enter to search anyway.
+                      </p>
+                    ) : null}
+                    <div
+                      id={listId}
+                      role="listbox"
+                      onClick={(event) => {
+                        // One handler for every option (each carries its address in data-href).
+                        const option = (event.target as HTMLElement).closest<HTMLElement>(
+                          "[data-href]",
+                        );
+                        if (option?.dataset.href) go(option.dataset.href);
+                      }}
+                      aria-label="Suggestions"
+                      className={cx(
+                        "transition-opacity",
+                        loading && "opacity-60",
+                        !expanded && "hidden",
+                      )}
+                    >
+                      {shown && shown.data.categories.length > 0 ? (
+                        <div role="group" aria-label="Categories" className="mb-5">
+                          <p
+                            aria-hidden
+                            className="mb-2 text-[0.625rem] font-bold tracking-[0.08em] text-muted uppercase"
+                          >
+                            Categories
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {shown.data.categories.map((category) => {
+                              const option = options.find(
+                                (o) => o.href === routes.category(category.slug),
+                              )!;
+                              return (
+                                <div
+                                  key={category.slug}
+                                  {...optionProps(option)}
+                                  className={cx(
+                                    "cursor-pointer rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                                    activeOption?.id === option.id
+                                      ? "border-deep bg-deep text-white"
+                                      : "border-line bg-white hover:bg-sand",
+                                  )}
+                                >
+                                  <Highlighted text={category.name} query={shown.q} />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {shown && shown.data.products.length > 0 ? (
+                        <div role="group" aria-label="Products">
+                          <p aria-hidden className="mb-3 flex items-center gap-2">
+                            <span className="font-display text-lg font-bold">Products</span>
+                            <span className="rounded bg-sage px-2 py-0.5 text-[0.625rem] font-bold text-sage-ink">
+                              {shown.data.products.length}{" "}
+                              {shown.data.products.length === 1 ? "match" : "matches"}
+                            </span>
+                          </p>
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            {shown.data.products.map((product) => {
+                              const option = options.find(
+                                (o) => o.href === `/product/${product.slug}`,
+                              )!;
+                              const on = activeOption?.id === option.id;
+                              return (
+                                <div
+                                  key={product.slug}
+                                  {...optionProps(option)}
+                                  className={cx(
+                                    "group flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 transition-all",
+                                    on
+                                      ? "border-deep bg-white shadow-md"
+                                      : "border-line bg-sand hover:bg-white hover:shadow-md",
+                                  )}
+                                >
+                                  <span className="flex items-start gap-3">
+                                    <span className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-white shadow-inner">
+                                      {product.image ? (
+                                        <Image
+                                          src={product.image.thumbnail}
+                                          alt=""
+                                          fill
+                                          sizes="80px"
+                                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                        />
+                                      ) : (
+                                        <PhotoPlaceholder size="small" />
+                                      )}
+                                    </span>
+                                    <span className="min-w-0">
+                                      {product.reviewCount > 0 ? (
+                                        <span className="mb-1 block text-[0.6875rem] font-bold text-gold-ink">
+                                          ★ {product.rating.toFixed(1)}{" "}
+                                          <span className="font-normal text-muted">
+                                            ({product.reviewCount})
+                                          </span>
+                                        </span>
+                                      ) : null}
+                                      <span className="line-clamp-2 text-xs leading-snug font-bold">
+                                        <Highlighted text={product.name} query={shown.q} />
+                                      </span>
+                                      {product.shortDescription ? (
+                                        <span className="mt-1 line-clamp-1 block text-[0.6875rem] text-muted">
+                                          {product.shortDescription}
+                                        </span>
+                                      ) : null}
+                                    </span>
+                                  </span>
+                                  <span className="mt-2 flex items-center justify-between border-t border-line pt-3">
+                                    <span className="text-base font-bold tracking-tight">
+                                      {formatPriceRange(
+                                        product.priceRange.min,
+                                        product.priceRange.max,
+                                      )}
+                                    </span>
+                                    <span
+                                      aria-hidden
+                                      className="rounded-full border border-line bg-white px-3 py-1.5 text-[0.625rem] font-bold transition-colors group-hover:bg-deep group-hover:text-white"
+                                    >
+                                      View
+                                    </span>
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {shown && expanded ? (
+                        <div className="mt-5 flex justify-end">
+                          <div
+                            {...optionProps(options[options.length - 1])}
+                            className={cx(
+                              "inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full px-6 py-2.5 text-xs font-bold text-white shadow-md transition-colors sm:w-auto",
+                              activeOption?.id === options[options.length - 1].id
+                                ? "bg-deep-hover ring-2 ring-gold"
+                                : "bg-deep hover:bg-deep-hover",
+                            )}
+                          >
+                            <SearchIcon width={16} height={16} aria-hidden />
+                            See all results for &ldquo;{shown.q}&rdquo; →
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>,
             document.body,

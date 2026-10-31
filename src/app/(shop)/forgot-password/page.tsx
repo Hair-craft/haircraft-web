@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
         </Link>
       }
     >
-      <div className="flex flex-col gap-4 text-deep/80">
+      <div className="flex flex-col gap-4 text-muted">
         <p>
           Resetting a password online is coming soon. Until then, please contact us from the email
           address on your account, and we&apos;ll help you get back in.

@@ -51,7 +51,7 @@ export function ProductTabs({ tabs, label }: { tabs: ProductTab[]; label: string
         <div
           role="tablist"
           aria-label={label}
-          className="flex justify-center gap-2"
+          className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0"
           onKeyDown={onKeyDown}
         >
           {tabs.map((tab, i) => (
@@ -68,20 +68,20 @@ export function ProductTabs({ tabs, label }: { tabs: ProductTab[]; label: string
               tabIndex={i === active ? 0 : -1}
               onClick={() => setActive(i)}
               className={cx(
-                "relative px-4 py-2 text-xs tracking-[0.25em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-deep",
-                i === active ? "text-deep" : "text-deep/70 hover:text-deep/80",
+                "relative shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep",
+                i === active ? "text-white" : "bg-white text-deep hover:bg-sand",
               )}
             >
-              {tab.label}
               {i === active ? (
                 <m.span
-                  layoutId={`${base}-underline`}
-                  className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gold"
+                  layoutId={`${base}-pill`}
+                  className="absolute inset-0 rounded-full bg-deep shadow-sm"
                   transition={
                     reduced ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 36 }
                   }
                 />
               ) : null}
+              <span className="relative">{tab.label}</span>
             </button>
           ))}
         </div>

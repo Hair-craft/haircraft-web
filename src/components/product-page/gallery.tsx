@@ -33,7 +33,7 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
   // Photos are optional: without any, one placeholder in the photo's place.
   if (images.length === 0)
     return (
-      <div className={cx("relative overflow-hidden rounded-[2rem]", FRAME)}>
+      <div className={cx("relative overflow-hidden rounded-xl", FRAME)}>
         <PhotoPlaceholder />
       </div>
     );
@@ -61,7 +61,7 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
   }, [active]);
 
   if (total === 0)
-    return <div className="aspect-[3/4] rounded-[2rem] bg-mint-deep" aria-label="No photo yet" />;
+    return <div className="aspect-[3/4] rounded-xl bg-mint-deep" aria-label="No photo yet" />;
 
   const show = (i: number) => setActive((i + total) % total);
   const onKeyDown = (event: KeyboardEvent) => {
@@ -75,50 +75,17 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
 
   return (
     <div>
-      {/* Desktop */}
-      <div className="hidden gap-4 lg:grid lg:grid-cols-[5rem_1fr]">
-        {/* As tall as the large photo; more thumbnails than fit scroll inside it. */}
-        <div className="relative">
-          <ul
-            ref={thumbs}
-            aria-label="Photos"
-            className="absolute inset-0 flex flex-col gap-3 overflow-y-auto p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {images.map((image, i) => (
-              <li key={image.id} className="shrink-0">
-                <button
-                  type="button"
-                  onClick={() => show(i)}
-                  aria-label={`Photo ${i + 1} of ${total}`}
-                  aria-current={i === active || undefined}
-                  className={cx(
-                    "relative block w-full overflow-hidden rounded-xl ring-2 transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-deep",
-                    FRAME,
-                    i === active ? "ring-deep" : "opacity-70 ring-transparent hover:opacity-100",
-                  )}
-                >
-                  <Image
-                    src={image.urls.thumbnail}
-                    alt=""
-                    fill
-                    sizes="80px"
-                    className="object-contain"
-                  />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* Desktop: the large photo, then a row of thumbnails under it. */}
+      <div className="hidden flex-col gap-4 lg:flex">
         <div className="relative" onKeyDown={onKeyDown}>
           <button
             type="button"
             onClick={() => setZoomed(active)}
             aria-label={`View photo ${active + 1} of ${total} full screen`}
             className={cx(
-              "relative block w-full cursor-zoom-in overflow-hidden rounded-[2rem] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep",
-              FRAME,
-              // Never taller than the window (below the header), so the whole photo is seen.
-              "max-h-[calc(100dvh-14rem)] min-h-[28rem]",
+              "relative block w-full cursor-zoom-in overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep",
+              // Square, as in the design; the whole photo shows (contained) on the sand ground.
+              "aspect-square bg-sand",
             )}
           >
             <Image
@@ -138,6 +105,32 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
             </>
           ) : null}
         </div>
+        <div>
+          <ul ref={thumbs} aria-label="Photos" className="grid grid-cols-5 gap-3 p-0.5">
+            {images.map((image, i) => (
+              <li key={image.id} className="shrink-0">
+                <button
+                  type="button"
+                  onClick={() => show(i)}
+                  aria-label={`Photo ${i + 1} of ${total}`}
+                  aria-current={i === active || undefined}
+                  className={cx(
+                    "relative block aspect-square w-full overflow-hidden rounded-xl bg-white p-1.5 shadow-sm ring-2 transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-deep",
+                    i === active ? "ring-deep" : "opacity-80 ring-transparent hover:opacity-100",
+                  )}
+                >
+                  <Image
+                    src={image.urls.thumbnail}
+                    alt=""
+                    fill
+                    sizes="120px"
+                    className="object-contain"
+                  />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       {/* Phones: edge to edge. Tablets: a centred photo, not one taller than the screen. */}
@@ -149,7 +142,7 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
             const el = event.currentTarget;
             setActive(Math.round(el.scrollLeft / el.clientWidth));
           }}
-          className="relative -mx-4 flex snap-x snap-mandatory overflow-x-auto sm:mx-0 sm:rounded-[2rem] [&::-webkit-scrollbar]:hidden"
+          className="relative -mx-4 flex snap-x snap-mandatory overflow-x-auto sm:mx-0 sm:rounded-xl [&::-webkit-scrollbar]:hidden"
         >
           {images.map((image, i) => (
             <li key={image.id} className="w-full shrink-0 snap-start">
@@ -266,7 +259,7 @@ export function Lightbox({
         if (event.key === "ArrowRight") go(index + 1);
         else if (event.key === "ArrowLeft") go(index - 1);
       }}
-      className="m-0 h-dvh max-h-none w-screen max-w-none bg-deep p-0 text-mint backdrop:bg-deep"
+      className="m-0 h-dvh max-h-none w-screen max-w-none bg-deep p-0 text-white backdrop:bg-deep"
     >
       <p className="absolute top-5 left-5 z-10 text-sm tracking-[0.2em]" aria-live="polite">
         {index + 1} / {total}

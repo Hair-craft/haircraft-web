@@ -72,10 +72,10 @@ export function ProfileForm({
       />
       <div className="flex flex-col gap-1.5">
         <p className="text-sm font-medium text-deep">Email</p>
-        <p className="rounded-xl border border-deep/10 bg-white/40 px-4 py-2.5 text-deep/80">
+        <p className="rounded-xl border border-line bg-white/40 px-4 py-2.5 text-muted">
           {profile.email}
         </p>
-        <p className="text-xs text-deep/70">
+        <p className="text-xs text-muted">
           To change your email, please{" "}
           <Link href="/contact" className="underline underline-offset-4 hover:text-deep">
             contact us
@@ -129,7 +129,7 @@ export function AddressForm({
           {LABEL_CHOICES.map((choice) => (
             <label
               key={choice}
-              className="cursor-pointer rounded-full border border-deep/20 bg-white/70 px-4 py-2 text-sm has-checked:border-deep has-checked:bg-deep has-checked:text-mint has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-deep"
+              className="cursor-pointer rounded-full border border-deep/20 bg-white px-4 py-2 text-sm has-checked:border-deep has-checked:bg-deep has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-deep"
             >
               <input
                 type="radio"
@@ -236,9 +236,9 @@ export function AddressForm({
         />
       </div>
       {address?.isDefault ? (
-        <p className="text-sm text-deep/70">This is your default address.</p>
+        <p className="text-sm text-muted">This is your default address.</p>
       ) : isFirst ? (
-        <p className="text-sm text-deep/70">Your first address becomes your default.</p>
+        <p className="text-sm text-muted">Your first address becomes your default.</p>
       ) : (
         <Checkbox name="isDefault" label="Make this my default address" />
       )}
@@ -302,7 +302,7 @@ export function AddressActions({ address }: { address: Address }) {
         </button>
       </form>
       <Dialog open={confirming} onClose={() => setConfirming(false)} title="Delete this address?">
-        <p className="text-deep/75">
+        <p className="text-muted">
           {address.fullName}, {address.city}. This can&apos;t be undone.
           {address.isDefault ? " Another saved address becomes your default." : ""}
         </p>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { BagIcon } from "@/components/ui/icons";
+import { BagIcon, LockIcon } from "@/components/ui/icons";
 import { cartFormAction } from "@/lib/cart/actions";
 import {
   freeShipping,
@@ -18,6 +18,7 @@ import {
 } from "@/lib/cart/rules";
 import { cx } from "@/lib/cx";
 import { formatPrice } from "@/lib/format";
+import { returnRules } from "@/content/returns-rules";
 import { useCart, useSeenPrices } from "./cart-context";
 
 const itemsLabel = (count: number) => `${count} ${count === 1 ? "item" : "items"}`;
@@ -40,7 +41,7 @@ export function CartButton() {
       {count > 0 ? (
         <span
           aria-hidden
-          className="absolute -top-0.5 -right-0.5 flex min-w-5 items-center justify-center rounded-full bg-gold px-1 text-[0.7rem] leading-5 font-semibold text-deep"
+          className="absolute top-0.5 right-0.5 flex size-4 items-center justify-center rounded-full bg-deep text-[0.625rem] font-bold text-white"
         >
           {count > 99 ? "99+" : count}
         </span>
@@ -92,8 +93,33 @@ function LineForm({
   );
 }
 
+/** A price (decimal rupees) times a quantity, in whole paise (never floats on money). */
+function timesQuantity(price: string, quantity: number): string {
+  const [rupees, paise = ""] = price.split(".");
+  const total = (Number(rupees) * 100 + Number(paise.padEnd(2, "0").slice(0, 2))) * quantity;
+  return `${Math.floor(total / 100)}.${String(total % 100).padStart(2, "0")}`;
+}
+
 const stepButton =
   "flex size-9 items-center justify-center rounded-full text-lg leading-none hover:bg-deep/5 disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-deep";
+
+function BinIcon() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      width={16}
+      height={16}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+    </svg>
+  );
+}
 
 function Line({ line, roomy }: { line: CartLine; roomy?: boolean }) {
   const { setQuantity, remove, pending } = useCart();
@@ -104,14 +130,14 @@ function Line({ line, roomy }: { line: CartLine; roomy?: boolean }) {
   return (
     <li
       className={cx(
-        "flex gap-4 rounded-3xl bg-white p-4 ring-1",
-        problem ? "ring-red-300" : "ring-deep/5",
+        "flex gap-3.5 rounded-xl border bg-sand p-3.5",
+        problem ? "border-red-300" : "border-line",
       )}
     >
       <Link
         href={href}
         className={cx(
-          "relative shrink-0 overflow-hidden rounded-2xl bg-mint-deep",
+          "relative shrink-0 overflow-hidden rounded-lg bg-white shadow-inner",
           roomy ? "size-28" : "size-20",
         )}
         tabIndex={-1}
@@ -126,18 +152,26 @@ function Line({ line, roomy }: { line: CartLine; roomy?: boolean }) {
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <Link href={href} className="font-display text-lg leading-snug hover:underline">
+            <Link
+              href={href}
+              className={cx(
+                "leading-snug font-bold hover:underline",
+                roomy ? "font-display text-lg" : "line-clamp-2 text-xs tracking-wide",
+              )}
+            >
               {line.productName}
             </Link>
-            <p className="text-sm text-deep/70">{line.variantLabel}</p>
+            <p className="mt-0.5 text-xs text-muted">{line.variantLabel}</p>
           </div>
           <p className="shrink-0 text-right text-sm">
-            <span className="font-semibold">{formatPrice(line.lineTotal)}</span>
+            <span className="text-base font-bold tracking-tight">
+              {formatPrice(line.lineTotal)}
+            </span>
             {line.quantity > 1 ? (
-              <span className="block text-xs text-deep/70">{formatPrice(line.unitPrice)} each</span>
+              <span className="block text-xs text-muted">{formatPrice(line.unitPrice)} each</span>
             ) : null}
             {line.onSale && line.listPrice !== line.unitPrice ? (
-              <s className="block text-xs text-deep/70">
+              <s className="block text-xs text-muted">
                 <span className="sr-only">was </span>
                 {formatPrice(line.listPrice)}
               </s>
@@ -148,7 +182,7 @@ function Line({ line, roomy }: { line: CartLine; roomy?: boolean }) {
           <p className="text-sm font-medium text-red-800">{line.message}</p>
         ) : null}
         {changed ? (
-          <p className="text-sm text-deep/70">
+          <p className="text-sm text-muted">
             Price changed from {formatPrice(changed.from)} to {formatPrice(changed.to)}
           </p>
         ) : null}
@@ -156,7 +190,7 @@ function Line({ line, roomy }: { line: CartLine; roomy?: boolean }) {
           <div
             role="group"
             aria-label={`Quantity of ${line.productName}`}
-            className="flex items-center rounded-full border border-deep/15"
+            className="flex items-center rounded-full border border-line bg-white"
           >
             {line.quantity > 1 ? (
               <LineForm
@@ -205,9 +239,10 @@ function Line({ line, roomy }: { line: CartLine; roomy?: boolean }) {
             op="remove"
             label={`Remove ${line.productName} from your bag`}
             disabled={pending}
-            className="text-sm text-deep/70 underline-offset-4 hover:text-deep hover:underline disabled:opacity-40"
+            className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs text-muted transition-colors hover:text-[#ba1a1a] disabled:opacity-40"
             onSubmit={() => remove(line)}
           >
+            <BinIcon />
             Remove
           </LineForm>
         </div>
@@ -240,19 +275,25 @@ export function FreeShippingLine({ cart }: { cart: Cart }) {
   const status = freeShipping(cart.subtotal, freeShippingThreshold);
   if (!status) return null;
   return (
-    <div className="rounded-2xl bg-white/70 px-4 py-3 text-sm">
-      <p>
-        {status.reached ? (
-          <>You&apos;ve got free shipping.</>
-        ) : (
-          <>
-            Add <strong>{formatPrice(status.remaining)}</strong> more for free shipping.
-          </>
-        )}
+    <div className="rounded-lg border border-line bg-white p-3 text-xs">
+      <p className="flex items-center justify-between gap-3 font-semibold">
+        <span className="text-sage-ink">
+          <span aria-hidden className="text-gold">
+            ✦{" "}
+          </span>
+          {status.reached ? (
+            <>You&apos;ve got free shipping.</>
+          ) : (
+            <>
+              Add <strong>{formatPrice(status.remaining)}</strong> more for free shipping.
+            </>
+          )}
+        </span>
+        <span className="font-bold text-deep">{formatPrice(cart.subtotal)}</span>
       </p>
-      <div aria-hidden className="mt-2 h-1.5 overflow-hidden rounded-full bg-deep/10">
+      <div aria-hidden className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#eee7dc]">
         <div
-          className="h-full rounded-full bg-gold transition-[width] duration-500"
+          className="h-full rounded-full bg-deep transition-[width] duration-500"
           style={{ width: `${status.reached ? 100 : status.percent}%` }}
         />
       </div>
@@ -267,16 +308,18 @@ export function CheckoutButton({ cart }: { cart: Cart }) {
     return (
       <div>
         <Button className="w-full" size="lg" disabled aria-describedby="checkout-note">
-          Checkout
+          <LockIcon width={18} height={18} />
+          Secure checkout
         </Button>
-        <p id="checkout-note" className="mt-2 text-center text-xs text-deep/70">
+        <p id="checkout-note" className="mt-2 text-center text-xs text-muted">
           Fix the items marked above to continue.
         </p>
       </div>
     );
   return (
-    <ButtonLink href="/checkout" size="lg" className="w-full" onClick={closeDrawer}>
-      Checkout
+    <ButtonLink href="/checkout" size="lg" className="w-full text-sm" onClick={closeDrawer}>
+      <LockIcon width={18} height={18} />
+      Secure checkout · {formatPrice(cart.subtotal)}
     </ButtonLink>
   );
 }
@@ -285,7 +328,7 @@ export function EmptyBag({ onShop }: { onShop?: () => void }) {
   return (
     <div className="flex flex-col items-center gap-4 py-10 text-center">
       <p className="font-display text-3xl">Your bag is empty</p>
-      <p className="text-deep/70">Find your length, colour and texture in the shop.</p>
+      <p className="text-muted">Find your length, colour and texture in the shop.</p>
       <ButtonLink href="/shop" onClick={onShop}>
         Shop all
       </ButtonLink>
@@ -295,14 +338,94 @@ export function EmptyBag({ onShop }: { onShop?: () => void }) {
 
 /** The bag, sliding in from the right (full width on phones). */
 export function CartDrawer() {
-  const { cart, drawerOpen, closeDrawer, pending, error } = useCart();
+  const { cart, drawerOpen, closeDrawer, pending, error, freeShippingThreshold } = useCart();
+  const free = cart ? freeShipping(cart.subtotal, freeShippingThreshold) : null;
+  const filled = cart !== null && cart.lines.length > 0;
   return (
     <Dialog
       open={drawerOpen}
       onClose={closeDrawer}
       title={cart ? `Your bag (${cart.itemCount})` : "Your bag"}
       placement="right"
-      className="sm:w-[min(28rem,92vw)]"
+      surface="white"
+      className="border-l border-line sm:w-[min(460px,92vw)]"
+      header={
+        <>
+          <div className="flex items-center gap-2.5 pr-12">
+            <span
+              aria-hidden
+              className="flex size-9 items-center justify-center rounded-full bg-deep text-white"
+            >
+              <BagIcon width={20} height={20} />
+            </span>
+            <div>
+              <h2 className="font-display text-lg leading-6 font-bold">Your bag</h2>
+              <p className="text-[0.625rem] font-bold tracking-[0.08em] text-muted uppercase">
+                {cart === null
+                  ? "Loading…"
+                  : `${cart.itemCount} ${cart.itemCount === 1 ? "item" : "items"}`}
+              </p>
+            </div>
+          </div>
+          {filled ? (
+            <div className="mt-4">
+              <FreeShippingLine cart={cart} />
+            </div>
+          ) : null}
+        </>
+      }
+      footer={
+        filled ? (
+          <div className="flex flex-col gap-3.5 border-t border-line bg-white p-5 shadow-[0_-4px_20px_rgba(11,41,26,0.04)]">
+            <div className="flex flex-col gap-1.5 text-[0.8125rem]">
+              <p className="flex justify-between text-muted">
+                <span>
+                  Subtotal ({cart.itemCount} {cart.itemCount === 1 ? "item" : "items"})
+                </span>
+                <span>{formatPrice(cart.subtotal)}</span>
+              </p>
+              <p className="flex justify-between text-muted">
+                <span>Delivery</span>
+                {free?.reached ? (
+                  <span className="font-semibold text-sage-ink">FREE</span>
+                ) : (
+                  <span>Worked out at checkout</span>
+                )}
+              </p>
+              <p className="flex items-baseline justify-between border-t border-line pt-2">
+                <span className="font-display text-lg font-bold">Total</span>
+                <span className="text-right">
+                  <span className="font-display text-lg font-bold">
+                    {formatPrice(cart.subtotal)}
+                  </span>
+                  <span className="block text-[0.6875rem] text-muted">
+                    Inclusive of all GST taxes
+                    {free?.reached ? "" : ", before delivery"}
+                  </span>
+                </span>
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <CheckoutButton cart={cart} />
+              <ButtonLink
+                href="/cart"
+                variant="ghost"
+                onClick={closeDrawer}
+                className="w-full border border-line bg-sand hover:bg-sand-deep"
+              >
+                View bag
+              </ButtonLink>
+            </div>
+            <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-[0.6875rem] text-muted">
+              <span>✦ Exchange for defective items</span>
+              <span aria-hidden>•</span>
+              <span>Secure payments</span>
+              <span aria-hidden>•</span>
+              <span>Ships in {returnRules.dispatchWorkingDays} working days</span>
+            </p>
+          </div>
+        ) : null
+      }
     >
       <div className="flex min-h-full flex-col gap-4" aria-busy={pending || undefined}>
         {error ? (
@@ -311,26 +434,12 @@ export function CartDrawer() {
           </p>
         ) : null}
         {cart === null ? (
-          <p className="py-10 text-center text-deep/70">Loading your bag…</p>
+          <p className="py-10 text-center text-muted">Loading your bag…</p>
         ) : cart.lines.length === 0 ? (
           <EmptyBag onShop={closeDrawer} />
         ) : (
           <div className={cx("flex flex-col gap-4 transition-opacity", pending && "opacity-60")}>
-            <FreeShippingLine cart={cart} />
             <CartLines cart={cart} />
-            <div className="sticky bottom-0 -mx-6 mt-auto flex flex-col gap-3 border-t border-deep/10 bg-mint px-6 pt-4 pb-2">
-              <p className="flex items-baseline justify-between">
-                <span>Subtotal</span>
-                <span className="text-lg font-semibold">{formatPrice(cart.subtotal)}</span>
-              </p>
-              <p className="-mt-2 text-xs text-deep/70">
-                Shipping and taxes are worked out at checkout.
-              </p>
-              <ButtonLink href="/cart" variant="secondary" onClick={closeDrawer}>
-                View bag
-              </ButtonLink>
-              <CheckoutButton cart={cart} />
-            </div>
           </div>
         )}
       </div>
@@ -390,7 +499,7 @@ export function AddToBag({
         <div
           role="group"
           aria-label="Quantity"
-          className="flex h-13 items-center rounded-full border border-deep/20 bg-white/70"
+          className="flex h-12 items-center rounded-full bg-sand-deep px-1.5"
         >
           <button
             type="button"
@@ -422,8 +531,15 @@ export function AddToBag({
             +
           </button>
         </div>
-        <Button type="submit" size="lg" loading={pending} className="flex-1">
-          Add to bag
+        <Button
+          type="submit"
+          size="lg"
+          loading={pending}
+          aria-label="Add to bag"
+          className="h-12 flex-1 text-sm tracking-wider uppercase"
+        >
+          <BagIcon width={20} height={20} />
+          Add to Bag — {formatPrice(timesQuantity(price, quantity))}
         </Button>
       </div>
       {problem ? (

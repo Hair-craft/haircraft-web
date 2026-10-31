@@ -170,7 +170,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
       <ProductView product={product} initialSku={variant?.sku ?? ""} />
 
       {summary && firstReviews ? (
-        <div className="mt-20">
+        <div className="mt-10">
           <Reviews
             slug={slug}
             summary={summary}
@@ -183,7 +183,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
 
       {helpful.length > 0 ? (
         <section aria-labelledby="guides-heading" className="mt-20">
-          <h2 id="guides-heading" className="text-center font-display text-4xl md:text-5xl">
+          <h2 id="guides-heading" className="font-display text-3xl font-semibold sm:text-4xl">
             Helpful guides
           </h2>
           <ul className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -198,7 +198,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
 
       {related.length > 0 ? (
         <section aria-labelledby="related-heading" className="mt-20">
-          <h2 id="related-heading" className="text-center font-display text-4xl md:text-5xl">
+          <h2 id="related-heading" className="font-display text-3xl font-semibold sm:text-4xl">
             You may also like
           </h2>
           <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-5 lg:grid-cols-4">

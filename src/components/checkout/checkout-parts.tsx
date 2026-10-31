@@ -23,14 +23,14 @@ export function SummaryLines({ lines }: { lines: SummaryLine[] }) {
   return (
     <ul aria-label="Items in your order" className="flex flex-col gap-4">
       {lines.map((line) => (
-        <li key={line.key} className="flex gap-3">
-          <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-white">
+        <li key={line.key} className="flex gap-3.5 rounded-xl bg-sand/60 p-3">
+          <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-white shadow-sm">
             {line.image ? (
               <Image src={line.image} alt="" fill sizes="64px" className="object-cover" />
             ) : (
               <PhotoPlaceholder size="small" />
             )}
-            <span className="absolute -top-0 -right-0 flex min-w-5 items-center justify-center rounded-bl-xl bg-deep px-1 text-[0.7rem] leading-5 font-semibold text-mint">
+            <span className="absolute -top-0 -right-0 flex min-w-5 items-center justify-center rounded-bl-xl bg-deep px-1 text-[0.7rem] leading-5 font-semibold text-white">
               <span className="sr-only">Quantity </span>
               {line.quantity}
             </span>
@@ -39,17 +39,17 @@ export function SummaryLines({ lines }: { lines: SummaryLine[] }) {
             {line.slug ? (
               <Link
                 href={`/product/${encodeURIComponent(line.slug)}`}
-                className="font-medium underline-offset-4 hover:underline"
+                className="font-semibold underline-offset-4 hover:underline"
               >
                 {line.name}
               </Link>
             ) : (
               <span className="font-medium">{line.name}</span>
             )}
-            <p className="text-deep/70">{line.option}</p>
+            <p className="text-muted">{line.option}</p>
             {line.problem ? <p className="mt-1 text-red-800">{line.problem}</p> : null}
           </div>
-          <p className="text-sm font-medium">{formatPrice(line.lineTotal)}</p>
+          <p className="text-base font-bold tracking-tight">{formatPrice(line.lineTotal)}</p>
         </li>
       ))}
     </ul>
@@ -73,7 +73,7 @@ export function TotalsList({
   return (
     <div className="flex flex-col gap-2 text-sm">
       <dl className="flex flex-col gap-2">
-        {row("Subtotal", formatPrice(totals.subtotal))}
+        {row(<span className="text-muted">Subtotal</span>, formatPrice(totals.subtotal))}
         {Number(totals.discount) > 0
           ? row(
               couponCode ? `Discount (${couponCode})` : "Discount",
@@ -81,16 +81,27 @@ export function TotalsList({
               "text-emerald-800",
             )
           : null}
-        {row("Shipping", isFree(totals.shipping) ? "Free" : formatPrice(totals.shipping))}
         {row(
-          <span className="font-display text-xl">Total</span>,
-          <span className="text-lg font-semibold">{formatPrice(totals.grandTotal)}</span>,
-          "mt-2 border-t border-deep/10 pt-3",
+          <span className="text-muted">Shipping</span>,
+          isFree(totals.shipping) ? (
+            <span className="font-bold text-sage-ink uppercase">Free</span>
+          ) : (
+            formatPrice(totals.shipping)
+          ),
+        )}
+        {row(
+          <span className="flex flex-col">
+            <span className="font-display text-lg font-semibold">Total</span>
+            <span className="text-xs text-muted">
+              Includes {formatPrice(totals.gstIncluded)} GST
+            </span>
+          </span>,
+          <span className="font-display text-[2rem] leading-none font-medium">
+            {formatPrice(totals.grandTotal)}
+          </span>,
+          "mt-2 rounded-xl bg-sand px-4 py-4",
         )}
       </dl>
-      <p className="text-right text-xs text-deep/70">
-        Includes {formatPrice(totals.gstIncluded)} GST
-      </p>
     </div>
   );
 }
@@ -108,12 +119,15 @@ export function CheckoutSection({
   return (
     <section
       aria-labelledby={`step-${number}`}
-      className="rounded-[2rem] bg-white/80 p-6 ring-1 ring-deep/5 sm:p-8"
+      className="flex flex-col rounded-xl bg-white p-6 shadow-sm"
     >
-      <h2 id={`step-${number}`} className="mb-5 flex items-center gap-3 font-display text-2xl">
+      <h2
+        id={`step-${number}`}
+        className="mb-5 flex items-center gap-2.5 font-display text-lg font-semibold"
+      >
         <span
           aria-hidden
-          className="flex size-8 items-center justify-center rounded-full bg-deep font-sans text-sm text-mint"
+          className="flex size-7 items-center justify-center rounded-full bg-deep font-sans text-xs text-white"
         >
           {number}
         </span>

@@ -7,7 +7,7 @@ import { ImageResponse } from "next/og";
 export const SHARE_SIZE = { width: 1200, height: 630 };
 
 const MINT = "#edf9e5";
-const DEEP = "#16362a";
+const DEEP = "#0b291a";
 const DEEP_SOFT = "#3d6b54";
 const GOLD = "#d9982f";
 

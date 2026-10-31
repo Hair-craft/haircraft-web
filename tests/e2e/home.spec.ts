@@ -38,19 +38,25 @@ async function expectPhotosLoad(images: Locator, where: string) {
 }
 
 test.describe("home page", () => {
-  test("hero with its fixed photo and two ways in", async ({ page }) => {
+  test("hero with its fixed photo, two ways in and a real product", async ({ page }) => {
     await page.goto(OPEN + "/");
     await expect(page).toHaveTitle("HairCraft — Human Hair Extensions, Toppers & Wigs in India");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Hair extensions, crafted for confidence",
+      "Hair extensions, crafted for confidence.",
     );
-    await expect(page.getByRole("link", { name: "Shop all", exact: true }).first()).toHaveAttribute(
+    await expect(page.getByRole("link", { name: /^Shop the collection/ })).toHaveAttribute(
       "href",
       "/shop",
     );
-    await expect(page.getByRole("link", { name: "Shop wigs" })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: /Find my match/ })).toHaveAttribute(
       "href",
-      "/shop/wigs",
+      "#match",
+    );
+    await expect(page.locator('img[src*="%2Fimages%2Fhome%2Fhero.webp"]')).toHaveCount(1);
+    // The floating card links to a real product.
+    await expect(page.getByRole("link", { name: /Quick view/ })).toHaveAttribute(
+      "href",
+      /^\/product\//,
     );
     // Exactly one h1 on the page; sections use h2.
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
@@ -58,43 +64,48 @@ test.describe("home page", () => {
     await expect(description).toHaveAttribute("content", /100% human hair extensions in India/);
   });
 
-  test("desktop: the 3D accent loads after the page and stays decorative", async ({ page }) => {
-    await page.goto(OPEN + "/");
-    const accent = page.getByTestId("hero-accent");
-    await expect(accent).toHaveAttribute("data-active", "true", { timeout: 10_000 });
-    await expect(accent.locator("canvas")).toHaveCount(1, { timeout: 10_000 });
-    // Decorative only: hidden from screen readers, never in the way of clicks.
-    await expect(accent).toHaveAttribute("aria-hidden", "true");
-    await expect(accent).toHaveCSS("pointer-events", "none");
-  });
-
-  test("announcement bar and trust strip: read once, pause on hover", async ({ page }) => {
+  test("announcement bar and hero badges, with the free-shipping amount", async ({ page }) => {
     await page.goto(OPEN + "/");
     const offers = page.getByRole("region", { name: "Offers" });
     await expect(offers).toContainText("Free shipping above ₹1,999");
-    // Screen readers get each message once; the copies that make the loop are hidden.
-    await expect(offers.getByRole("listitem")).toHaveCount(3);
-
-    const trust = page.getByRole("region", { name: "Why customers choose HairCraft" });
-    await expect(trust.getByRole("listitem")).toHaveCount(5);
-    const track = trust.locator(".hc-marquee-track");
-    await expect(track).toHaveCSS("animation-play-state", "running");
-    await trust.hover();
-    await expect(track).toHaveCSS("animation-play-state", "paused");
+    await expect(offers.getByRole("listitem")).toHaveCount(4);
+    // Still: no scrolling marquee any more.
+    await expect(offers.locator(".hc-marquee-track")).toHaveCount(0);
+    for (const text of ["100% human hair", "On orders ₹1,999+", "UPI, cards & net banking"]) {
+      await expect(page.getByText(text, { exact: true }).first()).toBeVisible();
+    }
   });
 
-  test("brand promises, with the free-shipping amount", async ({ page }) => {
+  test("find your match: a real product for the choices, and a link to all matches", async ({
+    page,
+  }) => {
     await page.goto(OPEN + "/");
-    const promises = page.getByRole("region", { name: "Our promises" });
-    for (const title of ["100% human hair", "Free shipping", "Secure payments", "Here to help"]) {
-      await expect(promises.getByRole("heading", { name: title })).toBeVisible();
-    }
-    await expect(promises).toContainText("On orders above ₹1,999");
+    const section = page.getByRole("region", { name: /Find your hair extension match/ });
+    const panel = section.getByTestId("match-panel");
+    // The first goal is chosen to start with, and its best product shows.
+    await expect(section.getByRole("button", { pressed: true })).toHaveCount(1);
+    await expect(panel.getByRole("link", { name: "View this match" })).toHaveAttribute(
+      "href",
+      /^\/product\//,
+    );
+
+    await section.getByRole("button", { name: "Wigs", exact: true }).click();
+    await expect(section.getByRole("button", { name: "Wigs", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(panel).toHaveAttribute("aria-busy", "false");
+    await expect(panel.getByRole("link", { name: "View this match" })).toHaveAttribute(
+      "href",
+      /^\/product\//,
+    );
+    const all = panel.getByRole("link", { name: /^See all \d+ matches$/ });
+    if ((await all.count()) > 0) await expect(all).toHaveAttribute("href", /^\/shop\/wigs/);
   });
 
   test("product and category photos actually load (not just image tags)", async ({ page }) => {
     await page.goto(OPEN + "/");
-    for (const name of ["Shop by category", "Most loved hair extensions"]) {
+    for (const name of ["Shop by category", "Bestsellers & customer favourites"]) {
       await expectPhotosLoad(page.getByRole("region", { name }).locator("img"), name);
     }
   });
@@ -102,8 +113,12 @@ test.describe("home page", () => {
   test("shop by category: every top-level category with a photo and a link", async ({ page }) => {
     await page.goto(OPEN + "/");
     const section = page.getByRole("region", { name: "Shop by category" });
-    const cards = section.getByRole("link");
+    const cards = section.getByRole("listitem").getByRole("link");
     await expect(cards).toHaveCount(4);
+    await expect(section.getByRole("link", { name: "View all products" })).toHaveAttribute(
+      "href",
+      "/shop",
+    );
     for (const [name, slug] of [
       ["Clip-in Extensions", "clip-in-extensions"],
       ["Tape-in Extensions", "tape-in-extensions"],
@@ -125,9 +140,12 @@ test.describe("home page", () => {
       apiProducts(request, "sort=createdAt:desc&limit=8"),
     ]);
     await page.goto(OPEN + "/");
-    const section = page.getByRole("region", { name: "Most loved hair extensions" });
+    const section = page.getByRole("region", { name: "Bestsellers & customer favourites" });
     const names = () => section.getByRole("tabpanel").getByRole("heading", { level: 3 });
-    await expect(section.getByRole("link", { name: "View all" })).toHaveAttribute("href", "/shop");
+    await expect(section.getByRole("link", { name: "View all products" })).toHaveAttribute(
+      "href",
+      "/shop",
+    );
 
     if (rated.length === 0) {
       // Nothing reviewed yet: no tabs, just the new arrivals.
@@ -168,46 +186,36 @@ test.describe("home page", () => {
     await expect(ratedTab).toHaveAttribute("tabindex", "-1");
   });
 
-  test("why HairCraft: four cards that stack while scrolling on desktop", async ({ page }) => {
+  test("why HairCraft: four cards, WhatsApp advice, and our story", async ({ page }) => {
     await page.goto(OPEN + "/");
-    const section = page.getByRole("region", { name: "Why women choose HairCraft" });
-    await expect(section.getByRole("heading", { level: 3 })).toHaveCount(4);
-    const cards = section.locator("[data-why-card]");
-    await expect(cards.first()).toHaveCSS("position", "sticky");
-    await expectPhotosLoad(section.locator("img"), "Why HairCraft");
-  });
-
-  test("range explorer: pointing at a category shows it", async ({ page }) => {
-    await page.goto(OPEN + "/");
-    const section = page.getByRole("region", { name: "Explore our range" });
-    const wigs = section.getByRole("button", { name: "Wigs" });
-    await wigs.hover();
-    await expect(wigs).toHaveAttribute("aria-pressed", "true");
-    await expect(section.getByRole("link", { name: "Shop Wigs" })).toHaveAttribute(
+    const why = page.getByRole("region", { name: "Why women choose HairCraft" });
+    await expect(why.getByRole("heading", { level: 3 })).toHaveCount(4);
+    const consult = page.getByRole("region", { name: "Unsure about your shade or length?" });
+    await expect(consult.getByRole("link", { name: /Chat on WhatsApp/ })).toHaveAttribute(
       "href",
-      "/shop/wigs",
+      /^https:\/\/(wa\.me|api\.whatsapp\.com)\//,
     );
-    // Keyboard reaches it too.
-    const ponytails = section.getByRole("button", { name: "Ponytails" });
-    await ponytails.focus();
-    await expect(ponytails).toHaveAttribute("aria-pressed", "true");
-    await expect(section.getByRole("link", { name: "Shop Ponytails" })).toBeVisible();
+    const story = page.getByRole("region", { name: /Crafted for the way you wear/ });
+    await expect(story.locator('img[src*="%2Fimages%2Fhome%2Fstory.webp"]')).toHaveCount(1);
+    // The exchange note says what the policy really is.
+    await expect(story.getByRole("link", { name: /Exchange for defective items/ })).toHaveAttribute(
+      "href",
+      "/returns",
+    );
   });
 
-  test("our story and testimonials (real reviews only)", async ({ page, request }) => {
+  test("review spotlight: one real review, or nothing", async ({ page, request }) => {
     await page.goto(OPEN + "/");
-    await expect(page.getByRole("heading", { name: /Crafted for the way you wear/ })).toBeVisible();
     const reviews = page.getByRole("region", { name: "Loved by women like you" });
     if ((await apiBestRated(request)).length === 0) {
       await expect(reviews).toHaveCount(0);
       return;
     }
-    const quotes = reviews.locator("figure");
-    const count = await quotes.count();
-    expect(count).toBeGreaterThan(0);
-    expect(count).toBeLessThanOrEqual(6);
-    // Each quote names its product, linked.
-    await expect(quotes.first().getByRole("link")).toHaveAttribute("href", /^\/product\//);
+    await expect(reviews.locator("figure")).toHaveCount(1);
+    await expect(reviews.getByRole("link", { name: /Shop this look/ })).toHaveAttribute(
+      "href",
+      /^\/product\//,
+    );
   });
 
   test("FAQ: one answer open at a time, and described for search engines", async ({ page }) => {
@@ -231,34 +239,27 @@ test.describe("home page", () => {
     expect(data.mainEntity).toHaveLength(6);
   });
 
-  test("with reduced motion: nothing moves, nothing sticks, no 3D", async ({ page }) => {
+  test("with reduced motion: the hero doesn't animate", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(OPEN + "/");
-    const track = page.getByRole("region", { name: "Offers" }).locator(".hc-marquee-track");
-    await expect(track).toHaveCSS("animation-name", "none");
-    await expect(
-      page
-        .getByRole("region", { name: "Why women choose HairCraft" })
-        .locator("[data-why-card]")
-        .first(),
-    ).toHaveCSS("position", "static");
-    // Give the accent its chance to load, then check it didn't.
-    await page.waitForTimeout(3000);
-    await expect(page.getByTestId("hero-accent")).toHaveAttribute("data-active", "false");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("animation-name", "none");
     await expect(page.locator("canvas")).toHaveCount(0);
   });
 
-  test("when the API is down the hero and promises still show, with calm messages", async ({
+  test("when the API is down the hero, badges and FAQ still show, with calm messages", async ({
     page,
   }) => {
     const response = await page.goto(API_DOWN + "/");
     expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Our promises" })).toBeVisible();
+    await expect(page.getByText("On orders ₹1,999+")).toBeVisible();
     await expect(page.getByRole("region", { name: "Frequently asked questions" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "We'll be right back" }).first()).toBeVisible();
     // Sections that need the catalogue simply don't appear.
-    await expect(page.getByRole("region", { name: "Explore our range" })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: /Find your hair extension match/ })).toHaveCount(
+      0,
+    );
+    await expect(page.getByRole("link", { name: /Quick view/ })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Loved by women like you" })).toHaveCount(0);
     await expect(page.getByRole("tab")).toHaveCount(0);
   });

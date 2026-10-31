@@ -43,9 +43,11 @@ export default function GuidesPage() {
         siteUrl={siteUrl}
       />
       <header className="mt-6 max-w-2xl text-center lg:text-left">
-        <p className="text-xs tracking-[0.35em] text-deep-soft uppercase">Advice</p>
-        <h1 className="mt-3 font-display text-4xl leading-tight md:text-6xl">Hair guides</h1>
-        <p className="mt-4 text-lg leading-relaxed text-deep/80">
+        <p className="text-[0.7rem] font-bold tracking-[0.2em] text-gold-ink uppercase">Advice</p>
+        <h1 className="mt-3 font-display text-3xl leading-tight font-semibold sm:text-4xl">
+          Hair guides
+        </h1>
+        <p className="mt-4 text-lg leading-relaxed text-muted">
           How to choose, wear and care for human hair extensions, toppers and wigs, from the
           HairCraft team.
         </p>

@@ -95,6 +95,15 @@ async function deleteProduct(request: APIRequestContext, id: string) {
   expect([200, 404], "test product deleted").toContain(res.status());
 }
 
+/** Products a test made and couldn't remove (it stopped early): gone before these tests run. */
+test.beforeAll(async ({ request }) => {
+  const headers = auth(await adminToken(request));
+  const res = await request.get(`${API}/admin/products?search=E2E&limit=100`, { headers });
+  const items = ((await res.json()).data ?? []) as { id: string; name: string }[];
+  for (const item of items.filter((p) => /^Test (Silk Topper|Plain Wig) E2E/.test(p.name)))
+    await deleteProduct(request, item.id);
+});
+
 test("sub-variants are the choices (not their main variant, no Option row); the shop filters by size", async ({
   page,
   request,
@@ -122,7 +131,7 @@ test("sub-variants are the choices (not their main variant, no Option row); the 
     await size.getByRole("link", { name: "15 × 16 cm" }).click();
     await expect(page).toHaveURL(new RegExp(`variant=${topper.sku("L")}$`));
     await expect(page.getByText("₹5,999").first()).toBeVisible();
-    await page.locator("summary", { hasText: "Details" }).click();
+    await page.getByRole("tab", { name: "Details" }).click();
     await expect(page.locator("dd", { hasText: "15 × 16 cm" })).toBeVisible();
     await expect(page.getByRole("group", { name: "Option" })).toHaveCount(0);
     await expectAccessible(page, "product with sub-variants");
@@ -139,6 +148,11 @@ test("sub-variants are the choices (not their main variant, no Option row); the 
       });
     }).toPass({ timeout: 20_000 });
     await expect(page.getByRole("link", { name: "Remove Size: 15 × 16 cm" })).toBeVisible();
+    // The Size drop-down in the filter toolbar.
+    await page
+      .getByRole("complementary", { name: "Filters" })
+      .locator("summary", { hasText: "Size" })
+      .click();
     await expect(page.getByRole("checkbox", { name: "13 × 15 cm" })).toBeVisible();
   } finally {
     await deleteProduct(request, topper.id);
@@ -281,37 +295,9 @@ test("Buy again: only that order's items that can still be bought, straight to c
   }
 });
 
-test("the home page photos are fixed, and the stacking cards never show through each other", async ({
-  page,
-}) => {
+test("the home page photos are fixed", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(OPEN + "/");
   await expect(page.locator('main img[src*="%2Fimages%2Fhome%2Fhero.webp"]')).toBeVisible();
   await expect(page.locator('img[src*="%2Fimages%2Fhome%2Fstory.webp"]')).toHaveCount(1);
-
-  const why = page.locator("[data-why-card]");
-  await expect(why).toHaveCount(4);
-  for (let i = 0; i < 4; i++)
-    await expect(why.nth(i).locator("img")).toHaveAttribute(
-      "src",
-      new RegExp(`%2Fimages%2Fhome%2Fwhy-${i + 1}\\.webp`),
-    );
-
-  // Scroll through the stack: every card stays opaque, and the section ends before the next one.
-  await why.first().scrollIntoViewIfNeeded();
-  for (let step = 0; step < 8; step++) {
-    await page.mouse.wheel(0, 350);
-    await page.waitForTimeout(250);
-    const opacities = await why.evaluateAll((cards) =>
-      cards.map((c) => Number(getComputedStyle(c.querySelector("[data-why-inner]")!).opacity)),
-    );
-    expect(Math.min(...opacities)).toBe(1);
-  }
-  const gap = await page.evaluate(() => {
-    const cards = [...document.querySelectorAll("[data-why-card]")];
-    const last = cards[cards.length - 1].getBoundingClientRect().bottom;
-    const next = document.querySelector("#range-heading")!.closest("section")!;
-    return next.getBoundingClientRect().top - last;
-  });
-  expect(gap).toBeGreaterThan(0);
 });

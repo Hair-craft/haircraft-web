@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { routes } from "@/components/layout/nav";
+import { ConsultBanner } from "@/components/layout/consult-banner";
 import { ProductCard } from "@/components/product/product-card";
 import { findCategory, getCategories, getFilterOptions, getProducts } from "@/lib/api/catalog";
 import { isApiError } from "@/lib/api/errors";
@@ -157,22 +158,40 @@ export async function ListingPage({
   const description = search ? null : found ? found.category.description : SHOP_DESCRIPTION;
 
   const header = (
-    <header className="flex flex-col items-center gap-3 text-center lg:items-start lg:gap-4 lg:text-left">
+    <header>
       <Breadcrumbs trail={trail} siteUrl={siteUrl} />
-      <p className="mt-2 text-xs tracking-[0.35em] text-deep-soft uppercase lg:mt-4">{eyebrow}</p>
-      <h1 className="font-display text-4xl leading-tight break-words sm:text-5xl md:text-6xl">
-        {title}
-      </h1>
-      {description ? <p className="max-w-2xl text-deep/70">{description}</p> : null}
-      {search ? (
-        <SearchForm q={q} />
-      ) : tree ? (
-        <SubCategoryLinks tree={tree} found={found ?? null} />
-      ) : null}
+      {/* A white card: badge, title, words, then the category pills (or the search box). */}
+      <div className="relative mt-4 overflow-hidden rounded-2xl bg-white p-6 shadow-sm sm:p-8 md:p-12">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-16 -right-16 size-80 rounded-full bg-mint opacity-70 blur-3xl"
+        />
+        <div className="relative max-w-3xl">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-sage px-3 py-1 text-[0.65rem] font-bold tracking-wider text-sage-ink uppercase shadow-sm">
+            <span aria-hidden className="text-gold">
+              ✦
+            </span>
+            {eyebrow}
+          </p>
+          <h1 className="font-display text-3xl leading-tight font-semibold tracking-tight break-words sm:text-4xl">
+            {title}
+          </h1>
+          {description ? (
+            <p className="mt-4 leading-relaxed text-muted sm:text-lg">{description}</p>
+          ) : null}
+        </div>
+        {search ? (
+          <div className="relative mt-6">
+            <SearchForm q={q} />
+          </div>
+        ) : tree ? (
+          <SubCategoryLinks tree={tree} found={found ?? null} />
+        ) : null}
+      </div>
     </header>
   );
   const shell = (body: React.ReactNode) => (
-    <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:py-14">
+    <div className="mx-auto w-full max-w-7xl px-4 pt-6 pb-14 sm:px-6">
       {header}
       {body}
     </div>
@@ -218,15 +237,14 @@ export async function ListingPage({
 
   return shell(
     <ListingProvider>
-      <div className="mt-10 grid gap-10 lg:grid-cols-[15rem_1fr] lg:gap-12">
-        <aside aria-label="Filters" className="hidden lg:block">
-          <FilterPanel base={base} state={state} options={options} mode="instant" />
-        </aside>
-        <section aria-labelledby="results-count">
-          {/* Product names are level-3 headings; this keeps the outline in order. */}
-          <h2 className="sr-only">Products</h2>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-deep/10 pb-4">
-            <p id="results-count" role="status" className="text-sm text-deep/70">
+      {/* The toolbar: filter drop-downs (desktop) or the Filters button (phones), the count and sort. */}
+      <div className="mt-6 flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm md:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <aside aria-label="Filters" className="hidden lg:block">
+            <FilterPanel base={base} state={state} options={options} mode="instant" layout="bar" />
+          </aside>
+          <div className="flex flex-1 flex-wrap items-center justify-between gap-3 lg:flex-none">
+            <p id="results-count" role="status" className="text-sm text-muted">
               {total} {total === 1 ? "product" : "products"}
             </p>
             <div className="flex items-center gap-3">
@@ -234,9 +252,13 @@ export async function ListingPage({
               <SortSelect base={base} state={state} />
             </div>
           </div>
-          <div className="mt-4">
-            <ActiveFilterChips base={base} state={state} />
-          </div>
+        </div>
+        <ActiveFilterChips base={base} state={state} />
+      </div>
+      <div className="mt-8">
+        <section aria-labelledby="results-count">
+          {/* Product names are level-3 headings; this keeps the outline in order. */}
+          <h2 className="sr-only">Products</h2>
           <ListingResults>
             {!search && result.items.length > 0 ? (
               <script
@@ -254,25 +276,40 @@ export async function ListingPage({
               />
             ) : null}
             {result.items.length === 0 ? (
-              <div className="mt-6">
-                <NoResults base={base} state={state} />
-              </div>
+              <NoResults base={base} state={state} />
             ) : (
-              <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 xl:grid-cols-4">
+              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
                 {result.items.map((product, i) => (
                   <li key={product.id}>
                     <ProductCard
                       product={product}
                       priority={i < 4}
-                      sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 26vw, (min-width: 640px) 31vw, 46vw"
+                      sizes="(min-width: 1024px) 22vw, (min-width: 640px) 31vw, 46vw"
                     />
                   </li>
                 ))}
               </ul>
             )}
-            <Pagination base={base} state={state} totalPages={totalPages} />
+            {totalPages > 1 ? (
+              <div className="mt-10 flex flex-col items-center justify-between gap-4 sm:flex-row [&>nav]:mt-0">
+                <p className="text-muted">
+                  Showing{" "}
+                  <span className="font-bold text-deep">
+                    {(state.page - 1) * productsPerPage + 1}–
+                    {Math.min(state.page * productsPerPage, total)}
+                  </span>{" "}
+                  of <span className="font-bold text-deep">{total}</span>
+                </p>
+                <Pagination base={base} state={state} totalPages={totalPages} />
+              </div>
+            ) : null}
           </ListingResults>
         </section>
+        {result.items.length > 0 ? (
+          <div className="mt-12">
+            <ConsultBanner headingId="listing-consult-heading" promises />
+          </div>
+        ) : null}
       </div>
       {/* The category's buying guide, on its first page only (later pages would repeat it). */}
       {guide && state.page === 1 ? <CategoryGuideSection guide={guide} /> : null}
@@ -304,32 +341,40 @@ function SubCategoryLinks({
         name: `All ${parent.name}`,
         href: routes.category(parent.slug),
         current: found?.category.slug === parent.slug,
+        count: parent.productCount,
       }
-    : { name: "All", href: routes.shop, current: true };
+    : { name: "All", href: routes.shop, current: true, count: null };
   const links = [
     all,
     ...items.map((c) => ({
       name: c.name,
       href: routes.category(c.slug),
       current: found?.category.slug === c.slug,
+      count: c.productCount as number | null,
     })),
   ];
   return (
-    <nav aria-label={parent ? `${parent.name} types` : "Shop by category"} className="mt-2">
-      <ul className="flex flex-wrap justify-center gap-2 lg:justify-start">
+    <nav
+      aria-label={parent ? `${parent.name} types` : "Shop by category"}
+      className="relative mt-8 border-t border-line pt-6"
+    >
+      <ul className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
         {links.map((link) => (
-          <li key={link.href}>
+          <li key={link.href} className="shrink-0">
             <Link
               href={link.href}
               aria-current={link.current ? "page" : undefined}
               className={cx(
-                "inline-flex h-9 items-center rounded-full border px-4 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep",
-                link.current
-                  ? "border-deep bg-deep text-mint"
-                  : "border-deep/20 bg-white/60 hover:border-deep/60",
+                "inline-flex h-10 items-center rounded-full px-5 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep",
+                link.current ? "bg-deep text-white shadow-sm" : "bg-sand hover:bg-sand-deep",
               )}
             >
               {link.name}
+              {link.count !== null ? (
+                <span className={link.current ? "ml-1 text-white/75" : "ml-1 text-muted"}>
+                  ({link.count})
+                </span>
+              ) : null}
             </Link>
           </li>
         ))}

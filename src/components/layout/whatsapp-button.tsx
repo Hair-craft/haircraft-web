@@ -30,7 +30,7 @@ export function WhatsAppButton() {
       {/* A label beside it on hover, for people with a mouse. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute right-full mr-3 hidden rounded-full bg-deep px-3.5 py-1.5 text-sm font-medium whitespace-nowrap text-mint opacity-0 shadow-md transition-opacity duration-200 group-hover:opacity-100 sm:block"
+        className="pointer-events-none absolute right-full mr-3 hidden rounded-full bg-deep px-3.5 py-1.5 text-sm font-medium whitespace-nowrap text-white opacity-0 shadow-md transition-opacity duration-200 group-hover:opacity-100 sm:block"
       >
         Chat with us
       </span>

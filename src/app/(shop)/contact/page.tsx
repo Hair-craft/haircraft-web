@@ -19,15 +19,15 @@ export default function ContactPage() {
   const officer = business.grievanceOfficer;
   return (
     <InfoPage slug="contact" eyebrow="We're here to help" title="Contact us">
-      <p className="mt-6 text-lg leading-relaxed text-deep/80">
+      <p className="mt-6 text-lg leading-relaxed text-muted">
         Questions about an order, a product, or which length and shade would suit you? Get in touch.{" "}
         {business.replyTime}
       </p>
       <ContactCards business={business} />
-      <p className="mt-6 text-sm text-deep/70">
+      <p className="mt-6 text-sm text-muted">
         <span className="font-medium text-deep">Hours:</span> {business.hours}
       </p>
-      <p className="mt-2 text-sm text-deep/70">
+      <p className="mt-2 text-sm text-muted">
         <RichText text="About an order? Include its order number (it's in [My orders](/account/orders)). Many answers are in the [FAQ](/faq)." />
       </p>
 
@@ -36,11 +36,11 @@ export default function ContactPage() {
           The business
         </h2>
         <dl className="mt-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-2 leading-relaxed">
-          <dt className="text-deep/70">Seller</dt>
+          <dt className="text-muted">Seller</dt>
           <dd>{sellerName()}</dd>
           {business.address ? (
             <>
-              <dt className="text-deep/70">Address</dt>
+              <dt className="text-muted">Address</dt>
               <dd>
                 <address className="not-italic">
                   {business.address.map((line) => (
@@ -54,7 +54,7 @@ export default function ContactPage() {
           ) : null}
           {business.gstin ? (
             <>
-              <dt className="text-deep/70">GSTIN</dt>
+              <dt className="text-muted">GSTIN</dt>
               <dd>{business.gstin}</dd>
             </>
           ) : null}
@@ -65,7 +65,7 @@ export default function ContactPage() {
         <h2 id="grievance" className="scroll-mt-28 font-display text-2xl md:text-3xl">
           Grievance officer
         </h2>
-        <p className="mt-4 leading-relaxed text-deep/80">
+        <p className="mt-4 leading-relaxed text-muted">
           If we haven&apos;t resolved a complaint about an order or your personal data, you can
           write to our grievance officer. They acknowledge complaints within 48 hours and aim to
           resolve them within one month.
@@ -73,11 +73,11 @@ export default function ContactPage() {
         <dl className="mt-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-2 leading-relaxed">
           {officer.name ? (
             <>
-              <dt className="text-deep/70">Name</dt>
+              <dt className="text-muted">Name</dt>
               <dd>{officer.name}</dd>
             </>
           ) : null}
-          <dt className="text-deep/70">Email</dt>
+          <dt className="text-muted">Email</dt>
           <dd>
             <a href={`mailto:${officer.email}`} className={linkClass}>
               {officer.email}
@@ -85,7 +85,7 @@ export default function ContactPage() {
           </dd>
           {officer.phone ? (
             <>
-              <dt className="text-deep/70">Phone</dt>
+              <dt className="text-muted">Phone</dt>
               <dd>
                 <a href={telHref(officer.phone)} className={linkClass}>
                   {displayPhone(officer.phone)}

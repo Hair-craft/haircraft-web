@@ -34,13 +34,13 @@ export function Breadcrumbs({ trail, siteUrl }: { trail: Crumb[]; siteUrl: strin
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
       />
-      <ol className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs tracking-[0.2em] text-deep/70 uppercase lg:justify-start">
+      <ol className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-muted lg:justify-start">
         {trail.map((crumb, i) => {
           const last = i === trail.length - 1;
           return (
             <li key={crumb.href} className="flex items-center gap-2">
               {last ? (
-                <span aria-current="page" className="text-deep">
+                <span aria-current="page" className="font-medium text-deep">
                   {crumb.name}
                 </span>
               ) : (
@@ -71,7 +71,7 @@ export function ActiveFilterChips({ base, state }: { base: string; state: Listin
           href={listingHref(base, chip.without)}
           scroll={false}
           aria-label={`Remove ${chip.label}`}
-          className="inline-flex items-center gap-1.5 rounded-full bg-deep px-3 py-1.5 text-xs text-mint hover:bg-deep-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
+          className="inline-flex items-center gap-1.5 rounded-full bg-sage px-3 py-1.5 text-xs font-semibold text-sage-ink shadow-sm hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
         >
           {chip.label}
           <CloseIcon width={12} height={12} aria-hidden />
@@ -80,7 +80,7 @@ export function ActiveFilterChips({ base, state }: { base: string; state: Listin
       <Link
         href={listingHref(base, clearFilters(state))}
         scroll={false}
-        className="px-2 text-xs font-medium tracking-[0.15em] uppercase underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-deep"
+        className="px-2 text-xs font-semibold text-gold-ink underline underline-offset-2 hover:text-deep focus-visible:outline-2 focus-visible:outline-deep"
       >
         Clear all
       </Link>
@@ -101,7 +101,7 @@ export function Pagination({
   if (totalPages <= 1) return null;
   const href = (page: number) => listingHref(base, withChange(state, { page }));
   const item =
-    "inline-flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep";
+    "inline-flex h-10 min-w-10 items-center justify-center rounded-full bg-white px-3 text-sm font-semibold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep";
   return (
     <nav aria-label="Pages" className="mt-12 flex justify-center">
       <ul className="flex flex-wrap items-center justify-center gap-1">
@@ -118,7 +118,7 @@ export function Pagination({
         </li>
         {pageNumbers(state.page, totalPages).map((page, i) =>
           page === null ? (
-            <li key={`gap-${i}`} aria-hidden className="px-1 text-deep/70">
+            <li key={`gap-${i}`} aria-hidden className="px-1 text-muted">
               …
             </li>
           ) : (
@@ -127,7 +127,7 @@ export function Pagination({
                 href={href(page)}
                 aria-label={`Page ${page}`}
                 aria-current={page === state.page ? "page" : undefined}
-                className={cx(item, page === state.page ? "bg-deep text-mint" : "hover:bg-deep/5")}
+                className={cx(item, page === state.page ? "bg-deep text-white" : "hover:bg-sand")}
               >
                 {page}
               </Link>
@@ -154,11 +154,11 @@ export function Pagination({
 export function NoResults({ base, state }: { base: string; state: ListingState }) {
   const filtered = activeFilters(state).length > 0;
   return (
-    <div role="status" className="rounded-[2rem] bg-white/70 px-8 py-16 text-center">
-      <h2 className="font-display text-3xl">
+    <div role="status" className="rounded-2xl bg-white px-8 py-16 text-center shadow-sm">
+      <h2 className="font-display text-3xl font-semibold">
         {filtered ? "No products match these filters" : "Nothing here yet"}
       </h2>
-      <p className="mx-auto mt-3 max-w-md text-deep/70">
+      <p className="mx-auto mt-3 max-w-md text-muted">
         {filtered
           ? "Try removing a filter or two: lengths, colours, textures and sizes must all be on the same product option."
           : "New pieces are on their way. In the meantime, have a look at the rest of the shop."}
@@ -166,7 +166,7 @@ export function NoResults({ base, state }: { base: string; state: ListingState }
       <div className="mt-6 flex justify-center">
         <Link
           href={filtered ? listingHref(base, clearFilters(state)) : routes.shop}
-          className="inline-flex h-11 items-center rounded-full bg-deep px-6 text-sm font-medium text-mint hover:bg-deep-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
+          className="inline-flex h-11 items-center rounded-full bg-deep px-6 text-sm font-semibold text-white shadow-md hover:bg-deep-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
         >
           {filtered ? "Clear all filters" : "Shop all products"}
         </Link>

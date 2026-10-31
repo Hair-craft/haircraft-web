@@ -24,9 +24,9 @@ export default async function CheckoutAddressPage({
   if (addresses.length >= MAX_ADDRESSES) redirect(checkoutHref(state));
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:py-12">
-      <h1 className="font-display text-4xl sm:text-5xl">Add an address</h1>
-      <p className="mt-2 text-deep/70">It&apos;s saved to your address book too.</p>
-      <div className="mt-8 rounded-[2rem] bg-white/80 p-6 ring-1 ring-deep/5 sm:p-8">
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">Add an address</h1>
+      <p className="mt-2 text-muted">It&apos;s saved to your address book too.</p>
+      <div className="mt-8 rounded-2xl bg-white/80 p-6 ring-1 ring-deep/5 sm:p-8">
         <AddressForm isFirst={addresses.length === 0} pick back={back} here={here} />
       </div>
     </div>

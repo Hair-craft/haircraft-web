@@ -152,7 +152,7 @@ test("the bag, checkout and an order link to the policies", async ({ page, reque
   const terms = page.getByRole("link", { name: "Terms of use (opens in a new tab)" });
   await expect(terms).toHaveAttribute("target", "_blank");
   await expect(
-    page.getByRole("link", { name: "Exchange policy (opens in a new tab)" }),
+    page.getByRole("link", { name: "Exchange policy (opens in a new tab)", exact: true }),
   ).toHaveAttribute("href", "/returns");
 
   const order = await placeOrderByApi(request, token, addressId, { pay: "COD", skipAdd: true });

@@ -53,7 +53,7 @@ export function RatingStars({
           </svg>
         ))}
       </span>
-      <span aria-hidden className="text-deep/70">
+      <span aria-hidden className="text-muted">
         ({reviewCount})
       </span>
     </span>

@@ -18,6 +18,13 @@ async function api(request: APIRequestContext, query: string, page = 1) {
 const results = (page: Page) => page.locator('section[aria-labelledby="results-count"]');
 const names = (page: Page) => results(page).getByRole("heading", { level: 3 });
 const filters = (page: Page) => page.getByRole("complementary", { name: "Filters" });
+/** Opens one of the toolbar's filter drop-downs (opening one closes the others). */
+const open = async (page: Page, title: string) => {
+  const group = filters(page)
+    .locator("details")
+    .filter({ has: page.locator("summary", { hasText: title }) });
+  if ((await group.getAttribute("open")) === null) await group.locator("summary").click();
+};
 const count = (total: number) => `${total} ${total === 1 ? "product" : "products"}`;
 
 async function expectMatchesApi(page: Page, request: APIRequestContext, query: string, pageNo = 1) {
@@ -87,6 +94,7 @@ test.describe("shop listing", () => {
           (window as unknown as { skeleton: boolean }).skeleton = true;
       }).observe(document.body, { childList: true, subtree: true });
     });
+    await open(page, "Colour");
     const black = filters(page).getByRole("checkbox", { name: "Natural Black" });
     await black.focus();
     await page.keyboard.press("Space");
@@ -99,6 +107,7 @@ test.describe("shop listing", () => {
     );
 
     // A second filter combines with the first.
+    await open(page, "Texture");
     await filters(page).getByRole("checkbox", { name: "Body Wave" }).check();
     await expect(page).toHaveURL(OPEN + "/shop?color=natural-black&texture=body-wave");
     await expectMatchesApi(page, request, "color=Natural Black&texture=Body Wave");
@@ -124,6 +133,7 @@ test.describe("shop listing", () => {
     const options = (await (await request.get(`${API}/products/filters`)).json()).data;
     expect(options.price).not.toBeNull();
     await page.goto(OPEN + "/shop");
+    await open(page, "Price");
     const price = filters(page).getByRole("group", { name: "Price" });
     const firstBand = price.getByRole("button").first();
     const label = (await firstBand.textContent()) ?? "";
@@ -143,6 +153,7 @@ test.describe("shop listing", () => {
 
   test("in stock only", async ({ page, request }) => {
     await page.goto(OPEN + "/shop");
+    await open(page, "Availability");
     await filters(page).getByRole("checkbox", { name: "In stock only" }).check();
     await expect(page).toHaveURL(OPEN + "/shop?instock=1");
     await expectMatchesApi(page, request, "inStock=true");
@@ -205,6 +216,7 @@ test.describe("shop listing", () => {
     request,
   }) => {
     await page.goto(OPEN + "/shop");
+    await open(page, "Length");
     await filters(page).getByRole("checkbox", { name: "18 inch" }).check();
     await expect(page).toHaveURL(OPEN + "/shop?length=18");
     await page.getByLabel("Sort by").selectOption("price-asc");
@@ -255,7 +267,9 @@ test.describe("shop listing", () => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto(OPEN + "/shop");
+    await open(page, "Colour");
     await filters(page).getByRole("checkbox", { name: "Natural Black" }).check();
+    await open(page, "Length");
     await filters(page).getByRole("checkbox", { name: "18 inch" }).check();
     await filters(page).getByRole("button", { name: "Apply filters" }).click();
     // The plain form's address is tidied by the server.

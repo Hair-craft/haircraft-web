@@ -65,7 +65,7 @@ function StarInput({ initial, error }: { initial: number; error?: string }) {
             </label>
           ))}
         </div>
-        <span aria-hidden className="text-sm text-deep/70">
+        <span aria-hidden className="text-sm text-muted">
           {shown ? STAR_WORDS[shown as 1 | 2 | 3 | 4 | 5] : ""}
         </span>
       </div>
@@ -143,9 +143,9 @@ export function ReviewForm({
           onChange={(event) => setBodyLength(event.target.value.length)}
           placeholder="How does it look and feel? How well does it blend and last?"
           aria-describedby="review-body-count"
-          className="w-full rounded-xl border border-deep/20 bg-white/80 px-4 py-3 placeholder:text-deep/40 focus-visible:border-deep focus-visible:outline-2 focus-visible:outline-deep/40"
+          className="w-full rounded-lg border border-line bg-sand px-4 py-3 shadow-sm placeholder:text-muted/70 focus-visible:border-deep focus-visible:bg-white focus-visible:outline-2 focus-visible:outline-deep/40"
         />
-        <p id="review-body-count" className="text-right text-xs text-deep/70">
+        <p id="review-body-count" className="text-right text-xs text-muted">
           {BODY_MAX - bodyLength} characters left
         </p>
         {state.fields.body ? (
@@ -155,7 +155,7 @@ export function ReviewForm({
         ) : null}
       </div>
       <PhotoPicker saved={review?.photos ?? []} error={state.fields.photos} />
-      <p className="text-sm text-deep/70">
+      <p className="text-sm text-muted">
         {verifiedPurchase ? "Your review will be marked Verified purchase. " : ""}
         {review
           ? "Changes are checked again before they appear."
@@ -226,7 +226,7 @@ function PhotoPicker({ saved, error }: { saved: ReviewPhoto[]; error?: string })
         </ul>
       ) : null}
       <label className="flex flex-col gap-1.5 text-sm">
-        <span className="text-deep/70">
+        <span className="text-muted">
           Add up to {MAX_PHOTOS} photos in all: JPEG, PNG or WebP, up to 5 MB each.
         </span>
         <input
@@ -281,7 +281,7 @@ export function DeleteReview({ reviewId, productName }: { reviewId: string; prod
       </summary>
       <form action={deleteReviewAction} className="mt-3 flex flex-wrap items-center gap-3">
         <input type="hidden" name="reviewId" value={reviewId} />
-        <span className="text-deep/75">Delete this review? This can&apos;t be undone.</span>
+        <span className="text-muted">Delete this review? This can&apos;t be undone.</span>
         <Button type="submit" size="sm" variant="secondary">
           Delete review
         </Button>

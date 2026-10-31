@@ -80,8 +80,15 @@ export function Reviews({
   };
 
   return (
-    <section id="reviews" aria-labelledby="reviews-heading" className="scroll-mt-28">
-      <h2 id="reviews-heading" className="text-center font-display text-4xl md:text-5xl">
+    <section
+      id="reviews"
+      aria-labelledby="reviews-heading"
+      className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(11,41,26,0.04)] lg:p-8"
+    >
+      <h2
+        id="reviews-heading"
+        className="text-center font-display text-3xl font-semibold sm:text-4xl"
+      >
         Customer reviews
       </h2>
       <div className="mt-5 flex flex-col items-center gap-2 text-center">
@@ -93,15 +100,13 @@ export function Reviews({
           {mine ? "Edit your review" : "Write a review"}
         </ButtonLink>
         {mine?.status === "PENDING" ? (
-          <p className="text-sm text-deep/70">Your review is waiting for approval.</p>
+          <p className="text-sm text-muted">Your review is waiting for approval.</p>
         ) : mine?.status === "REJECTED" ? (
-          <p className="text-sm text-deep/70">
-            Your review wasn&apos;t published. You can edit it.
-          </p>
+          <p className="text-sm text-muted">Your review wasn&apos;t published. You can edit it.</p>
         ) : null}
       </div>
       {summary.count === 0 ? (
-        <p className="mt-6 text-center text-deep/70">
+        <p className="mt-6 text-center text-muted">
           No reviews yet. Be the first to share how it looks and feels.
         </p>
       ) : (
@@ -109,7 +114,7 @@ export function Reviews({
           <div>
             <p className="font-display text-6xl leading-none">
               {Number.isInteger(summary.average) ? summary.average : summary.average.toFixed(1)}
-              <span className="text-2xl text-deep/70"> / 5</span>
+              <span className="text-2xl text-muted"> / 5</span>
             </p>
             <div className="mt-3">
               {/* The count is written out just below. */}
@@ -119,7 +124,7 @@ export function Reviews({
                 className="[&>span:last-child]:hidden"
               />
             </div>
-            <p className="mt-1 text-sm text-deep/70">
+            <p className="mt-1 text-sm text-muted">
               Based on {summary.count} {summary.count === 1 ? "review" : "reviews"}
             </p>
             <ul className="mt-6 flex flex-col gap-2" aria-label="Reviews by star rating">
@@ -138,7 +143,7 @@ export function Reviews({
                         style={{ width: `${share}%` }}
                       />
                     </span>
-                    <span className="w-8 shrink-0 text-right text-deep/70">
+                    <span className="w-8 shrink-0 text-right text-muted">
                       {count}
                       <span className="sr-only"> {count === 1 ? "review" : "reviews"}</span>
                     </span>
@@ -169,7 +174,7 @@ export function Reviews({
               </div>
             ) : null}
             <label className="flex items-center justify-end gap-2 text-sm">
-              <span className="text-deep/70">Sort reviews</span>
+              <span className="text-muted">Sort reviews</span>
               <select
                 value={sort}
                 disabled={loading}
@@ -185,7 +190,7 @@ export function Reviews({
             </label>
             <ul
               aria-busy={loading || undefined}
-              className={`mt-4 divide-y divide-deep/10 transition-opacity ${loading ? "opacity-50" : ""}`}
+              className={`mt-4 divide-y divide-line transition-opacity ${loading ? "opacity-50" : ""}`}
             >
               {items.map((review) => (
                 <li key={review.id} className="py-6">
@@ -196,10 +201,10 @@ export function Reviews({
                       className="[&>span:last-child]:hidden"
                     />
                     {review.title ? (
-                      <h3 className="mt-2 font-display text-2xl">{review.title}</h3>
+                      <h3 className="mt-2 font-display text-xl font-semibold">{review.title}</h3>
                     ) : null}
                     {review.body ? (
-                      <p className="mt-2 leading-relaxed whitespace-pre-line text-deep/80">
+                      <p className="mt-2 leading-relaxed whitespace-pre-line text-muted">
                         {review.body}
                       </p>
                     ) : null}
@@ -226,7 +231,7 @@ export function Reviews({
                         ))}
                       </ul>
                     ) : null}
-                    <p className="mt-3 text-sm text-deep/70">
+                    <p className="mt-3 text-sm text-muted">
                       <span className="font-medium text-deep">{review.reviewerName}</span>
                       {review.verifiedPurchase ? " · Verified purchase" : ""} ·{" "}
                       <time dateTime={review.createdAt}>

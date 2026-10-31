@@ -55,14 +55,16 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
       />
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-16">
         <article className="max-w-[68ch] min-w-0">
-          <p className="text-xs tracking-[0.35em] text-deep-soft uppercase">
+          <p className="text-[0.7rem] font-bold tracking-[0.2em] text-gold-ink uppercase">
             Hair guide · {readingMinutes(guide)} min read
           </p>
-          <h1 className="mt-3 font-display text-4xl leading-tight md:text-5xl">{guide.title}</h1>
-          <p className="mt-3 text-sm text-deep/70">
+          <h1 className="mt-3 font-display text-3xl leading-tight font-semibold sm:text-4xl">
+            {guide.title}
+          </h1>
+          <p className="mt-3 text-sm text-muted">
             Last updated <time dateTime={guide.updated}>{updatedDate(guide.updated)}</time>
           </p>
-          <p className="mt-6 text-lg leading-relaxed text-deep/80">{guide.summary}</p>
+          <p className="mt-6 text-lg leading-relaxed text-muted">{guide.summary}</p>
           <Contents sections={guide.sections} />
           {guide.sections.map((section) => (
             <Section key={section.id} section={section} />
@@ -70,7 +72,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
         </article>
 
         <aside aria-label="Shop the look" className="min-w-0 print:hidden">
-          <div className="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-deep/5 lg:sticky lg:top-28">
+          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-deep/5 lg:sticky lg:top-28">
             <h2 className="font-display text-2xl">Shop the look</h2>
             <ul className="mt-4 flex flex-col gap-2">
               {guide.shop.map((link) => (
@@ -87,7 +89,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-sm leading-relaxed text-deep/70">
+            <p className="mt-5 text-sm leading-relaxed text-muted">
               Not sure what suits you?{" "}
               <Link href="/contact" className="font-medium text-deep underline underline-offset-2">
                 Ask us

@@ -140,7 +140,7 @@ export function PaymentPanel({
       prefill: { name: c.prefill.name, email: c.prefill.email, contact: c.prefill.contact ?? "" },
       notes: c.notes,
       timeout: c.timeoutSeconds,
-      theme: { color: "#16362a" },
+      theme: { color: "#0b291a" },
       modal: {
         ondismiss: () => {
           setBusy(false);
@@ -199,7 +199,7 @@ export function PaymentPanel({
     return (
       <section
         aria-labelledby="payment-title"
-        className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6"
+        className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6"
       >
         <h2 id="payment-title" className="font-display text-2xl text-emerald-900">
           Payment received
@@ -214,12 +214,12 @@ export function PaymentPanel({
     return (
       <section
         aria-labelledby="payment-title"
-        className="rounded-[2rem] border border-deep/15 bg-white/80 p-6"
+        className="rounded-2xl border border-deep/15 bg-white/80 p-6"
       >
         <h2 id="payment-title" className="font-display text-2xl">
           Not paid
         </h2>
-        <p className="mt-2 text-sm text-deep/75">
+        <p className="mt-2 text-sm text-muted">
           This order was cancelled because it wasn&apos;t paid in time. Nothing was charged, and the
           items were put back on sale.
         </p>
@@ -233,12 +233,12 @@ export function PaymentPanel({
   return (
     <section
       aria-labelledby="payment-title"
-      className="rounded-[2rem] border border-gold/40 bg-gold/10 p-6"
+      className="rounded-2xl border border-gold/40 bg-gold/10 p-6"
     >
       <h2 id="payment-title" className="font-display text-2xl">
         {state === "waiting" ? "Waiting for your bank" : "Awaiting payment"}
       </h2>
-      <p className="mt-2 text-sm text-deep/80">
+      <p className="mt-2 text-sm text-muted">
         {state === "waiting"
           ? "Your payment is being confirmed. This page updates by itself; there's no need to pay again."
           : deadline}
@@ -264,7 +264,7 @@ export function PaymentPanel({
           >
             Pay {formatPrice(amount)} now
           </Button>
-          <p className="mt-3 flex items-center gap-2 text-xs text-deep/70">
+          <p className="mt-3 flex items-center gap-2 text-xs text-muted">
             <LockIcon width={14} height={14} />
             Secure payment by Razorpay: UPI, cards, net banking and wallets.
           </p>

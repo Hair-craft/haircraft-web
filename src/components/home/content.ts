@@ -4,20 +4,12 @@ import { plainText } from "@/lib/info/rich-text";
 /**
  * Home page wording that isn't catalogue data.
  *
- * DRAFT — OWNER TO CONFIRM: the trust points and "Why HairCraft" cards were
+ * DRAFT — OWNER TO CONFIRM: the "Why HairCraft" cards were
  * written as sensible defaults (phase S2b). They make no promises about years
  * in business, manufacturing or policies the owner hasn't confirmed; replace
  * them with your own words (or confirm them) before the shop opens. The FAQ
  * and the story live with the information pages, in `src/content/`.
  */
-
-export const trustPoints = [
-  "100% human hair",
-  "Every length, colour and texture",
-  "Hand-checked before it ships",
-  "Secure payments",
-  "Delivered across India",
-];
 
 export interface WhyCard {
   eyebrow: string;

@@ -25,7 +25,7 @@ export function ContactCards({ business }: { business: Business }) {
                 <Icon />
               </span>
               <span className="min-w-0">
-                <span className="block text-sm text-deep/70">{method.label}</span>
+                <span className="block text-sm text-muted">{method.label}</span>
                 <span className="block font-medium break-words">{method.value}</span>
                 {method.external ? <span className="sr-only"> (opens in a new tab)</span> : null}
               </span>

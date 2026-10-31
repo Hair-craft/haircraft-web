@@ -27,7 +27,10 @@ import {
   idempotencyKey,
   readCheckoutState,
 } from "@/lib/checkout/rules";
+import { business } from "@/content/business";
+import { returnRules } from "@/content/returns-rules";
 import { cx } from "@/lib/cx";
+import { whatsappChatHref } from "@/lib/info/contact";
 import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -36,7 +39,51 @@ export const metadata: Metadata = {
 };
 
 const radioCard =
-  "flex cursor-pointer gap-3 rounded-2xl border border-deep/15 bg-white/70 p-4 transition-colors has-checked:border-deep has-checked:bg-white has-checked:ring-1 has-checked:ring-deep has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-deep";
+  "flex cursor-pointer gap-3 rounded-xl border border-transparent bg-sand p-4 transition-colors hover:bg-sand-deep has-checked:border-deep/30 has-checked:bg-sage/50 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-deep";
+
+/** Bag ✓ → Delivery and payment → Confirmation. */
+function Steps() {
+  const steps = ["Bag", "Delivery & payment", "Confirmation"];
+  return (
+    <ol
+      aria-label="Checkout steps"
+      className="flex items-center gap-2 overflow-x-auto pb-1 md:gap-4"
+    >
+      {steps.map((step, i) => (
+        <li key={step} className="flex shrink-0 items-center gap-2 md:gap-4">
+          {i > 0 ? (
+            <span aria-hidden className={cx("h-0.5 w-6", i === 1 ? "bg-sage" : "bg-[#eee7dc]")} />
+          ) : null}
+          <span className="flex items-center gap-2" aria-current={i === 1 ? "step" : undefined}>
+            <span
+              aria-hidden
+              className={cx(
+                "flex size-7 items-center justify-center rounded-full text-[0.625rem] font-bold",
+                i === 0
+                  ? "bg-sage text-sage-ink"
+                  : i === 1
+                    ? "bg-deep text-white shadow-sm"
+                    : "bg-[#eee7dc]",
+              )}
+            >
+              {i === 0 ? "✓" : i + 1}
+            </span>
+            <span
+              className={cx(
+                "text-xs",
+                i === 1 ? "font-bold" : "font-medium",
+                i === 2 && "text-muted",
+              )}
+            >
+              {i + 1}. {step}
+              {i === 0 ? <span className="sr-only"> (done)</span> : null}
+            </span>
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
 const radio = "mt-1 size-4 shrink-0 accent-deep";
 
 /** `/checkout`: address, payment and the order summary on one page. */
@@ -83,6 +130,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
   // The bag, the address and the payment method must be right; a coupon that
   // doesn't apply is simply left off (it changes nothing in the total).
   const canPlace = preview.problems.length === 0 && address !== null;
+  const whatsapp = whatsappChatHref(business);
 
   const summary = (
     <>
@@ -100,8 +148,21 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
   );
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
-      <h1 className="font-display text-4xl sm:text-5xl">Checkout</h1>
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+      <div className="flex flex-col justify-between gap-4 py-2 lg:flex-row lg:items-center">
+        <div className="flex flex-col gap-3">
+          <h1 className="font-display text-2xl font-semibold sm:text-[2rem] sm:leading-10">
+            Checkout
+          </h1>
+          <Steps />
+        </div>
+        <p className="flex items-center gap-2 self-start rounded-full bg-white/80 px-3.5 py-1.5 text-[0.625rem] font-bold tracking-wider uppercase shadow-sm lg:self-auto">
+          <span aria-hidden className="text-gold">
+            ✦
+          </span>
+          Secure payments by Razorpay · 100% human hair
+        </p>
+      </div>
       {notice ? (
         <p
           role="alert"
@@ -111,9 +172,9 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
         </p>
       ) : null}
 
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
+      <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         {/* On phones the summary comes first, folded to its total. */}
-        <details className="group rounded-[2rem] bg-white/80 p-5 ring-1 ring-deep/5 lg:hidden">
+        <details className="group rounded-xl bg-white p-5 shadow-sm lg:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
             <span className="flex items-center gap-2 text-sm">
               Order summary ({itemCount} {itemCount === 1 ? "item" : "items"})
@@ -128,7 +189,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
           <div className="mt-5 flex flex-col gap-4">{summary}</div>
         </details>
 
-        <div className="flex min-w-0 flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-6 lg:col-span-7">
           <CheckoutSection number={1} title="Delivery address">
             {addresses.length === 0 ? (
               <AddressForm
@@ -172,7 +233,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
                 </ChoiceForm>
                 <Link
                   href={`/checkout/address${here.slice("/checkout".length)}`}
-                  className="mt-4 inline-block text-sm font-medium underline-offset-4 hover:underline"
+                  className="mt-4 inline-block text-xs font-bold tracking-wide uppercase underline-offset-4 hover:underline"
                 >
                   + Add a new address
                 </Link>
@@ -192,9 +253,23 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
                     defaultChecked={chosen.pay === "ONLINE"}
                     className={radio}
                   />
-                  <span className="text-sm">
-                    <span className="block font-medium">Pay online</span>
-                    <span className="text-deep/70">UPI, cards, net banking and wallets</span>
+                  <span className="flex flex-1 flex-wrap items-center justify-between gap-2 text-sm">
+                    <span>
+                      <span className="block font-semibold">Pay online</span>
+                      <span className="text-muted">
+                        UPI (GPay, PhonePe, Paytm…), cards, net banking and wallets
+                      </span>
+                    </span>
+                    <span aria-hidden className="flex gap-1.5">
+                      {["UPI", "Cards", "NetBanking"].map((method) => (
+                        <span
+                          key={method}
+                          className="rounded bg-white px-1.5 py-0.5 text-[0.625rem] font-bold"
+                        >
+                          {method}
+                        </span>
+                      ))}
+                    </span>
                   </span>
                 </label>
                 {preview.paymentMethods.cod || chosen.pay === "COD" ? (
@@ -207,8 +282,8 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
                       className={radio}
                     />
                     <span className="text-sm">
-                      <span className="block font-medium">Cash on delivery</span>
-                      <span className="text-deep/70">Pay the courier in cash or by UPI</span>
+                      <span className="block font-semibold">Cash on delivery</span>
+                      <span className="text-muted">Pay the courier in cash or by UPI</span>
                       {codProblem ? (
                         <span className="mt-1 block text-red-800">{codProblem.message}</span>
                       ) : null}
@@ -219,8 +294,26 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
             </ChoiceForm>
           </CheckoutSection>
 
+          <div className="flex items-start gap-4 rounded-xl bg-gradient-to-br from-sage/80 to-cream p-5 shadow-sm">
+            <span
+              aria-hidden
+              className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-gold shadow-sm"
+            >
+              ✦
+            </span>
+            <span className="flex flex-col gap-1.5">
+              <span className="font-display text-lg font-semibold">Checked before it ships</span>
+              <span className="text-sm leading-relaxed text-[#424843]">
+                Every piece is checked before dispatch. If something arrives defective or isn&apos;t
+                what you ordered, it can be exchanged within {returnRules.exchangeDays} days of
+                delivery, as long as it is unused.{" "}
+                <PolicyLink href="/returns">Read the exchange policy</PolicyLink>
+              </span>
+            </span>
+          </div>
+
           <CheckoutSection number={3} title="Delivery instructions">
-            <label htmlFor="notes" className="text-sm text-deep/70">
+            <label htmlFor="notes" className="text-sm text-muted">
               Anything the courier should know (optional)
             </label>
             <textarea
@@ -230,23 +323,36 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
               maxLength={500}
               rows={3}
               placeholder="For example: please call before delivering."
-              className="mt-2 w-full rounded-xl border border-deep/20 bg-white/80 px-4 py-3 text-deep placeholder:text-deep/40 focus-visible:border-deep focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-deep/40"
+              className="mt-2 w-full rounded-lg border border-line bg-sand px-4 py-3 text-deep shadow-sm placeholder:text-muted/70 focus-visible:border-deep focus-visible:bg-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-deep/40"
             />
           </CheckoutSection>
         </div>
 
         <aside
           aria-label="Order summary"
-          className="flex flex-col gap-5 rounded-[2rem] bg-white/80 p-6 ring-1 ring-deep/5 lg:sticky lg:top-8"
+          className="flex flex-col gap-5 rounded-2xl bg-white p-6 shadow-md lg:sticky lg:top-8 lg:col-span-5"
         >
-          <h2 className="hidden font-display text-2xl lg:block">Order summary</h2>
+          <div className="hidden items-center justify-between lg:flex">
+            <span className="flex flex-col">
+              <span className="text-[0.625rem] font-bold tracking-[0.15em] text-gold-ink uppercase">
+                Your order
+              </span>
+              <h2 className="font-display text-xl font-medium">Order summary</h2>
+              <span className="text-xs text-muted">
+                {itemCount} {itemCount === 1 ? "item" : "items"}
+              </span>
+            </span>
+            <span className="rounded-full bg-sage px-2.5 py-1 text-[0.625rem] font-semibold text-sage-ink">
+              100% human hair
+            </span>
+          </div>
           <div className="hidden flex-col gap-4 lg:flex">{summary}</div>
 
           <Form action="/checkout" scroll={false} replace className="flex flex-col gap-2">
             {keep.address ? <input type="hidden" name="address" value={keep.address} /> : null}
             {keep.pay ? <input type="hidden" name="pay" value={keep.pay} /> : null}
             {coupon?.applied ? (
-              <p className="flex items-center justify-between gap-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              <p className="flex items-center justify-between gap-3 rounded-xl bg-sand p-3 text-sm text-sage-ink">
                 <span>
                   <strong>{coupon.code}</strong> applied: you save {formatPrice(coupon.discount)}.
                 </span>
@@ -260,8 +366,11 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
                 </Link>
               </p>
             ) : (
-              <details className="group" open={Boolean(coupon)}>
-                <summary className="cursor-pointer list-none text-sm font-medium underline-offset-4 hover:underline">
+              <details className="group rounded-xl bg-sand p-3" open={Boolean(coupon)}>
+                <summary className="cursor-pointer list-none text-sm font-semibold underline-offset-4 hover:underline">
+                  <span aria-hidden className="mr-1.5 text-gold">
+                    ✦
+                  </span>
                   Have a coupon?
                 </summary>
                 <div className="mt-3 flex gap-2">
@@ -276,11 +385,11 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
                     autoComplete="off"
                     aria-invalid={coupon && !coupon.applied ? true : undefined}
                     aria-describedby={coupon && !coupon.applied ? "coupon-error" : undefined}
-                    className="h-11 min-w-0 flex-1 rounded-xl border border-deep/20 bg-white/80 px-4 uppercase focus-visible:border-deep focus-visible:outline-2 focus-visible:outline-deep/40"
+                    className="h-11 min-w-0 flex-1 rounded-lg border border-line bg-sand px-4 uppercase shadow-sm focus-visible:border-deep focus-visible:bg-white focus-visible:outline-2 focus-visible:outline-deep/40"
                   />
                   <button
                     type="submit"
-                    className="rounded-full border border-deep/20 px-5 text-sm font-medium hover:border-deep focus-visible:outline-2 focus-visible:outline-deep"
+                    className="rounded-full bg-deep px-5 text-sm font-semibold text-white hover:bg-deep-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
                   >
                     Apply
                   </button>
@@ -296,7 +405,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
 
           <TotalsList totals={preview.totals} couponCode={coupon?.applied ? coupon.code : null} />
           {preview.amountToFreeShipping ? (
-            <p className="rounded-2xl bg-mint px-4 py-3 text-sm">
+            <p className="rounded-xl bg-mint px-4 py-3 text-sm">
               Add <strong>{formatPrice(preview.amountToFreeShipping)}</strong> more for free
               shipping.
             </p>
@@ -309,14 +418,14 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
             <input type="hidden" name="pay" value={chosen.pay} />
             <input type="hidden" name="expectedGrandTotal" value={preview.totals.grandTotal} />
             {address ? (
-              <p className="text-sm text-deep/70">
+              <p className="text-sm text-muted">
                 Delivering to {address.fullName}, {address.city} {address.postalCode}.
               </p>
             ) : null}
             <PlaceOrderButton disabled={!canPlace}>
               Place order · {formatPrice(preview.totals.grandTotal)}
             </PlaceOrderButton>
-            <p className="text-center text-xs text-deep/70">
+            <p className="text-center text-xs text-muted">
               {!address
                 ? "Add a delivery address to continue."
                 : lineProblems.length > 0
@@ -328,11 +437,45 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
                       : "You'll pay securely online after placing your order."}
             </p>
           </form>
-          <p className="text-center text-xs leading-relaxed text-deep/70">
+          <p className="text-center text-xs leading-relaxed text-muted">
             By placing your order you agree to our{" "}
             <PolicyLink href="/terms">Terms of use</PolicyLink> and{" "}
-            <PolicyLink href="/returns">Exchange policy</PolicyLink> policy.
+            <PolicyLink href="/returns">Exchange policy</PolicyLink>.
           </p>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            {[
+              `Exchange within ${returnRules.exchangeDays} days if defective`,
+              "100% human hair",
+              `Ships in ${returnRules.dispatchWorkingDays} working days`,
+            ].map((promise) => (
+              <p
+                key={promise}
+                className="flex flex-col items-center gap-1.5 rounded bg-sand p-2 text-[0.625rem] leading-tight font-bold"
+              >
+                <span aria-hidden className="text-gold">
+                  ✦
+                </span>
+                {promise}
+              </p>
+            ))}
+          </div>
+          {whatsapp ? (
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-sage/40 p-3.5">
+              <span className="flex flex-col">
+                <span className="text-xs font-bold">Unsure about your shade?</span>
+                <span className="text-sm text-muted">Ask us before you pay</span>
+              </span>
+              <a
+                href={whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 rounded-full bg-white px-3.5 py-1.5 text-[0.625rem] font-bold tracking-wide uppercase shadow-sm transition-colors hover:bg-sand-deep focus-visible:outline-2 focus-visible:outline-deep"
+              >
+                WhatsApp
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>

@@ -73,7 +73,7 @@ test.describe("the account area", () => {
     const { email } = await newCustomer(request, "Asha");
     await signIn(page, email);
     await page.goto(OPEN + "/account");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hello, Asha");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back, Asha");
     const menu = page.getByRole("navigation", { name: "My account" });
     await expect(menu.getByRole("link", { name: "Overview" })).toHaveAttribute(
       "aria-current",
@@ -115,7 +115,7 @@ test.describe("profile", () => {
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByText("Your details are saved.")).toBeVisible();
     await page.goto(OPEN + "/account");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hello, Meenakshi");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back, Meenakshi");
   });
 
   test("bad values are explained and nothing is saved", async ({ page, request }) => {
@@ -151,7 +151,7 @@ test.describe("address book", () => {
       state: "Maharashtra",
       pin: "400 050",
     });
-    await page.getByText("Home", { exact: true }).click();
+    await page.locator("form").getByText("Home", { exact: true }).click();
     await page.getByRole("button", { name: "Add address" }).click();
     await expect(page).toHaveURL(OPEN + "/account/addresses");
     await expect(page.getByText("Address added.")).toBeVisible();
@@ -299,7 +299,7 @@ test.describe("password and security", () => {
 
     // Still signed in here.
     await page.goto(OPEN + "/account");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hello, Meera");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back, Meera");
     // Signed out there.
     await elsewhere.goto(OPEN + "/account");
     await expect(elsewhere).toHaveURL(/\/sign-in/);

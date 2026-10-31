@@ -26,7 +26,7 @@ export async function ShopChrome({ children }: { children: ReactNode }) {
         <WishlistProvider signedIn={session.accessToken !== null} initialCount={saved}>
           <a
             href="#main"
-            className="sr-only z-50 rounded-full bg-deep px-4 py-2 text-mint focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+            className="sr-only z-50 rounded-full bg-deep px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
           >
             Skip to content
           </a>

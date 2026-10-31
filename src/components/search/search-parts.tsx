@@ -16,7 +16,7 @@ export function SearchForm({ q }: { q: string | null }) {
       role="search"
       className="mt-2 flex w-full max-w-xl items-center gap-2 rounded-full border border-deep/20 bg-white/80 py-1.5 pr-1.5 pl-5 focus-within:border-deep"
     >
-      <SearchIcon width={18} height={18} aria-hidden className="shrink-0 text-deep/70" />
+      <SearchIcon width={18} height={18} aria-hidden className="shrink-0 text-muted" />
       <label className="sr-only" htmlFor="search-page-q">
         Search the shop
       </label>
@@ -31,7 +31,7 @@ export function SearchForm({ q }: { q: string | null }) {
       />
       <button
         type="submit"
-        className="h-10 shrink-0 rounded-full bg-deep px-5 text-sm font-medium text-mint hover:bg-deep-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
+        className="h-10 shrink-0 rounded-full bg-deep px-5 text-sm font-medium text-white hover:bg-deep-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
       >
         Search
       </button>
@@ -50,7 +50,7 @@ function CategoryChips({ tree, label }: { tree: Category[] | null; label: string
           <li key={category.id}>
             <Link
               href={routes.category(category.slug)}
-              className="inline-flex h-9 items-center rounded-full border border-deep/20 bg-white/60 px-4 text-sm hover:border-deep/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
+              className="inline-flex h-9 items-center rounded-full border border-deep/20 bg-white px-4 text-sm hover:border-deep/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
             >
               {category.name}
             </Link>
@@ -95,7 +95,7 @@ export async function SearchHelp({ q, tree }: { q: string; tree: Category[] | nu
   const suggestions = await quietly(() => getSuggestions(q), null);
   const didYouMean = suggestions?.didYouMean ?? null;
   return (
-    <div className="rounded-[2rem] bg-white/70 px-6 py-12 text-center sm:px-10">
+    <div className="rounded-2xl bg-white px-6 py-12 text-center sm:px-10">
       {/* Announced on arrival; the tips and products below are read normally. */}
       <div role="status">
         <h2 className="font-display text-3xl">No results for &ldquo;{q}&rdquo;</h2>
@@ -112,7 +112,7 @@ export async function SearchHelp({ q, tree }: { q: string; tree: Category[] | nu
           ?
         </p>
       ) : null}
-      <ul className="mx-auto mt-6 max-w-md list-inside list-disc space-y-1 text-left text-deep/75">
+      <ul className="mx-auto mt-6 max-w-md list-inside list-disc space-y-1 text-left text-muted">
         <li>
           Check the spelling, or try a shorter word (&ldquo;wig&rdquo; rather than &ldquo;wigs for
           parties&rdquo;).
@@ -134,9 +134,9 @@ export async function SearchHelp({ q, tree }: { q: string; tree: Category[] | nu
 /** `/search` with nothing typed yet: the box and the categories. */
 export function EmptySearch({ tree }: { tree: Category[] | null }) {
   return (
-    <div className="mt-10 rounded-[2rem] bg-white/70 px-6 py-12 text-center sm:px-10">
+    <div className="mt-10 rounded-2xl bg-white px-6 py-12 text-center sm:px-10">
       <h2 className="font-display text-3xl">What are you looking for?</h2>
-      <p className="mt-3 text-deep/70">
+      <p className="mt-3 text-muted">
         Type a product, type of extension, length or colour above, or start from a category.
       </p>
       <div className="mt-6">

@@ -36,7 +36,10 @@ test.describe("shop layout (shop open)", () => {
     for (const name of TOP_CATEGORIES) {
       await expect(nav.getByText(name, { exact: true })).toBeVisible();
     }
-    const cards = page.getByRole("region", { name: "Shop by category" }).getByRole("link");
+    const cards = page
+      .getByRole("region", { name: "Shop by category" })
+      .getByRole("listitem")
+      .getByRole("link");
     await expect(cards).toHaveCount(4);
     await expect(cards.first()).toHaveAttribute("href", "/shop/clip-in-extensions");
     // Account and cart icons are labelled for screen readers.
@@ -47,7 +50,7 @@ test.describe("shop layout (shop open)", () => {
           .getByRole("link", { name: label, exact: true }),
       ).toBeVisible();
     }
-    await expect(page.getByRole("contentinfo")).toContainText("GST included");
+    await expect(page.getByRole("contentinfo")).toContainText("inclusive of all GST taxes");
   });
 
   test("a category with sub-categories opens its menu by click and keyboard", async ({ page }) => {

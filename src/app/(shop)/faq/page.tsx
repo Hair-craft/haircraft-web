@@ -24,7 +24,7 @@ export default async function FaqPage() {
           __html: JSON.stringify(faqJsonLd(groups.flatMap((g) => g.faqs))).replace(/</g, "\\u003c"),
         }}
       />
-      <p className="mt-6 text-lg leading-relaxed text-deep/80">
+      <p className="mt-6 text-lg leading-relaxed text-muted">
         <RichText text="Can't find your answer? Our [hair guides](/guides) go into more detail, or [contact us](/contact) and we'll help." />
       </p>
       <FaqList groups={groups} />

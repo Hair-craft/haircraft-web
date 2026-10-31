@@ -50,3 +50,4 @@ dev/
 | 2026-10-07 | phase-s15-seo-performance   | [plan](plan/2026-10-07-phase-s15-seo-performance.md)     | [status](status/2026-10-07-phase-s15-seo-performance.md)   | [testing](testing/2026-10-07-phase-s15-seo-performance.md)   | Pending |
 | 2026-10-08 | phase-s15b-seo-content      | [plan](plan/2026-10-08-phase-s15b-seo-content.md)        | [status](status/2026-10-08-phase-s15b-seo-content.md)      | [testing](testing/2026-10-08-phase-s15b-seo-content.md)      | Pending |
 | 2026-10-08 | phase-s16-launch-readiness  | [plan](plan/2026-10-08-phase-s16-launch-readiness.md)    | —                                                          | —                                                            | Pending |
+| 2026-10-31 | redesign-emerald            | [plan](plan/2026-10-31-redesign-emerald.md)              | [status](status/2026-10-31-redesign-emerald.md)            | [testing](testing/2026-10-31-redesign-emerald.md)            | Pending |

@@ -35,14 +35,14 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
             <li>
               <Link
                 href={routes.shop}
-                className="block rounded-xl px-3 py-3 font-semibold hover:bg-white/70"
+                className="block rounded-xl px-3 py-3 font-semibold hover:bg-white"
               >
                 Shop all
               </Link>
             </li>
             {items.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className="block rounded-xl px-3 py-3 hover:bg-white/70">
+                <Link href={item.href} className="block rounded-xl px-3 py-3 hover:bg-white">
                   {item.label}
                 </Link>
                 {item.children.length > 0 ? (
@@ -51,7 +51,7 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
                       <li key={child.href}>
                         <Link
                           href={child.href}
-                          className="block rounded-xl px-3 py-2 text-sm hover:bg-white/70"
+                          className="block rounded-xl px-3 py-2 text-sm hover:bg-white"
                         >
                           {child.label}
                         </Link>
@@ -64,7 +64,7 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
           </ul>
           <Link
             href={routes.wishlist}
-            className="mt-4 block rounded-xl border-t border-deep/10 px-3 pt-4 pb-3 hover:bg-white/70"
+            className="mt-4 block rounded-xl border-t border-line px-3 pt-4 pb-3 hover:bg-white"
           >
             My wishlist
           </Link>

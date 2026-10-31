@@ -160,10 +160,10 @@ test.describe("search results", () => {
     request,
   }) => {
     await page.goto(OPEN + "/search?q=clip%20in");
-    await page
-      .getByRole("complementary", { name: "Filters" })
-      .getByRole("checkbox", { name: "Natural Black" })
-      .check();
+    const filters = page.getByRole("complementary", { name: "Filters" });
+    // The toolbar's Colour drop-down.
+    await filters.locator("summary", { hasText: "Colour" }).click();
+    await filters.getByRole("checkbox", { name: "Natural Black" }).check();
     await expect(page).toHaveURL(OPEN + "/search?q=clip%20in&color=natural-black");
     const filtered = await apiSearch(request, "search=clip in&color=Natural Black");
     await expect(names(page)).toHaveText(filtered.names);
@@ -173,6 +173,8 @@ test.describe("search results", () => {
     const sorted = await apiSearch(request, "search=clip in&color=Natural Black&sort=price:asc");
     await expect(names(page)).toHaveText(sorted.names);
 
+    // Escape closes the open drop-down (it sits over the chips).
+    await page.keyboard.press("Escape");
     await page
       .getByRole("group", { name: "Active filters" })
       .getByRole("link", { name: "Clear all" })

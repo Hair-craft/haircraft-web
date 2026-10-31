@@ -9,8 +9,8 @@ import { cx } from "@/lib/cx";
  */
 
 const control =
-  "w-full rounded-xl border bg-white/80 px-4 text-deep placeholder:text-deep/40 transition-colors " +
-  "focus-visible:border-deep focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-deep/40 " +
+  "w-full rounded-lg border bg-sand px-4 text-deep shadow-sm placeholder:text-muted/70 transition-colors " +
+  "focus-visible:border-deep focus-visible:bg-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-deep/40 " +
   "disabled:cursor-not-allowed disabled:opacity-60";
 
 interface FieldShellProps {
@@ -25,7 +25,7 @@ interface FieldShellProps {
 function FieldShell({ id, label, hint, error, required, children }: FieldShellProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-deep">
+      <label htmlFor={id} className="text-xs font-semibold tracking-wide text-deep">
         {label}
         {required ? (
           <span aria-hidden className="ml-0.5 text-gold">
@@ -35,7 +35,7 @@ function FieldShell({ id, label, hint, error, required, children }: FieldShellPr
       </label>
       {children}
       {hint && !error ? (
-        <p id={`${id}-hint`} className="text-xs text-deep/70">
+        <p id={`${id}-hint`} className="text-xs text-muted">
           {hint}
         </p>
       ) : null}
@@ -56,21 +56,51 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   hint?: string;
   error?: string;
+  /** A short pill before the box (e.g. "+91" for an Indian mobile number). */
+  addon?: ReactNode;
 };
 
-export function Input({ label, hint, error, id, className, required, ...props }: InputProps) {
+export function Input({
+  label,
+  hint,
+  error,
+  id,
+  className,
+  required,
+  addon,
+  ...props
+}: InputProps) {
   const generated = useId();
   const inputId = id ?? generated;
   return (
     <FieldShell id={inputId} label={label} hint={hint} error={error} required={required}>
-      <input
-        id={inputId}
-        required={required}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(inputId, hint, error)}
-        className={cx(control, "h-11", error ? "border-red-600" : "border-deep/20", className)}
-        {...props}
-      />
+      {addon ? (
+        <div className="flex items-center gap-2">
+          <span
+            aria-hidden
+            className="flex h-12 shrink-0 items-center gap-2 rounded-lg bg-sand-deep px-3.5 text-xs font-semibold shadow-sm select-none"
+          >
+            {addon}
+          </span>
+          <input
+            id={inputId}
+            required={required}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy(inputId, hint, error)}
+            className={cx(control, "h-12", error ? "border-red-600" : "border-line", className)}
+            {...props}
+          />
+        </div>
+      ) : (
+        <input
+          id={inputId}
+          required={required}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy(inputId, hint, error)}
+          className={cx(control, "h-12", error ? "border-red-600" : "border-line", className)}
+          {...props}
+        />
+      )}
     </FieldShell>
   );
 }
@@ -103,8 +133,8 @@ export function Select({
         aria-describedby={describedBy(selectId, hint, error)}
         className={cx(
           control,
-          "h-11 appearance-none",
-          error ? "border-red-600" : "border-deep/20",
+          "h-12 appearance-none",
+          error ? "border-red-600" : "border-line",
           className,
         )}
         {...props}

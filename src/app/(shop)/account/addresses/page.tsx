@@ -49,7 +49,7 @@ export default async function AddressesPage({ searchParams }: PageProps<"/accoun
       {addresses.length === 0 ? (
         <AccountCard className="flex flex-col items-center gap-4 py-12 text-center">
           <p className="font-display text-3xl">No saved addresses yet</p>
-          <p className="text-deep/70">Add one now, and checkout will be quicker.</p>
+          <p className="text-muted">Add one now, and checkout will be quicker.</p>
           <ButtonLink href="/account/addresses/new">Add address</ButtonLink>
         </AccountCard>
       ) : (
@@ -72,7 +72,7 @@ export default async function AddressesPage({ searchParams }: PageProps<"/accoun
           </ul>
           <div className="mt-8">
             {full ? (
-              <p className="text-sm text-deep/70">
+              <p className="text-sm text-muted">
                 You&apos;ve saved {MAX_ADDRESSES} addresses, the most we keep. Delete one you no
                 longer use to add another.
               </p>

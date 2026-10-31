@@ -12,7 +12,11 @@ import { markMoving, useWishlist } from "./wishlist-ui";
 
 /** The page heading; the count follows what's left on the page. */
 export function WishlistHeading({ count }: { count: number | null }) {
-  return <h1 className="mt-3 font-display text-5xl">My wishlist{count ? ` (${count})` : ""}</h1>;
+  return (
+    <h1 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
+      My wishlist{count ? ` (${count})` : ""}
+    </h1>
+  );
 }
 
 /** The wishlist page's contents: saved products with Move to bag and Remove. */
@@ -25,9 +29,9 @@ export function WishlistView({ initial }: { initial: Wishlist }) {
     return (
       <>
         {heading}
-        <div className="mt-10 flex flex-col items-center gap-4 rounded-[2rem] bg-white/70 px-6 py-14 text-center">
+        <div className="mt-10 flex flex-col items-center gap-4 rounded-2xl bg-white px-6 py-14 text-center">
           <p className="font-display text-3xl">Nothing saved yet</p>
-          <p className="text-deep/70">
+          <p className="text-muted">
             Press the heart on anything you like, and it waits for you here.
           </p>
           <ButtonLink href="/shop">Shop all</ButtonLink>
@@ -92,10 +96,10 @@ function SavedProduct({
         <ProductCard product={item.product} heart={false} />
       ) : (
         <div className="flex flex-col gap-3">
-          <div className="flex aspect-[4/5] items-center justify-center rounded-3xl bg-white/50 p-4 text-center text-sm text-deep/70">
+          <div className="flex aspect-[4/5] items-center justify-center rounded-3xl bg-white/50 p-4 text-center text-sm text-muted">
             No longer available
           </div>
-          <p className="px-1 font-display text-xl text-deep/70">{item.name}</p>
+          <p className="px-1 font-display text-xl text-muted">{item.name}</p>
         </div>
       )}
       <div className="mt-auto flex flex-col gap-2 px-1 pt-3">
@@ -115,7 +119,7 @@ function SavedProduct({
           onClick={remove}
           disabled={pending}
           aria-label={`Remove ${item.name} from your wishlist`}
-          className="text-sm text-deep/70 underline-offset-4 hover:text-deep hover:underline disabled:opacity-40"
+          className="text-sm text-muted underline-offset-4 hover:text-deep hover:underline disabled:opacity-40"
         >
           Remove
         </button>

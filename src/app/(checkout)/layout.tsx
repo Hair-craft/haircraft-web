@@ -14,15 +14,15 @@ export default async function CheckoutLayout({ children }: LayoutProps<"/">) {
     <>
       <a
         href="#main"
-        className="sr-only z-50 rounded-full bg-deep px-4 py-2 text-mint focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+        className="sr-only z-50 rounded-full bg-deep px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
       >
         Skip to content
       </a>
-      <header className="border-b border-deep/10 bg-mint">
-        <div className="mx-auto flex h-18 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+      <header className="bg-white/95 shadow-[0_4px_20px_rgba(11,41,26,0.06)]">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link
             href="/"
-            className="shrink-0 rounded-lg focus-visible:outline-2 focus-visible:outline-deep"
+            className="flex shrink-0 items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-deep"
           >
             <Image
               src="/images/logo.png"
@@ -30,16 +30,24 @@ export default async function CheckoutLayout({ children }: LayoutProps<"/">) {
               width={73}
               height={64}
               priority
-              className="h-11 w-auto"
+              className="h-9 w-auto"
             />
+            <span aria-hidden className="hidden flex-col sm:flex">
+              <span className="font-display text-xl leading-none font-semibold tracking-tight">
+                HairCraft
+              </span>
+              <span className="mt-1 text-[0.625rem] font-bold tracking-[0.15em] text-gold-ink uppercase">
+                Luxury Human Hair Co.
+              </span>
+            </span>
           </Link>
-          <p className="flex items-center gap-2 text-sm font-medium tracking-wide text-deep/80">
-            <LockIcon width={16} height={16} />
+          <p className="flex items-center gap-2 rounded-full bg-sage px-3 py-1.5 text-xs font-semibold text-sage-ink">
+            <LockIcon width={14} height={14} />
             Secure checkout
           </p>
           <Link
             href="/cart"
-            className="rounded-full px-3 py-2 text-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-deep"
+            className="rounded-full bg-sand px-4 py-2 text-xs font-semibold transition-colors hover:bg-sand-deep focus-visible:outline-2 focus-visible:outline-deep"
           >
             Back to bag
           </Link>
@@ -48,7 +56,7 @@ export default async function CheckoutLayout({ children }: LayoutProps<"/">) {
       <main id="main" tabIndex={-1} className="flex flex-1 flex-col focus:outline-none">
         {children}
       </main>
-      <footer className="mt-auto border-t border-deep/10 py-6 text-center text-xs text-deep/70">
+      <footer className="mt-auto bg-cream py-6 text-center text-xs text-muted">
         Questions about your order?{" "}
         <Link href="/contact" className="underline underline-offset-4 hover:text-deep">
           Contact us

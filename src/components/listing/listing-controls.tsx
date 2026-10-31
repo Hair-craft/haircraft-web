@@ -43,7 +43,7 @@ export function SortSelect({ base, state }: { base: string; state: ListingState 
       {state.max !== null ? <input type="hidden" name="max" value={state.max} /> : null}
       {state.inStock ? <input type="hidden" name="instock" value="1" /> : null}
       <label className="flex items-center gap-2 text-sm">
-        <span className="text-deep/70">Sort by</span>
+        <span className="text-muted">Sort by</span>
         <span className="relative">
           <select
             name="sort"
@@ -53,7 +53,7 @@ export function SortSelect({ base, state }: { base: string; state: ListingState 
                 listingHref(base, withChange(state, { sort: event.target.value as SortKey })),
               )
             }
-            className="h-10 appearance-none rounded-full border border-deep/20 bg-white/80 pr-9 pl-4 text-sm text-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
+            className="h-10 appearance-none rounded-full bg-sand pr-9 pl-4 text-xs font-semibold text-deep transition-colors hover:bg-sand-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
           >
             {sortsFor(state).map((sort) => (
               <option key={sort.key} value={sort.key}>

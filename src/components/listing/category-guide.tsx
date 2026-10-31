@@ -13,16 +13,18 @@ export function CategoryGuideSection({ guide }: { guide: CategoryGuide }) {
   return (
     <section
       aria-labelledby="buying-guide"
-      className="mt-20 border-t border-deep/10 pt-14 lg:grid lg:grid-cols-[15rem_1fr] lg:gap-12"
+      className="mt-20 border-t border-line pt-14 lg:grid lg:grid-cols-[15rem_1fr] lg:gap-12"
     >
       <div aria-hidden className="hidden lg:block" />
       <div className="min-w-0">
         <div className="max-w-[68ch]">
-          <p className="text-xs tracking-[0.35em] text-deep-soft uppercase">Good to know</p>
+          <p className="text-[0.7rem] font-bold tracking-[0.2em] text-gold-ink uppercase">
+            Good to know
+          </p>
           <h2 id="buying-guide" className="mt-3 font-display text-3xl leading-tight md:text-4xl">
             {guide.heading}
           </h2>
-          <p className="mt-5 text-lg leading-relaxed text-deep/80">
+          <p className="mt-5 text-lg leading-relaxed text-muted">
             <RichText text={guide.intro} />
           </p>
           {guide.sections.map((section) => (
@@ -33,7 +35,7 @@ export function CategoryGuideSection({ guide }: { guide: CategoryGuide }) {
           ))}
 
           <h3 className="mt-10 font-display text-2xl">Questions</h3>
-          <ul className="mt-3 divide-y divide-deep/10 border-y border-deep/10">
+          <ul className="mt-3 divide-y divide-line border-y border-line">
             {guide.faqs.map((faq) => (
               <li key={faq.question}>
                 <details name="category-faq" className="group">
@@ -47,7 +49,7 @@ export function CategoryGuideSection({ guide }: { guide: CategoryGuide }) {
                       <span className="absolute top-0 left-1/2 h-4 w-px bg-current" />
                     </span>
                   </summary>
-                  <p className="pr-8 pb-5 leading-relaxed text-deep/75">
+                  <p className="pr-8 pb-5 leading-relaxed text-muted">
                     <RichText text={faq.answer} />
                   </p>
                 </details>

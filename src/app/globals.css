@@ -3,12 +3,24 @@
 :root {
   --mint: #edf9e5;
   --mint-deep: #cdeebb;
-  --deep: #16362a;
-  --deep-soft: #3d6b54;
-  --gold: #d9982f;
-  --gold-light: #f2c45c;
-  /* Gold for words (accents in large headings): 3:1 or more on mint, cream and white. */
-  --gold-ink: #a8731c;
+  /* Deep emerald: text, buttons, the footer band. */
+  --deep: #0b291a;
+  --deep-soft: #304d3c;
+  --deep-hover: #162e22;
+  /* Antique gold: stars, sparkles, small accents. */
+  --gold: #b58b42;
+  --gold-light: #c89a3c;
+  /* Gold for words (accents in headings): 3:1 or more on mint, cream and white. */
+  --gold-ink: #7b5812;
+  /* The footer's cream (the mock's cream-base). */
+  --cream: #fbf9f5;
+  /* Pills, boxes and fields inside white cards (the mock's surface-container-low / -container). */
+  --sand: #faf3e8;
+  --sand-deep: #f4ede2;
+  --sage: #e3efe0;
+  --sage-ink: #1e432b;
+  --muted: #6e685f;
+  --line: #efe9dc;
 }
 
 @theme inline {
@@ -16,17 +28,25 @@
   --color-mint-deep: var(--mint-deep);
   --color-deep: var(--deep);
   --color-deep-soft: var(--deep-soft);
+  --color-deep-hover: var(--deep-hover);
   --color-gold: var(--gold);
   --color-gold-light: var(--gold-light);
   --color-gold-ink: var(--gold-ink);
-  --font-sans: var(--font-geist-sans);
+  --color-cream: var(--cream);
+  --color-sand: var(--sand);
+  --color-sand-deep: var(--sand-deep);
+  --color-sage: var(--sage);
+  --color-sage-ink: var(--sage-ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --font-sans: var(--font-body);
   --font-display: var(--font-display);
 }
 
 body {
   background: var(--mint);
   color: var(--deep);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
 }
 
 /* Home hero: one gentle entrance, skipped for people who prefer reduced motion. */

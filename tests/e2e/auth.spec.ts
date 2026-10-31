@@ -62,7 +62,7 @@ test.describe("register", () => {
     await page.getByRole("button", { name: "Create account" }).click();
 
     await expect(page).toHaveURL(OPEN + "/account");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hello, Priya");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back, Priya");
     await expect(page.locator("main")).toContainText(email);
     await expect(page.locator("main")).toContainText("98765 43210");
     await expect(page.getByRole("button", { name: "Account menu for Priya" })).toBeVisible();
@@ -215,7 +215,7 @@ test.describe("the session", () => {
     );
     for (const response of responses) expect(response.status()).toBe(200);
     await page.goto(OPEN + "/account");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hello, Nisha");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back, Nisha");
     const renewed = (await cookie(context, "hc_rt"))!.value;
     expect(renewed).not.toBe(firstRefresh);
 
@@ -301,7 +301,7 @@ test("without JavaScript, register and sign in still work", async ({ browser }) 
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(OPEN + "/account");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hello, Lata");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back, Lata");
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(OPEN + "/");
 

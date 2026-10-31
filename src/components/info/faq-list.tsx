@@ -28,7 +28,7 @@ export function FaqList({ groups }: { groups: FaqGroup[] }) {
           <h2 id={group.id} className="scroll-mt-28 font-display text-2xl md:text-3xl">
             {group.heading}
           </h2>
-          <ul className="mt-4 divide-y divide-deep/10 border-y border-deep/10">
+          <ul className="mt-4 divide-y divide-line border-y border-line">
             {group.faqs.map((faq) => (
               <li key={faq.question}>
                 <details name={group.id} className="group">
@@ -42,7 +42,7 @@ export function FaqList({ groups }: { groups: FaqGroup[] }) {
                       <span className="absolute top-0 left-1/2 h-4 w-px bg-current" />
                     </span>
                   </summary>
-                  <p className="pr-8 pb-5 leading-relaxed text-deep/75">
+                  <p className="pr-8 pb-5 leading-relaxed text-muted">
                     <RichText text={faq.answer} />
                   </p>
                 </details>

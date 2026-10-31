@@ -26,7 +26,7 @@ export default function GlobalError({
           display: "grid",
           placeItems: "center",
           background: "#edf9e5",
-          color: "#16362a",
+          color: "#0b291a",
           fontFamily: "system-ui, sans-serif",
           textAlign: "center",
           padding: "1rem",
@@ -43,7 +43,7 @@ export default function GlobalError({
             onClick={() => retry()}
             style={{
               marginTop: "1rem",
-              background: "#16362a",
+              background: "#0b291a",
               color: "#edf9e5",
               border: 0,
               borderRadius: 999,

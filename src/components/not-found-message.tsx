@@ -5,9 +5,11 @@ import { ButtonLink } from "@/components/ui/button";
 export function NotFoundMessage() {
   return (
     <section className="mx-auto my-20 flex max-w-xl flex-col items-center gap-4 px-4 text-center">
-      <p className="text-sm tracking-[0.3em] text-deep-soft uppercase">404</p>
-      <h1 className="font-display text-5xl">We couldn&apos;t find that page</h1>
-      <p className="text-deep/75">
+      <p className="text-sm font-bold tracking-[0.2em] text-gold-ink uppercase">404</p>
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">
+        We couldn&apos;t find that page
+      </h1>
+      <p className="text-muted">
         The link may be old, or the page may have moved. Let&apos;s get you back to something
         beautiful.
       </p>

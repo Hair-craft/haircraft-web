@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { cx } from "@/lib/cx";
 import {
@@ -44,6 +52,10 @@ const rupees = (text: string): number | null => {
  *   with their Apply button (or Enter).
  * - `deferred` (the phone panel): choices apply together with Show results.
  *
+ * Laid out as a `list` (open groups, one under another: the phone panel)
+ * or a `bar` (the desktop toolbar: each group is a button that opens a
+ * small panel; one open at a time, closed by Escape or a click outside).
+ *
  * It is a real GET form, so without JavaScript it still works: the browser
  * submits it to the same address.
  */
@@ -52,14 +64,39 @@ export function FilterPanel({
   state,
   options,
   mode,
+  layout = "list",
   onApplied,
 }: {
   base: string;
   state: ListingState;
   options: FilterOptions;
   mode: "instant" | "deferred";
+  layout?: "list" | "bar";
   onApplied?: () => void;
 }) {
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (layout !== "bar") return;
+    const close = (except?: Node | null) =>
+      form.current?.querySelectorAll("details[open]").forEach((details) => {
+        if (!except || !details.contains(except)) details.removeAttribute("open");
+      });
+    const onPointer = (event: PointerEvent) => close(event.target as Node);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const open = form.current?.querySelector("details[open]");
+      if (!open) return;
+      open.removeAttribute("open");
+      open.querySelector("summary")?.focus();
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [layout]);
+
   const { navigate } = useListing();
   const hydrated = useHydrated();
   const [draft, setDraft] = useState(() => toDraft(state));
@@ -102,174 +139,207 @@ export function FilterPanel({
 
   return (
     <form
+      ref={form}
       method="get"
       action={base}
       onSubmit={submit}
       aria-label="Filters"
-      className="flex flex-col"
+      className={layout === "bar" ? "flex flex-wrap items-center gap-2" : "flex flex-col"}
     >
-      {state.q !== null ? <input type="hidden" name="q" value={state.q} /> : null}
-      {state.sort !== defaultSort(state) ? (
-        <input type="hidden" name="sort" value={state.sort} />
-      ) : null}
+      <BarContext value={layout === "bar"}>
+        {state.q !== null ? <input type="hidden" name="q" value={state.q} /> : null}
+        {state.sort !== defaultSort(state) ? (
+          <input type="hidden" name="sort" value={state.sort} />
+        ) : null}
 
-      {options.lengths.length > 0 ? (
-        <Group title="Length" count={lengths.length}>
-          {options.lengths.map((length) => (
-            <Tick
-              key={length}
-              name="length"
-              value={String(length)}
-              label={lengthLabel(length)}
-              checked={lengths.includes(length)}
-              onChange={() => change({ lengths: toggle(lengths, length) })}
-            />
-          ))}
-        </Group>
-      ) : null}
+        {options.lengths.length > 0 ? (
+          <Group title="Length" count={lengths.length}>
+            {options.lengths.map((length) => (
+              <Tick
+                key={length}
+                name="length"
+                value={String(length)}
+                label={lengthLabel(length)}
+                checked={lengths.includes(length)}
+                onChange={() => change({ lengths: toggle(lengths, length) })}
+              />
+            ))}
+          </Group>
+        ) : null}
 
-      {options.colors.length > 0 ? (
-        <Group title="Colour" count={colors.length}>
-          {options.colors.map((color) => (
-            <Tick
-              key={color}
-              name="color"
-              value={slugify(color)}
-              label={color}
-              checked={colors.includes(color)}
-              onChange={() => change({ colors: toggle(colors, color) })}
-            />
-          ))}
-        </Group>
-      ) : null}
+        {options.colors.length > 0 ? (
+          <Group title="Colour" count={colors.length}>
+            {options.colors.map((color) => (
+              <Tick
+                key={color}
+                name="color"
+                value={slugify(color)}
+                label={color}
+                checked={colors.includes(color)}
+                onChange={() => change({ colors: toggle(colors, color) })}
+              />
+            ))}
+          </Group>
+        ) : null}
 
-      {options.textures.length > 0 ? (
-        <Group title="Texture" count={textures.length}>
-          {options.textures.map((texture) => (
-            <Tick
-              key={texture}
-              name="texture"
-              value={slugify(texture)}
-              label={texture}
-              checked={textures.includes(texture)}
-              onChange={() => change({ textures: toggle(textures, texture) })}
-            />
-          ))}
-        </Group>
-      ) : null}
+        {options.textures.length > 0 ? (
+          <Group title="Texture" count={textures.length}>
+            {options.textures.map((texture) => (
+              <Tick
+                key={texture}
+                name="texture"
+                value={slugify(texture)}
+                label={texture}
+                checked={textures.includes(texture)}
+                onChange={() => change({ textures: toggle(textures, texture) })}
+              />
+            ))}
+          </Group>
+        ) : null}
 
-      {(options.sizes ?? []).length > 0 ? (
-        <Group title="Size" count={sizes.length}>
-          {options.sizes.map((size) => (
-            <Tick
-              key={size}
-              name="size"
-              value={size}
-              label={sizeFilterLabel(size)}
-              checked={sizes.includes(size)}
-              onChange={() => change({ sizes: toggle(sizes, size) })}
-            />
-          ))}
-        </Group>
-      ) : null}
+        {(options.sizes ?? []).length > 0 ? (
+          <Group title="Size" count={sizes.length}>
+            {options.sizes.map((size) => (
+              <Tick
+                key={size}
+                name="size"
+                value={size}
+                label={sizeFilterLabel(size)}
+                checked={sizes.includes(size)}
+                onChange={() => change({ sizes: toggle(sizes, size) })}
+              />
+            ))}
+          </Group>
+        ) : null}
 
-      {options.price ? (
-        <Group title="Price" count={draft.state.min !== null || draft.state.max !== null ? 1 : 0}>
-          {bands.length > 0 ? (
-            <div className="flex flex-wrap gap-2 pb-3">
-              {bands.map((band) => {
-                const pressed = draft.state.min === band.min && draft.state.max === band.max;
-                return (
-                  <button
-                    key={band.label}
-                    type="button"
-                    aria-pressed={pressed}
-                    onClick={() =>
-                      pressed
-                        ? change({ min: null, max: null }, { from: "", to: "" })
-                        : change(
-                            { min: band.min, max: band.max },
-                            {
-                              from: band.min === null ? "" : String(band.min),
-                              to: band.max === null ? "" : String(band.max),
-                            },
-                          )
-                    }
-                    className={cx(
-                      "rounded-full border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep",
-                      pressed
-                        ? "border-deep bg-deep text-mint"
-                        : "border-deep/20 bg-white/70 hover:border-deep/60",
-                    )}
-                  >
-                    {band.label}
-                  </button>
-                );
-              })}
+        {options.price ? (
+          <Group title="Price" count={draft.state.min !== null || draft.state.max !== null ? 1 : 0}>
+            {bands.length > 0 ? (
+              <div className="flex flex-wrap gap-2 pb-3">
+                {bands.map((band) => {
+                  const pressed = draft.state.min === band.min && draft.state.max === band.max;
+                  return (
+                    <button
+                      key={band.label}
+                      type="button"
+                      aria-pressed={pressed}
+                      onClick={() =>
+                        pressed
+                          ? change({ min: null, max: null }, { from: "", to: "" })
+                          : change(
+                              { min: band.min, max: band.max },
+                              {
+                                from: band.min === null ? "" : String(band.min),
+                                to: band.max === null ? "" : String(band.max),
+                              },
+                            )
+                      }
+                      className={cx(
+                        "rounded-full border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep",
+                        pressed
+                          ? "border-deep bg-deep text-white"
+                          : "border-deep/20 bg-white hover:border-deep/60",
+                      )}
+                    >
+                      {band.label}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+            <div className="flex items-end gap-2">
+              <PriceBox
+                label="From"
+                name="min"
+                value={draft.from}
+                onChange={(from) => setDraft({ ...draft, from })}
+              />
+              <span aria-hidden className="pb-2.5 text-muted">
+                –
+              </span>
+              <PriceBox
+                label="To"
+                name="max"
+                value={draft.to}
+                onChange={(to) => setDraft({ ...draft, to })}
+              />
+              {deferred ? null : (
+                <Button type="submit" variant="secondary" size="sm" className="mb-0.5 shrink-0">
+                  Apply
+                </Button>
+              )}
             </div>
-          ) : null}
-          <div className="flex items-end gap-2">
-            <PriceBox
-              label="From"
-              name="min"
-              value={draft.from}
-              onChange={(from) => setDraft({ ...draft, from })}
-            />
-            <span aria-hidden className="pb-2.5 text-deep/70">
-              –
-            </span>
-            <PriceBox
-              label="To"
-              name="max"
-              value={draft.to}
-              onChange={(to) => setDraft({ ...draft, to })}
-            />
-            {deferred ? null : (
-              <Button type="submit" variant="secondary" size="sm" className="mb-0.5 shrink-0">
-                Apply
-              </Button>
-            )}
-          </div>
+          </Group>
+        ) : null}
+
+        <Group title="Availability" count={draft.state.inStock ? 1 : 0}>
+          <Tick
+            name="instock"
+            value="1"
+            label="In stock only"
+            checked={draft.state.inStock}
+            onChange={() => change({ inStock: !draft.state.inStock })}
+          />
         </Group>
-      ) : null}
 
-      <Group title="Availability" count={draft.state.inStock ? 1 : 0}>
-        <Tick
-          name="instock"
-          value="1"
-          label="In stock only"
-          checked={draft.state.inStock}
-          onChange={() => change({ inStock: !draft.state.inStock })}
-        />
-      </Group>
-
-      {deferred ? (
-        <div className="sticky bottom-0 -mx-6 mt-4 flex gap-3 border-t border-deep/10 bg-mint px-6 py-4">
-          <Button
-            variant="secondary"
-            className="flex-1"
-            disabled={!hasFilters(draft.state) && draft.from === "" && draft.to === ""}
-            onClick={() => setDraft(toDraft(clearFilters(draft.state)))}
-          >
-            Clear all
+        {deferred ? (
+          <div className="sticky bottom-0 -mx-6 mt-4 flex gap-3 border-t border-line bg-mint px-6 py-4">
+            <Button
+              variant="secondary"
+              className="flex-1"
+              disabled={!hasFilters(draft.state) && draft.from === "" && draft.to === ""}
+              onClick={() => setDraft(toDraft(clearFilters(draft.state)))}
+            >
+              Clear all
+            </Button>
+            <Button type="submit" className="flex-1">
+              Show results
+            </Button>
+          </div>
+        ) : !hydrated ? (
+          // Only without JavaScript: the ticks above can't apply themselves.
+          <Button type="submit" size="sm" className={layout === "bar" ? "" : "mt-4"}>
+            Apply filters
           </Button>
-          <Button type="submit" className="flex-1">
-            Show results
-          </Button>
-        </div>
-      ) : !hydrated ? (
-        // Only without JavaScript: the ticks above can't apply themselves.
-        <Button type="submit" className="mt-4">
-          Apply filters
-        </Button>
-      ) : null}
+        ) : null}
+      </BarContext>
     </form>
   );
 }
 
+/** Inside the desktop toolbar: groups are drop-downs. */
+const BarContext = createContext(false);
+
 function Group({ title, count, children }: { title: string; count: number; children: ReactNode }) {
+  const bar = useContext(BarContext);
+  if (bar)
+    return (
+      // `name`: opening one closes the others.
+      <details name="listing-filters" className="group relative">
+        <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full bg-sand px-3.5 py-2 text-xs font-semibold transition-colors group-open:bg-sand-deep hover:bg-sand-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep [&::-webkit-details-marker]:hidden">
+          {title}
+          <span className="text-muted">{count > 0 ? `${count} chosen` : "All"}</span>
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            width={14}
+            height={14}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            className="text-muted transition-transform group-open:rotate-180"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </summary>
+        <fieldset className="absolute top-full left-0 z-30 mt-2 max-h-[60vh] w-64 overflow-y-auto rounded-2xl border border-line bg-white p-4 shadow-xl">
+          <legend className="sr-only">{title}</legend>
+          <div className="flex flex-col gap-2.5">{children}</div>
+        </fieldset>
+      </details>
+    );
   return (
-    <details open className="group border-b border-deep/10 py-4 first:pt-0">
+    <details open className="group border-b border-line py-4 first:pt-0">
       <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium tracking-[0.25em] uppercase focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep [&::-webkit-details-marker]:hidden">
         <span>
           {title}
@@ -328,7 +398,7 @@ function PriceBox({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-deep/70">
+    <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-muted">
       {label} (₹)
       <input
         type="text"

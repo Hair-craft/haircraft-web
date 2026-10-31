@@ -7,10 +7,10 @@ import { formatPrice, formatPriceRange } from "@/lib/format";
 type BadgeTone = "deep" | "gold" | "mint" | "muted" | "danger";
 
 const tones: Record<BadgeTone, string> = {
-  deep: "bg-deep text-mint",
-  gold: "bg-gold/90 text-deep",
+  deep: "bg-deep text-white",
+  gold: "bg-sage text-sage-ink",
   mint: "bg-mint-deep text-deep",
-  muted: "bg-deep/10 text-deep/80",
+  muted: "bg-deep/10 text-muted",
   danger: "bg-red-100 text-red-800",
 };
 
@@ -57,7 +57,7 @@ export function Price({
           <span className="sr-only">Sale price </span>
           {formatPrice(amount)}
         </span>
-        <s className="text-sm text-deep/70">
+        <s className="text-sm text-muted">
           <span className="sr-only">, was </span>
           {formatPrice(compareAt)}
         </s>

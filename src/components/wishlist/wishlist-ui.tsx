@@ -161,7 +161,7 @@ function GuestPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const next = encodeURIComponent(pathname);
   return (
     <Dialog open={open} onClose={onClose} title="Save your favourites">
-      <p className="text-deep/75">
+      <p className="text-muted">
         Sign in or create an account to keep a wishlist. We&apos;ll save this one for you as soon as
         you do.
       </p>
@@ -249,7 +249,7 @@ export function WishlistLink({ className }: { className?: string }) {
       {count > 0 ? (
         <span
           aria-hidden
-          className="absolute -top-0.5 -right-0.5 flex min-w-5 items-center justify-center rounded-full bg-gold px-1 text-[0.7rem] leading-5 font-semibold text-deep"
+          className="absolute top-0.5 right-0.5 flex size-4 items-center justify-center rounded-full bg-gold text-[0.625rem] font-bold text-white"
         >
           {count > 99 ? "99+" : count}
         </span>

@@ -19,6 +19,9 @@ export function CategoryMenu({ items }: { items: NavItem[] }) {
   return (
     <nav aria-label="Categories" className="hidden md:block">
       <ul className="flex items-center gap-0.5 lg:gap-1">
+        <li>
+          <NavLink href="/shop" label="Shop All" exact />
+        </li>
         {shown.map((item) =>
           item.children.length > 0 ? (
             <DropDown key={item.href} label={item.label}>
@@ -60,17 +63,20 @@ export function CategoryMenu({ items }: { items: NavItem[] }) {
   );
 }
 
-function NavLink({ href, label }: { href: string; label: string }) {
+/** `exact`: only this address counts (Shop All, so it isn't underlined on every category too). */
+function NavLink({ href, label, exact }: { href: string; label: string; exact?: boolean }) {
   const pathname = usePathname();
-  const active = pathname === href || pathname.startsWith(`${href}/`);
+  const active = pathname === href || (!exact && pathname.startsWith(`${href}/`));
   return (
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
       className={cx(
-        "rounded-full px-2 py-2 text-sm tracking-wide whitespace-nowrap transition-colors hover:bg-deep/5 lg:px-3",
+        "mx-1.5 border-b-2 py-2 text-[0.8rem] font-semibold tracking-wide whitespace-nowrap transition-colors lg:mx-2.5",
         "focus-visible:outline-2 focus-visible:outline-deep",
-        active && "font-semibold",
+        active
+          ? "border-deep font-bold text-deep"
+          : "border-transparent text-deep-soft hover:text-deep",
       )}
     >
       {label}
@@ -166,7 +172,7 @@ function DropDown({
           }
           setOpen((value) => !value);
         }}
-        className="inline-flex items-center gap-1 rounded-full px-2 py-2 text-sm tracking-wide whitespace-nowrap hover:bg-deep/5 focus-visible:outline-2 focus-visible:outline-deep lg:px-3"
+        className="mx-1.5 inline-flex items-center gap-1 py-2 text-[0.8rem] font-semibold tracking-wide whitespace-nowrap text-deep-soft hover:text-deep focus-visible:outline-2 focus-visible:outline-deep lg:mx-2.5"
       >
         {label}
         <ChevronDownIcon
@@ -180,7 +186,7 @@ function DropDown({
         hidden={!open}
         className={cx("absolute top-full z-40 min-w-56 pt-2", alignRight ? "right-0" : "left-0")}
       >
-        <ul className="max-h-[70vh] overflow-y-auto rounded-2xl border border-deep/10 bg-white p-2 shadow-xl">
+        <ul className="max-h-[70vh] overflow-y-auto rounded-2xl border border-line bg-white p-2 shadow-xl">
           {children}
         </ul>
       </div>

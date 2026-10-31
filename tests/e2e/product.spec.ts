@@ -121,10 +121,7 @@ test.describe("product page", () => {
     expect(await page.evaluate(() => (window as unknown as { marker?: number }).marker)).toBe(1);
 
     // The details follow the chosen option.
-    await page
-      .locator("summary")
-      .filter({ hasText: /^Details/ })
-      .click();
+    await page.getByRole("tab", { name: "Details" }).click();
     await expect(page.locator("dl")).toContainText(`${next.lengthInches} inch`);
   });
 

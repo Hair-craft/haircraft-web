@@ -33,7 +33,7 @@ export function CartPageView({ initial, problem }: { initial: Cart; problem: str
           </div>
           <aside
             aria-label="Order summary"
-            className="flex flex-col gap-4 rounded-[2rem] bg-white/80 p-6 ring-1 ring-deep/5 lg:sticky lg:top-28"
+            className="flex flex-col gap-4 rounded-2xl bg-white/80 p-6 ring-1 ring-deep/5 lg:sticky lg:top-28"
           >
             <h2 className="font-display text-2xl">Summary</h2>
             <p className="flex items-baseline justify-between">
@@ -42,12 +42,12 @@ export function CartPageView({ initial, problem }: { initial: Cart; problem: str
               </span>
               <span className="text-lg font-semibold">{formatPrice(cart.subtotal)}</span>
             </p>
-            <p className="-mt-2 text-xs text-deep/70">
+            <p className="-mt-2 text-xs text-muted">
               Shipping and taxes are worked out at checkout.
             </p>
             <FreeShippingLine cart={cart} />
             <CheckoutButton cart={cart} />
-            <p className="text-center text-xs text-deep/70">
+            <p className="text-center text-xs text-muted">
               <Link href="/shipping" className="underline underline-offset-2 hover:text-deep">
                 Delivery
               </Link>{" "}

@@ -14,7 +14,7 @@ test.describe("sign-in pages on a phone", () => {
     await page.getByRole("textbox", { name: "Password", exact: true }).fill("Silky2026!");
     await page.getByRole("button", { name: "Create account" }).tap();
     await expect(page).toHaveURL(OPEN + "/account");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hello, Divya");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back, Divya");
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       screen,
     );

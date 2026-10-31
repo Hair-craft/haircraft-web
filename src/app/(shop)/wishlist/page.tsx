@@ -28,7 +28,9 @@ export default async function WishlistPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:py-14">
-      <p className="text-xs tracking-[0.35em] text-deep-soft uppercase">Saved for later</p>
+      <p className="text-[0.7rem] font-bold tracking-[0.2em] text-gold-ink uppercase">
+        Saved for later
+      </p>
       {wishlist ? (
         <WishlistView initial={wishlist} />
       ) : (

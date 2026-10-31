@@ -84,7 +84,7 @@ test.describe("bag (guest)", () => {
     await expect(drawer(page)).toHaveAccessibleName("Your bag (2)");
     await expect(drawer(page).getByText("Subtotal")).toBeVisible();
     // Checkout (S10) is a link to the checkout page.
-    await expect(drawer(page).getByRole("link", { name: "Checkout" })).toHaveAttribute(
+    await expect(drawer(page).getByRole("link", { name: /^Secure checkout/ })).toHaveAttribute(
       "href",
       "/checkout",
     );

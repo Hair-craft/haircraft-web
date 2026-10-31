@@ -8,9 +8,6 @@ import { useToast } from "@/components/ui/toast";
 import { signOutAction } from "@/lib/session/actions";
 import { FLASH_COOKIE } from "@/lib/session/cookies";
 
-const iconLink =
-  "inline-flex rounded-full p-2 transition-colors hover:bg-deep/5 focus-visible:outline-2 focus-visible:outline-deep";
-
 /**
  * The header's account control. Guests: a "Sign in" icon link. Signed in:
  * the first letter of the name, opening a small menu (My account, Sign out).
@@ -40,8 +37,12 @@ export function AccountMenu({ firstName }: { firstName: string | null }) {
 
   if (firstName === null)
     return (
-      <Link href="/sign-in" className={iconLink} aria-label="Sign in">
-        <UserIcon />
+      <Link
+        href="/sign-in"
+        className="ml-1 inline-flex size-8 items-center justify-center rounded-full bg-deep text-white transition-colors hover:bg-deep-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
+        aria-label="Sign in"
+      >
+        <UserIcon width={18} height={18} />
       </Link>
     );
 
@@ -65,7 +66,7 @@ export function AccountMenu({ firstName }: { firstName: string | null }) {
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
-        className="flex size-10 items-center justify-center rounded-full bg-deep font-medium text-mint hover:bg-deep-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
+        className="ml-1 flex size-8 items-center justify-center rounded-full bg-deep text-sm font-medium text-white hover:bg-deep-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
       >
         {initial}
       </button>
@@ -76,7 +77,7 @@ export function AccountMenu({ firstName }: { firstName: string | null }) {
           aria-label="Account"
           className="absolute top-full right-0 z-40 mt-2 w-56 rounded-2xl bg-white p-2 shadow-xl ring-1 shadow-deep/10 ring-deep/10"
         >
-          <p className="px-3 py-2 text-sm text-deep/70">Hello, {firstName}</p>
+          <p className="px-3 py-2 text-sm text-muted">Hello, {firstName}</p>
           <Link
             href="/account"
             role="menuitem"

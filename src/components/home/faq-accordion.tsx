@@ -19,11 +19,11 @@ export function FaqAccordion({ faqs }: { faqs: Faq[] }) {
 
   return (
     <LazyMotionProvider>
-      <ul className="mx-auto mt-10 max-w-3xl divide-y divide-deep/10 border-y border-deep/10">
+      <ul className="mt-6 flex flex-col gap-4">
         {faqs.map((faq, i) => {
           const expanded = open === i;
           return (
-            <li key={faq.question}>
+            <li key={faq.question} className="rounded-2xl bg-white px-5 shadow-sm">
               <h3>
                 <button
                   type="button"
@@ -31,13 +31,13 @@ export function FaqAccordion({ faqs }: { faqs: Faq[] }) {
                   aria-expanded={expanded}
                   aria-controls={`${base}-a-${i}`}
                   onClick={() => setOpen(expanded ? null : i)}
-                  className="flex w-full items-center justify-between gap-6 py-5 text-left text-base font-medium hover:text-deep-soft focus-visible:outline-2 focus-visible:outline-deep md:text-lg"
+                  className="flex w-full items-center justify-between gap-6 py-5 text-left font-display text-base font-semibold hover:text-deep-soft focus-visible:outline-2 focus-visible:outline-deep md:text-lg"
                 >
                   {faq.question}
                   <span
                     aria-hidden
                     className={cx(
-                      "relative size-5 shrink-0 transition-transform duration-300",
+                      "relative size-5 shrink-0 text-gold transition-transform duration-300",
                       expanded && "rotate-45",
                     )}
                   >
@@ -58,7 +58,7 @@ export function FaqAccordion({ faqs }: { faqs: Faq[] }) {
                     transition={{ duration: reduced ? 0 : 0.3, ease: [0.22, 1, 0.36, 1] }}
                     className="overflow-hidden"
                   >
-                    <p className="pr-10 pb-6 leading-relaxed text-deep/75">
+                    <p className="pr-10 pb-5 leading-relaxed text-muted">
                       <RichText text={faq.answer} />
                     </p>
                   </m.div>

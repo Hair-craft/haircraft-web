@@ -25,12 +25,17 @@ export function SectionHeader({
   return (
     <div className={cx(align === "center" ? "mx-auto text-center" : "", "max-w-2xl", className)}>
       {eyebrow ? (
-        <p className="text-xs tracking-[0.35em] text-deep-soft uppercase">{eyebrow}</p>
+        <p className="text-[0.65rem] font-bold tracking-[0.2em] text-gold-ink uppercase">
+          {eyebrow}
+        </p>
       ) : null}
-      <h2 id={id} className="mt-3 font-display text-4xl leading-tight md:text-5xl">
+      <h2
+        id={id}
+        className="mt-2 font-display text-2xl leading-tight font-medium tracking-tight sm:text-[2rem] sm:leading-10"
+      >
         {title}
       </h2>
-      {intro ? <p className="mt-4 text-deep/70">{intro}</p> : null}
+      {intro ? <p className="mt-3 text-muted">{intro}</p> : null}
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
   );

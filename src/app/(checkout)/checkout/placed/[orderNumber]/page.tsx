@@ -51,11 +51,13 @@ export default async function OrderPlacedPage({
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
-      <p className="text-xs tracking-[0.35em] text-deep-soft uppercase">
+      <p className="text-[0.7rem] font-bold tracking-[0.2em] text-gold-ink uppercase">
         Order {order.orderNumber}
       </p>
-      <h1 className="mt-3 font-display text-4xl sm:text-5xl">Thank you{name ? `, ${name}` : ""}</h1>
-      <p className="mt-3 text-deep/75">
+      <h1 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
+        Thank you{name ? `, ${name}` : ""}
+      </h1>
+      <p className="mt-3 text-muted">
         Your order <strong>{order.orderNumber}</strong> is placed.
       </p>
 
@@ -63,12 +65,12 @@ export default async function OrderPlacedPage({
         {payment === "none" ? (
           <section
             aria-labelledby="next-title"
-            className="rounded-[2rem] border border-gold/40 bg-gold/10 p-6"
+            className="rounded-2xl border border-gold/40 bg-gold/10 p-6"
           >
             <h2 id="next-title" className="font-display text-2xl">
               {steps.title}
             </h2>
-            <p className="mt-2 text-sm text-deep/80">{steps.text}</p>
+            <p className="mt-2 text-sm text-muted">{steps.text}</p>
           </section>
         ) : (
           <PaymentPanel
@@ -84,25 +86,25 @@ export default async function OrderPlacedPage({
       </div>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
-        <section className="rounded-[2rem] bg-white/80 p-6 ring-1 ring-deep/5">
+        <section className="rounded-2xl bg-white/80 p-6 ring-1 ring-deep/5">
           <h2 className="font-display text-2xl">Delivering to</h2>
           <address className="mt-3 text-sm not-italic">
             <p className="font-medium">{a.fullName}</p>
-            <p className="text-deep/75">{a.line1}</p>
-            {a.line2 ? <p className="text-deep/75">{a.line2}</p> : null}
-            {a.landmark ? <p className="text-deep/75">Near {a.landmark}</p> : null}
-            <p className="text-deep/75">
+            <p className="text-muted">{a.line1}</p>
+            {a.line2 ? <p className="text-muted">{a.line2}</p> : null}
+            {a.landmark ? <p className="text-muted">Near {a.landmark}</p> : null}
+            <p className="text-muted">
               {a.city}, {a.state} {a.postalCode}
             </p>
-            <p className="mt-1 text-deep/75">Mobile: {localMobile(a.phone)}</p>
+            <p className="mt-1 text-muted">Mobile: {localMobile(a.phone)}</p>
           </address>
           {order.notes ? (
-            <p className="mt-3 text-sm text-deep/75">
+            <p className="mt-3 text-sm text-muted">
               <span className="font-medium text-deep">Instructions:</span> {order.notes}
             </p>
           ) : null}
         </section>
-        <section className="rounded-[2rem] bg-white/80 p-6 ring-1 ring-deep/5">
+        <section className="rounded-2xl bg-white/80 p-6 ring-1 ring-deep/5">
           <h2 className="font-display text-2xl">Payment</h2>
           <p className="mt-3 text-sm">
             {order.paymentMethod === "COD" ? "Cash on delivery" : "Online"}
@@ -110,7 +112,7 @@ export default async function OrderPlacedPage({
         </section>
       </div>
 
-      <section className="mt-6 flex flex-col gap-5 rounded-[2rem] bg-white/80 p-6 ring-1 ring-deep/5">
+      <section className="mt-6 flex flex-col gap-5 rounded-2xl bg-white/80 p-6 ring-1 ring-deep/5">
         <h2 className="font-display text-2xl">Your order</h2>
         <SummaryLines
           lines={order.items.map((item, index) => ({
