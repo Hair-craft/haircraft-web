@@ -96,6 +96,15 @@ test.describe("bag (guest)", () => {
     await expect(bagButton(page)).toHaveAccessibleName("Bag, 0 items");
   });
 
+  test("Buy now adds to the bag and goes straight on to checkout", async ({ page }) => {
+    await page.goto(`${OPEN}/product/${SLUG}`);
+    await page.getByRole("button", { name: "One more" }).click();
+    await page.getByRole("button", { name: "Buy now" }).click();
+    // Checkout (or signing in first, for a guest), without opening the drawer.
+    await expect(page).toHaveURL(/checkout/);
+    await expect(bagButton(page)).toHaveAccessibleName("Bag, 2 items");
+  });
+
   test("at most 10 of one item", async ({ page, request }) => {
     await setStock(request, defaultVariant((await product(request)).variants)!.id, 50);
     await page.goto(`${OPEN}/product/${SLUG}`);
@@ -265,6 +274,11 @@ test("without JavaScript, Add to bag and the cart page still work", async ({ bro
   await expect(main.getByText(/^Quantity 2$/)).toBeVisible();
   await main.getByRole("button", { name: /from your bag$/ }).click();
   await expect(main.getByText("Your bag is empty")).toBeVisible();
+
+  // Buy now goes on to checkout.
+  await page.goto(`${OPEN}/product/${SLUG}`);
+  await page.getByRole("button", { name: "Buy now" }).click();
+  await expect(page).toHaveURL(/checkout/);
   await context.close();
 });
 

@@ -46,8 +46,6 @@ const product: PublicProduct = {
   id: "p1",
   name: "Silky Tape-ins",
   slug: "silky-tape-ins",
-  headline: null,
-  shortDescription: "Seamless",
   description: null,
   attributes: {},
   categories: [{ id: "c1", name: "Tape-ins", slug: "tape-ins" }],

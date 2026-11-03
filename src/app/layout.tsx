@@ -1,19 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
+import { Belgrano, Merriweather, Roboto_Slab } from "next/font/google";
 import { settings } from "@/lib/env";
 import { siteJsonLd } from "@/lib/seo/organization";
 import { jsonLdScript } from "@/lib/seo/json-ld";
 import "./globals.css";
 
-const display = Playfair_Display({
+/** The owner's three fonts (2026-11-03): headlines, highlighters (labels, buttons, prices) and sub text. */
+const display = Belgrano({
   variable: "--font-display",
   subsets: ["latin"],
-  style: ["normal", "italic"],
+  weight: "400",
 });
 
-const sans = Plus_Jakarta_Sans({
+const accent = Roboto_Slab({
+  variable: "--font-accent",
+  subsets: ["latin"],
+});
+
+const sans = Merriweather({
   variable: "--font-body",
   subsets: ["latin"],
+  style: ["normal", "italic"],
 });
 
 const description =
@@ -47,7 +54,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-IN" className={`${display.variable} ${sans.variable} h-full antialiased`}>
+    <html
+      lang="en-IN"
+      className={`${display.variable} ${accent.variable} ${sans.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">
         <script
           type="application/ld+json"

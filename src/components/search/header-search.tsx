@@ -213,12 +213,9 @@ export function HeaderSearch({
             setOpen(true);
           }
         }}
-        className="inline-flex items-center gap-2 rounded-full p-2 transition-colors hover:bg-deep/5 focus-visible:outline-2 focus-visible:outline-deep xl:w-60 xl:border xl:border-line xl:bg-sand xl:px-3 xl:py-1.5 xl:hover:bg-sand-deep"
+        className="inline-flex size-9 items-center justify-center rounded-full border border-line bg-sand transition-colors hover:bg-sand-deep focus-visible:outline-2 focus-visible:outline-deep"
       >
-        <SearchIcon width={18} height={18} className="shrink-0 xl:text-[#727973]" />
-        <span aria-hidden className="hidden truncate text-sm text-muted xl:inline">
-          Search clip-ins, toppers, shades…
-        </span>
+        <SearchIcon width={18} height={18} className="shrink-0" />
       </Link>
 
       {open
@@ -486,11 +483,6 @@ export function HeaderSearch({
                                       <span className="line-clamp-2 text-xs leading-snug font-bold">
                                         <Highlighted text={product.name} query={shown.q} />
                                       </span>
-                                      {product.shortDescription ? (
-                                        <span className="mt-1 line-clamp-1 block text-[0.6875rem] text-muted">
-                                          {product.shortDescription}
-                                        </span>
-                                      ) : null}
                                     </span>
                                   </span>
                                   <span className="mt-2 flex items-center justify-between border-t border-line pt-3">

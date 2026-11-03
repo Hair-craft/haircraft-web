@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -465,6 +466,7 @@ export function AddToBag({
   onAdded?: () => void;
 }) {
   const { add, pending } = useCart();
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [problem, setProblem] = useState<string | null>(null);
   // A different option starts again from one, without old problems.
@@ -487,9 +489,14 @@ export function AddToBag({
       action={cartFormAction}
       onSubmit={async (event) => {
         event.preventDefault();
-        const result = await add(variantId, quantity, price);
+        // "Buy now" adds it and goes straight to checkout (guests sign in first).
+        const buyNow =
+          (event.nativeEvent as SubmitEvent).submitter?.getAttribute("value") === "checkout";
+        const result = await add(variantId, quantity, price, { quiet: buyNow });
         setProblem(result);
-        if (result === null) onAdded?.();
+        if (result !== null) return;
+        onAdded?.();
+        if (buyNow) router.push("/checkout");
       }}
       className="mt-8 flex flex-col gap-3"
     >
@@ -536,12 +543,27 @@ export function AddToBag({
           size="lg"
           loading={pending}
           aria-label="Add to bag"
-          className="h-12 flex-1 text-sm tracking-wider uppercase"
+          className="h-12 flex-1 text-sm tracking-wider whitespace-nowrap uppercase"
         >
           <BagIcon width={20} height={20} />
-          Add to Bag — {formatPrice(timesQuantity(price, quantity))}
+          Add to Bag
+          {/* The price only where the button has room: not on phones (owner, 2026-11-03), nor in the narrow side column at 1024px. */}
+          <span className="hidden sm:inline lg:hidden xl:inline">
+            — {formatPrice(timesQuantity(price, quantity))}
+          </span>
         </Button>
       </div>
+      <Button
+        type="submit"
+        name="then"
+        value="checkout"
+        size="lg"
+        variant="secondary"
+        disabled={pending}
+        className="h-12 w-full border-deep text-sm tracking-wider uppercase"
+      >
+        Buy now
+      </Button>
       {problem ? (
         <p role="alert" className="text-sm font-medium text-red-800">
           {problem}

@@ -10,7 +10,6 @@ const card = (overrides: Partial<ProductCard> = {}): ProductCard => ({
   id: "p1",
   name: "Silky Tape-ins",
   slug: "silky-tape-ins",
-  shortDescription: null,
   image: null,
   imageAlt: null,
   priceRange: { min: "5499.00", max: "6699.00" },
@@ -43,6 +42,12 @@ describe("product card", () => {
     expect(cardBadges({ inStock: true, onSale: false })).toEqual([]);
     expect(cardBadges({ inStock: true, onSale: true })).toEqual(["sale"]);
     expect(cardBadges({ inStock: false, onSale: true })).toEqual(["soldOut"]);
+    // Ticked "Best seller" in the admin (owner, 2026-11-03).
+    expect(cardBadges({ inStock: true, onSale: true, bestSeller: true })).toEqual([
+      "bestSeller",
+      "sale",
+    ]);
+    expect(cardBadges({ inStock: false, onSale: false, bestSeller: true })).toEqual(["soldOut"]);
   });
 
   it("links to the product page", () => {

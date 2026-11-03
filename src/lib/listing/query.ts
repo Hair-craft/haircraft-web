@@ -225,9 +225,15 @@ export function isRefinedView(state: ListingState): boolean {
 }
 
 /** The API query for a state. */
-export function toApiQuery(state: ListingState, perPage: number, category?: string) {
+export function toApiQuery(
+  state: ListingState,
+  perPage: number,
+  category?: string,
+  concern?: string,
+) {
   return {
     category,
+    concern,
     search: state.q ?? undefined,
     length: state.lengths.length > 0 ? state.lengths : undefined,
     color: state.colors.length > 0 ? state.colors : undefined,
@@ -254,7 +260,8 @@ export function priceLabel(min: number | null, max: number | null): string {
 export const lengthLabel = (inches: number) => `${inches} inch`;
 
 /** `13x15` → "13 × 15 cm". */
-export const sizeFilterLabel = (size: string) => `${size.replace("x", " × ")} cm`;
+export { sizeLabel as sizeFilterLabel } from "@/lib/product/size";
+import { sizeLabel as sizeFilterLabel } from "@/lib/product/size";
 
 export interface PriceBand {
   label: string;

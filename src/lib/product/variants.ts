@@ -16,17 +16,9 @@ export const AXES: { key: Axis; label: string }[] = [
   { key: "size", label: "Size" },
 ];
 
-type Sized = Pick<PublicVariant, "sizeHeightCm" | "sizeWidthCm">;
-
-/** The size as the address and filters write it (`13x15`), or null without one. */
-export function sizeKey(variant: Sized): string | null {
-  return variant.sizeHeightCm === null || variant.sizeWidthCm === null
-    ? null
-    : `${variant.sizeHeightCm}x${variant.sizeWidthCm}`;
-}
-
-/** `13x15` → "13 × 15 cm". */
-export const sizeLabel = (key: string) => `${key.replace("x", " × ")} cm`;
+/** The size as the address and filters write it (size.ts). */
+export { sizeKey, sizeLabel } from "./size";
+import { sizeKey, sizeLabel } from "./size";
 
 /** A variant's value on an axis (its size as `13x15`). */
 export function valueOf(variant: PublicVariant, axis: Axis): Value | null {

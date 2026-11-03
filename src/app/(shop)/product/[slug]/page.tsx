@@ -5,6 +5,7 @@ import { routes } from "@/components/layout/nav";
 import { Breadcrumbs } from "@/components/listing/listing-parts";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductView } from "@/components/product-page/product-view";
+import { descriptionHtml } from "@/lib/product/description-html";
 import { Reviews } from "@/components/product-page/reviews";
 import {
   getNewArrivals,
@@ -163,11 +164,16 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
           ),
         }}
       />
-      <div className="mb-6">
+      {/* Not on phones (owner, 2026-11-03); search engines still read the trail. */}
+      <div className="mb-6 hidden sm:block">
         <Breadcrumbs trail={trail} siteUrl={siteUrl} />
       </div>
 
-      <ProductView product={product} initialSku={variant?.sku ?? ""} />
+      <ProductView
+        product={product}
+        initialSku={variant?.sku ?? ""}
+        descriptionHtml={descriptionHtml(product.description)}
+      />
 
       {summary && firstReviews ? (
         <div className="mt-10">

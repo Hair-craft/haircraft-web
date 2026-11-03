@@ -16,7 +16,7 @@ test.describe("home page on a phone", () => {
   test("product rows scroll sideways; the page itself never does", async ({ page }) => {
     await page.goto(OPEN + "/");
     const row = page
-      .getByRole("region", { name: "Bestsellers & customer favourites" })
+      .getByRole("region", { name: "Customer favourites" })
       .getByRole("tabpanel")
       .getByRole("list");
     const scroll = await row.evaluate((el) => ({ width: el.scrollWidth, visible: el.clientWidth }));
@@ -26,14 +26,21 @@ test.describe("home page on a phone", () => {
     await expectFitsScreen(page);
   });
 
-  test("the matcher and every section fit a phone, after scrolling to the end", async ({
+  test("shop by concern and every section fit a phone, after scrolling to the end", async ({
     page,
   }) => {
     await page.goto(OPEN + "/");
     await expect(page.locator("canvas")).toHaveCount(0);
-    const match = page.getByRole("region", { name: /Find your hair extension match/ });
-    await match.getByRole("button", { name: "Wigs", exact: true }).tap();
-    await expect(match.getByRole("link", { name: "View this match" })).toBeVisible();
+    // Concern cards two across on a phone.
+    const concerns = page
+      .getByRole("region", { name: "What would you like to change?" })
+      .getByRole("listitem");
+    await expect(concerns.first()).toBeVisible();
+    const [first, second] = await Promise.all([
+      concerns.nth(0).boundingBox(),
+      concerns.nth(1).boundingBox(),
+    ]);
+    expect(Math.round(first!.y)).toBe(Math.round(second!.y));
     // Scroll through every section (so each one reveals), then check the width again.
     await page.evaluate(async () => {
       for (let y = 0; y < document.body.scrollHeight; y += 600) {

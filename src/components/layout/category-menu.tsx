@@ -19,9 +19,6 @@ export function CategoryMenu({ items }: { items: NavItem[] }) {
   return (
     <nav aria-label="Categories" className="hidden md:block">
       <ul className="flex items-center gap-0.5 lg:gap-1">
-        <li>
-          <NavLink href="/shop" label="Shop All" exact />
-        </li>
         {shown.map((item) =>
           item.children.length > 0 ? (
             <DropDown key={item.href} label={item.label}>
@@ -72,7 +69,7 @@ function NavLink({ href, label, exact }: { href: string; label: string; exact?: 
       href={href}
       aria-current={active ? "page" : undefined}
       className={cx(
-        "mx-1.5 border-b-2 py-2 text-[0.8rem] font-semibold tracking-wide whitespace-nowrap transition-colors lg:mx-2.5",
+        "mx-1.5 border-b-2 py-2 font-accent text-[0.8rem] font-semibold tracking-wide whitespace-nowrap transition-colors lg:mx-2.5",
         "focus-visible:outline-2 focus-visible:outline-deep",
         active
           ? "border-deep font-bold text-deep"
@@ -172,7 +169,7 @@ function DropDown({
           }
           setOpen((value) => !value);
         }}
-        className="mx-1.5 inline-flex items-center gap-1 py-2 text-[0.8rem] font-semibold tracking-wide whitespace-nowrap text-deep-soft hover:text-deep focus-visible:outline-2 focus-visible:outline-deep lg:mx-2.5"
+        className="mx-1.5 inline-flex items-center gap-1 py-2 font-accent text-[0.8rem] font-semibold tracking-wide whitespace-nowrap text-deep-soft hover:text-deep focus-visible:outline-2 focus-visible:outline-deep lg:mx-2.5"
       >
         {label}
         <ChevronDownIcon

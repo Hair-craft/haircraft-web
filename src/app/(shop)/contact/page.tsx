@@ -52,6 +52,28 @@ export default function ContactPage() {
               </dd>
             </>
           ) : null}
+          {!business.address && business.mapUrl ? (
+            <>
+              <dt className="text-muted">Address</dt>
+              <dd>
+                <a
+                  href={business.mapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold underline underline-offset-4 hover:text-gold-ink"
+                >
+                  Find us on Google Maps
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              </dd>
+            </>
+          ) : null}
+          {business.cin ? (
+            <>
+              <dt className="text-muted">CIN</dt>
+              <dd>{business.cin}</dd>
+            </>
+          ) : null}
           {business.gstin ? (
             <>
               <dt className="text-muted">GSTIN</dt>

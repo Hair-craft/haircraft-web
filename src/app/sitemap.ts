@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { routes } from "@/components/layout/nav";
 import { GUIDES } from "@/content/guides";
 import { INFO_PAGES, LAST_UPDATED } from "@/content/pages";
-import { getCategories, getProducts } from "@/lib/api/catalog";
+import { getCategories, getConcerns, getProducts } from "@/lib/api/catalog";
 import { isApiError } from "@/lib/api/errors";
 import type { Category } from "@/lib/api/types";
 import { settings } from "@/lib/env";
@@ -53,6 +53,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: url(routes.category(category.slug)),
         changeFrequency: "daily",
         priority: 0.8,
+      });
+    // The shown "Shop by concern" pages.
+    for (const concern of (await getConcerns()).items)
+      entries.push({
+        url: url(routes.concern(concern.slug)),
+        changeFrequency: "weekly",
+        priority: 0.7,
       });
     // Every active product, 100 at a time (at most 50 pages: 5,000 products).
     for (let page = 1; page <= 50; page++) {

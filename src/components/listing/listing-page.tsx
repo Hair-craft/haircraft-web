@@ -7,7 +7,7 @@ import { ConsultBanner } from "@/components/layout/consult-banner";
 import { ProductCard } from "@/components/product/product-card";
 import { findCategory, getCategories, getFilterOptions, getProducts } from "@/lib/api/catalog";
 import { isApiError } from "@/lib/api/errors";
-import type { Category } from "@/lib/api/types";
+import type { Category, PublicConcern } from "@/lib/api/types";
 import { cx } from "@/lib/cx";
 import { settings } from "@/lib/env";
 import { EmptySearch, SearchForm, SearchHelp } from "@/components/search/search-parts";
@@ -26,7 +26,12 @@ import { ActiveFilterChips, Breadcrumbs, NoResults, Pagination, type Crumb } fro
 import { FilterPanel } from "./filter-panel";
 import { itemListJsonLd } from "@/lib/seo/item-list";
 import { openGraph } from "@/lib/seo/open-graph";
-import { categoryDescription, categoryTitle } from "@/lib/seo/titles";
+import {
+  categoryDescription,
+  categoryTitle,
+  concernDescription,
+  concernTitle,
+} from "@/lib/seo/titles";
 import { categoryGuide } from "@/content/categories";
 import { CategoryGuideSection } from "./category-guide";
 import { getShopPolicies } from "@/lib/api/shop";
@@ -73,6 +78,34 @@ export async function searchMetadata(searchParams: Promise<SearchParams>): Promi
   };
 }
 
+/** A concern page's title, description and canonical address (the page itself 404s when hidden). */
+export async function concernMetadata(
+  concern: PublicConcern,
+  searchParams: Promise<SearchParams>,
+): Promise<Metadata> {
+  const params = await searchParams;
+  const base = routes.concern(concern.slug);
+  const refined = Object.keys(params).some((key) => key !== "page");
+  const page =
+    typeof params.page === "string" && /^\d{1,4}$/.test(params.page) ? Number(params.page) : 1;
+  const canonical = page > 1 ? `${base}?page=${page}` : base;
+  const policies = await getShopPolicies();
+  const title = `${concernTitle(concern.title)}${page > 1 ? ` — Page ${page}` : ""}`;
+  const description = concernDescription(
+    concern.title,
+    concern.line,
+    concern.categories.map((c) => c.name),
+    policies,
+  );
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: openGraph({ title: `${title} | HairCraft`, description, url: canonical }),
+    robots: refined ? { index: false, follow: true } : undefined,
+  };
+}
+
 export async function listingMetadata(
   categorySlug: string | undefined,
   searchParams: Promise<SearchParams>,
@@ -114,10 +147,13 @@ export async function listingMetadata(
  */
 export async function ListingPage({
   categorySlug,
+  concern,
   searchParams,
   search = false,
 }: {
   categorySlug?: string;
+  /** A "Shop by concern" page: the products of all its categories (owner, 2026-11-03). */
+  concern?: PublicConcern;
   searchParams: Promise<SearchParams>;
   /** The search results page: `q` is searched, sorted by relevance by default. */
   search?: boolean;
@@ -125,7 +161,13 @@ export async function ListingPage({
   const params = await searchParams;
   const { productsPerPage, siteUrl } = settings();
   const { tree, found } = await resolveCategory(categorySlug);
-  const base = search ? routes.search : categorySlug ? routes.category(categorySlug) : routes.shop;
+  const base = search
+    ? routes.search
+    : concern
+      ? routes.concern(concern.slug)
+      : categorySlug
+        ? routes.category(categorySlug)
+        : routes.shop;
   const q = search ? searchOf(params) : null;
 
   const trail: Crumb[] = search
@@ -133,29 +175,45 @@ export async function ListingPage({
         { name: "Home", href: routes.home },
         { name: "Search", href: routes.search },
       ]
-    : [
-        { name: "Home", href: routes.home },
-        { name: "Shop", href: routes.shop },
-        ...(found
-          ? [...found.ancestors, found.category].map((c) => ({
-              name: c.name,
-              href: routes.category(c.slug),
-            }))
-          : []),
-      ];
+    : concern
+      ? [
+          { name: "Home", href: routes.home },
+          { name: "Shop by concern", href: `${routes.home}#concerns` },
+          { name: concern.title, href: base },
+        ]
+      : [
+          { name: "Home", href: routes.home },
+          { name: "Shop", href: routes.shop },
+          ...(found
+            ? [...found.ancestors, found.category].map((c) => ({
+                name: c.name,
+                href: routes.category(c.slug),
+              }))
+            : []),
+        ];
   const title = search
     ? q
       ? `Results for “${q}”`
       : "Search"
-    : found
-      ? found.category.name
-      : "Shop all";
+    : concern
+      ? concern.title
+      : found
+        ? found.category.name
+        : "Shop all";
   const eyebrow = search
     ? "Search"
-    : found
-      ? (found.ancestors.at(-1)?.name ?? "The collection")
-      : "The collection";
-  const description = search ? null : found ? found.category.description : SHOP_DESCRIPTION;
+    : concern
+      ? "Shop by concern"
+      : found
+        ? (found.ancestors.at(-1)?.name ?? "The collection")
+        : "The collection";
+  const description = search
+    ? null
+    : concern
+      ? concern.line
+      : found
+        ? found.category.description
+        : SHOP_DESCRIPTION;
 
   const header = (
     <header>
@@ -184,6 +242,8 @@ export async function ListingPage({
           <div className="relative mt-6">
             <SearchForm q={q} />
           </div>
+        ) : concern ? (
+          <ConcernCategoryLinks concern={concern} />
         ) : tree ? (
           <SubCategoryLinks tree={tree} found={found ?? null} />
         ) : null}
@@ -203,14 +263,16 @@ export async function ListingPage({
     return shell(<EmptySearch tree={tree} />);
   }
   if (found === undefined) return shell(<ApiUnavailable retryHref={base} />);
-  const options = await load(() => getFilterOptions(categorySlug, q ?? undefined));
+  const options = await load(() => getFilterOptions(categorySlug, q ?? undefined, concern?.slug));
   if (!options) return shell(<ApiUnavailable retryHref={base} />);
   const parsed = parseListing(params, options);
   // Only the search page searches: a `q` on the shop's lists is dropped (and tidied away).
   const state = search
     ? parsed
     : { ...parsed, q: null, sort: parsed.sort === "relevance" ? DEFAULT_SORT : parsed.sort };
-  const result = await load(() => getProducts(toApiQuery(state, productsPerPage, categorySlug)));
+  const result = await load(() =>
+    getProducts(toApiQuery(state, productsPerPage, categorySlug, concern?.slug)),
+  );
   if (!result) return shell(<ApiUnavailable retryHref={base} />);
 
   const { total, totalPages } = result.meta;
@@ -222,7 +284,7 @@ export async function ListingPage({
   const tidy = listingHref(base, state);
   // A category's buying guide: its own, or its nearest parent's (search has none).
   const guide =
-    !search && found
+    !search && !concern && found
       ? categoryGuide([found.category.slug, ...[...found.ancestors].reverse().map((c) => c.slug)])
       : null;
   if (tidy !== addressOf(base, params)) redirect(tidy);
@@ -314,6 +376,26 @@ export async function ListingPage({
       {/* The category's buying guide, on its first page only (later pages would repeat it). */}
       {guide && state.page === 1 ? <CategoryGuideSection guide={guide} /> : null}
     </ListingProvider>,
+  );
+}
+
+/** On a concern's page: its categories, each a link to that category alone. */
+function ConcernCategoryLinks({ concern }: { concern: PublicConcern }) {
+  return (
+    <nav aria-label={`${concern.title}: categories`} className="relative mt-6">
+      <ul className="flex flex-wrap gap-2">
+        {concern.categories.map((category) => (
+          <li key={category.slug}>
+            <Link
+              href={routes.category(category.slug)}
+              className="inline-flex items-center rounded-full border border-line bg-white px-4 py-2 font-accent text-sm font-semibold transition-colors hover:border-deep hover:text-deep focus-visible:outline-2 focus-visible:outline-deep"
+            >
+              {category.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 

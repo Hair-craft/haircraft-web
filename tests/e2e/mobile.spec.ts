@@ -25,7 +25,18 @@ test.describe("mobile layout", () => {
     const drawer = page.getByRole("dialog", { name: "Menu" });
     await expect(drawer).toBeVisible();
     await expect(drawer.getByRole("link", { name: "Shop all" })).toBeVisible();
-    await expect(drawer.getByRole("link", { name: "Seamless Clip-ins" })).toBeVisible();
+    // Sub-categories sit in drop-downs (owner, 2026-11-03), closed at first.
+    const seamless = drawer.getByRole("link", { name: "Seamless Clip-ins" });
+    await expect(seamless).toBeHidden();
+    const clipIns = drawer.getByRole("button", { name: "Show Clip-in Extensions types" });
+    await expect(clipIns).toHaveAttribute("aria-expanded", "false");
+    await clipIns.click();
+    await expect(seamless).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "All Clip-in Extensions" })).toBeVisible();
+    await expect(
+      drawer.getByRole("button", { name: "Hide Clip-in Extensions types" }),
+    ).toHaveAttribute("aria-expanded", "true");
+    await drawer.getByRole("button", { name: "Show Wigs types" }).click();
     await expect(drawer.getByRole("link", { name: "Lace Front Wigs" })).toBeVisible();
 
     await page.keyboard.press("Escape");

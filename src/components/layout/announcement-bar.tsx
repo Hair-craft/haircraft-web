@@ -25,8 +25,8 @@ const fits = ["inline-flex", "inline-flex", "hidden md:inline-flex", "hidden lg:
 export function AnnouncementBar() {
   const items = announcementItems(settings().freeShippingThreshold);
   return (
-    <section aria-label="Offers" className="bg-deep px-4 py-2 text-white">
-      <ul className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-6 gap-y-1 text-[0.7rem] font-semibold tracking-wider uppercase sm:text-xs">
+    <section aria-label="Offers" className="bg-deep px-3 py-1.5 text-white sm:px-4 sm:py-2">
+      <ul className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-0.5 text-[0.625rem] font-semibold tracking-wide uppercase sm:gap-x-6 sm:text-xs sm:tracking-wider">
         {items.map((item, i) => (
           <li key={item} className={cx("items-center gap-1.5", fits[i] ?? "hidden lg:inline-flex")}>
             <span aria-hidden className="text-gold-light">

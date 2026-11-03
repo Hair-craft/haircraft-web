@@ -84,8 +84,8 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
             aria-label={`View photo ${active + 1} of ${total} full screen`}
             className={cx(
               "relative block w-full cursor-zoom-in overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep",
-              // Square, as in the design; the whole photo shows (contained) on the sand ground.
-              "aspect-square bg-sand",
+              // Square, as in the design; the whole photo shows (contained) on white, for a natural look.
+              "aspect-square bg-white",
             )}
           >
             <Image
@@ -142,7 +142,8 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
             const el = event.currentTarget;
             setActive(Math.round(el.scrollLeft / el.clientWidth));
           }}
-          className="relative -mx-4 flex snap-x snap-mandatory overflow-x-auto sm:mx-0 sm:rounded-xl [&::-webkit-scrollbar]:hidden"
+          // Inside the photo card, rounded (owner, 2026-11-03: the photo fits the card on phones).
+          className="relative flex snap-x snap-mandatory overflow-x-auto rounded-xl [&::-webkit-scrollbar]:hidden"
         >
           {images.map((image, i) => (
             <li key={image.id} className="w-full shrink-0 snap-start">

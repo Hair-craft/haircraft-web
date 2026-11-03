@@ -5,6 +5,8 @@ export const routes = {
   home: "/",
   shop: "/shop",
   category: (slug: string) => `/shop/${encodeURIComponent(slug)}`,
+  /** A "Shop by concern" page (owner, 2026-11-03). */
+  concern: (slug: string) => `/concern/${encodeURIComponent(slug)}`,
   search: "/search",
   account: "/account",
   wishlist: "/wishlist",

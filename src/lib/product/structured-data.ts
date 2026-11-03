@@ -1,4 +1,6 @@
 import type { PublicProduct, PublicReview, PublicVariant } from "@/lib/api/types";
+import { sizeText } from "./size";
+import { descriptionText } from "./description";
 import type { ShopPolicies } from "@/lib/info/policies";
 import { returnPolicy, shippingDetails } from "@/lib/seo/commerce";
 
@@ -11,9 +13,7 @@ function optionName(variant: PublicVariant): string {
     variant.lengthInches === null ? null : `${variant.lengthInches} in`,
     variant.color,
     variant.texture,
-    variant.sizeHeightCm == null || variant.sizeWidthCm == null
-      ? null
-      : `${variant.sizeHeightCm} × ${variant.sizeWidthCm} cm`,
+    sizeText(variant),
     variant.weightGrams === null ? null : `${variant.weightGrams} g`,
   ]
     .filter(Boolean)
@@ -49,7 +49,7 @@ export function productJsonLd(
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description ?? product.shortDescription ?? undefined,
+    description: descriptionText(product.description) || undefined,
     image: product.images.map((image) => image.urls.large),
     url,
     ...(variants.length === 1 ? { sku: variants[0].sku } : {}),

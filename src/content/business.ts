@@ -12,6 +12,10 @@ export interface Business {
   legalName: string | null;
   /** Registered address, one line per entry. */
   address: string[] | null;
+  /** The address on Google Maps (shown as a link, e.g. while there is no written address). */
+  mapUrl: string | null;
+  /** The company's Corporate Identification Number. */
+  cin: string | null;
   gstin: string | null;
   email: string;
   /** International format, e.g. "+919876543210". */
@@ -35,16 +39,20 @@ export interface Business {
 
 export const business: Business = {
   tradingName: "HairCraft",
-  legalName: null,
+  // Owner, 2026-11-03.
+  legalName: "House of Jana Private Limited",
   address: null,
+  mapUrl:
+    "https://maps.google.com/maps?vet=10CAAQoqAOahcKEwjIsO-mnuuXAxUAAAAAHQAAAAAQBQ..i&udm&fvr=1&pvq=Cg0vZy8xMXlxcm54ajBfIhMKDWhvdXNlIG9mIGphbmEQAhgDiQH_mhf0DOltnQ&lqi=Cg1ob3VzZSBvZiBqYW5hSJ-AufravYCACFolEAAQARACGAAYARgCIg1ob3VzZSBvZiBqYW5hKggIAhAAEAEQApIBGGhhaXJfZXh0ZW5zaW9uc19zdXBwbGllcg&cs=1&um=1&ie=UTF-8&fb=1&gl=in&sa=X&ftid=0x39f89fded047d143:0x9d6de90cf4179aff",
+  cin: "U32904WB2024PTC273691",
   gstin: null,
-  email: "care@haircraft.in",
-  phone: null,
+  email: "contact@haircraft.in",
+  phone: "+919903411497",
   whatsapp: null,
   whatsappChat: "https://wa.me/message/5EXU5MQ2N5Y3B1",
   hours: "Monday to Saturday, 10 am to 6 pm (IST)",
   replyTime: "We reply within one working day.",
-  grievanceOfficer: { name: null, email: "care@haircraft.in", phone: null },
+  grievanceOfficer: { name: null, email: "contact@haircraft.in", phone: "+919903411497" },
   socialProfiles: [],
 };
 

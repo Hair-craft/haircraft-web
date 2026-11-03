@@ -4,11 +4,13 @@ import { formatPrice, formatPriceRange } from "@/lib/format";
 
 /** Small display pieces: badge, price, skeleton. */
 
-type BadgeTone = "deep" | "gold" | "mint" | "muted" | "danger";
+type BadgeTone = "deep" | "gold" | "bright" | "mint" | "muted" | "danger";
 
 const tones: Record<BadgeTone, string> = {
   deep: "bg-deep text-white",
   gold: "bg-sage text-sage-ink",
+  /** Solid gold (the "Best seller" badge). */
+  bright: "bg-gold text-deep",
   mint: "bg-mint-deep text-deep",
   muted: "bg-deep/10 text-muted",
   danger: "bg-red-100 text-red-800",
@@ -26,7 +28,7 @@ export function Badge({
   return (
     <span
       className={cx(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium tracking-wide",
+        "inline-flex items-center rounded-full px-2.5 py-0.5 font-accent text-xs font-medium tracking-wide",
         tones[tone],
         className,
       )}
@@ -52,7 +54,7 @@ export function Price({
 }) {
   if (compareAt && compareAt !== amount) {
     return (
-      <span className={cx("inline-flex items-baseline gap-2", className)}>
+      <span className={cx("inline-flex items-baseline gap-2 font-accent", className)}>
         <span className="font-semibold text-deep">
           <span className="sr-only">Sale price </span>
           {formatPrice(amount)}
@@ -64,7 +66,11 @@ export function Price({
       </span>
     );
   }
-  return <span className={cx("font-semibold text-deep", className)}>{formatPrice(amount)}</span>;
+  return (
+    <span className={cx("font-accent font-semibold text-deep", className)}>
+      {formatPrice(amount)}
+    </span>
+  );
 }
 
 export function PriceRange({
@@ -77,7 +83,7 @@ export function PriceRange({
   className?: string;
 }) {
   return (
-    <span className={cx("font-semibold text-deep", className)}>
+    <span className={cx("font-accent font-semibold text-deep", className)}>
       {min !== max ? <span className="sr-only">From </span> : null}
       {formatPriceRange(min, max)}
     </span>

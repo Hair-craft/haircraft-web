@@ -9,9 +9,10 @@ import { Skeleton } from "@/components/ui/display";
 import { ChevronRightIcon } from "@/components/ui/icons";
 import {
   getBestRated,
+  getBestSellers,
   getCategories,
   getCategoryPhoto,
-  getFilterOptions,
+  getConcerns,
   getNewArrivals,
   getFeaturedReviews,
 } from "@/lib/api/catalog";
@@ -26,7 +27,7 @@ import { PromiseIcon } from "./hero";
 import { storyImage } from "./home-images";
 import { ProductTabs } from "./product-tabs";
 import { SectionHeader } from "./section-header";
-import { ShadeMatcher } from "./shade-matcher";
+import { concernPhoto } from "./concerns";
 
 /** Runs a section's data loading; an API outage becomes `null` (the section shows a calm message). */
 async function load<T>(work: () => Promise<T>): Promise<T | null> {
@@ -52,40 +53,95 @@ function ViewAll({ href, label }: { href: string; label: string }) {
   );
 }
 
-// ── Find your match ─────────────────────────────────────────────────────
+// ── Shop by concern ─────────────────────────────────────────────────────
 
-/** At most this many choices per step (in the API's order). */
-const MATCH_CHOICES = 6;
-
-/** Goal (top-level categories), texture and shade, from the shop's real values. */
-export async function MatchSection() {
+/**
+ * What a shopper wants to change, each leading to a category (owner,
+ * 2026-11-03). The cards, their order and the heading come from the admin
+ * (Catalog → Shop by concern). A card without its own photo shows its
+ * category's. Hidden when nothing is shown (or the API is down).
+ */
+export async function ConcernSection() {
   const data = await load(async () => {
-    const [categories, options] = await Promise.all([getCategories(), getFilterOptions()]);
-    return { categories, options };
+    const section = await getConcerns();
+    // The category photo, only for cards without their own.
+    const photos = await Promise.all(
+      section.items.map((concern) =>
+        concern.image
+          ? null
+          : getCategoryPhoto(concern.categories[0].slug).catch((error: unknown) => {
+              if (isApiError(error)) return null;
+              throw error;
+            }),
+      ),
+    );
+    return { section, photos };
   });
-  if (!data) return null;
-  const goals = data.categories
-    .filter((category) => category.productCount > 0)
-    .slice(0, 4)
-    .map((category) => ({ slug: category.slug, label: category.name }));
-  if (goals.length === 0) return null;
+  if (!data || data.section.items.length === 0) return null;
+  const { section, photos } = data;
   return (
-    <section id="match" aria-labelledby="match-heading" className={`${shell} scroll-mt-28 py-10`}>
-      <div className="rounded-3xl bg-white p-6 shadow-lg sm:p-8 lg:p-10">
-        <SectionHeader
-          id="match-heading"
-          align="left"
-          eyebrow="Find your match"
-          title="Find your hair extension match in seconds"
-          intro="Tell us what you're looking for, and we'll show you the closest piece in our shop."
-          className="mb-8 max-w-3xl"
-        />
-        <ShadeMatcher
-          goals={goals}
-          textures={data.options.textures.slice(0, MATCH_CHOICES)}
-          colors={data.options.colors.slice(0, MATCH_CHOICES)}
-        />
-      </div>
+    <section
+      id="concerns"
+      aria-labelledby="concerns-heading"
+      className={`${shell} scroll-mt-28 py-10`}
+    >
+      <SectionHeader
+        id="concerns-heading"
+        align="left"
+        eyebrow="Shop by concern"
+        title={section.heading}
+        intro={section.intro || undefined}
+        className="mb-8 max-w-3xl"
+      />
+      {/* Wider, taller cards (owner, 2026-11-03): three across on desktop, two on tablets, a
+          sideways row of large cards on phones (the next one peeks in). */}
+      <ul className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3">
+        {section.items.map((concern, i) => {
+          const photo = concernPhoto(concern, photos[i]?.image ?? null);
+          return (
+            <li key={concern.id} className="w-[78%] shrink-0 snap-start sm:w-auto">
+              <Reveal delay={Math.min(i, 7) * 0.06} className="h-full">
+                <Link
+                  href={routes.concern(concern.slug)}
+                  className="hc-card group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep"
+                >
+                  <span className="relative block aspect-[4/5] w-full overflow-hidden bg-sand">
+                    <span aria-hidden className="hc-sheen z-[1]" />
+                    {photo ? (
+                      <Image
+                        src={photo.src}
+                        alt={photo.alt}
+                        fill
+                        sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 78vw"
+                        className="object-cover transition-transform duration-700 ease-out motion-safe:group-hover:scale-[1.06]"
+                      />
+                    ) : null}
+                  </span>
+                  <span className="flex flex-1 flex-col gap-1.5 p-4 sm:p-5">
+                    <h3 className="text-base leading-snug font-semibold transition-colors group-hover:text-gold-ink sm:text-lg">
+                      {concern.title}
+                    </h3>
+                    {concern.line ? (
+                      <span className="text-sm text-muted">{concern.line}</span>
+                    ) : null}
+                    <span className="mt-auto inline-flex items-center gap-1 pt-2 font-accent text-xs font-semibold text-gold-ink">
+                      Shop now
+                      <span className="sr-only">
+                        : {concern.categories.map((c) => c.name).join(", ")}
+                      </span>
+                      <ChevronRightIcon
+                        width={14}
+                        height={14}
+                        className="transition-transform duration-300 motion-safe:group-hover:translate-x-1"
+                      />
+                    </span>
+                  </span>
+                </Link>
+              </Reveal>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
@@ -157,12 +213,37 @@ function ProductRow({ products }: { products: ProductCardData[] }) {
   return (
     // `relative` keeps the row's overflow inside it: without it, phone browsers widen the whole page.
     <ul className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-4">
-      {products.map((product) => (
+      {products.map((product, i) => (
         <li key={product.id} className="w-[72%] shrink-0 snap-start sm:w-auto">
-          <ProductCard product={product} />
+          <Reveal delay={Math.min(i, 7) * 0.08} className="h-full">
+            <ProductCard product={product} />
+          </Reveal>
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * Products ticked "Best seller" in the admin (owner, 2026-11-03). Hidden when
+ * none are ticked (or the API is down): never an empty or invented list.
+ */
+export async function BestSellersSection() {
+  const products = await load(() => getBestSellers(8));
+  if (!products || products.length === 0) return null;
+  return (
+    <section aria-labelledby="bestsellers-heading" className={`${shell} py-10`}>
+      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <SectionHeader
+          id="bestsellers-heading"
+          align="left"
+          eyebrow="Best sellers"
+          title="Our best sellers"
+        />
+        <ViewAll href={routes.shop} label="View all products" />
+      </div>
+      <ProductRow products={products} />
+    </section>
   );
 }
 
@@ -185,13 +266,13 @@ export async function MostLovedSection() {
         id="loved-heading"
         align="left"
         eyebrow="Most loved"
-        title="Bestsellers & customer favourites"
+        title="Customer favourites"
       />
       {data === null ? (
         <ApiUnavailable />
       ) : (
         <>
-          <ProductTabs tabs={tabs} label="Bestsellers and customer favourites" />
+          <ProductTabs tabs={tabs} label="Customer favourites" />
           <div className="mt-6 text-center">
             <ViewAll href={routes.shop} label="View all products" />
           </div>

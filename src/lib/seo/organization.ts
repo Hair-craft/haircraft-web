@@ -17,6 +17,8 @@ export function siteJsonLd(siteUrl: string, description: string) {
       "@type": "OnlineStore",
       name: business.tradingName,
       ...(business.legalName ? { legalName: business.legalName } : {}),
+      ...(business.cin ? { identifier: business.cin } : {}),
+      ...(business.mapUrl ? { hasMap: business.mapUrl } : {}),
       alternateName: "Hair Craft",
       url: home,
       logo: new URL("/images/logo.png", siteUrl).toString(),

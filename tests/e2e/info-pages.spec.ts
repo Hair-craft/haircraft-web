@@ -114,10 +114,21 @@ test("Contact: one tap to email; the grievance officer is listed", async ({ page
   await page.goto(OPEN + "/contact");
   await expect(page.getByRole("link", { name: /^Email/ })).toHaveAttribute("href", /^mailto:.+@.+/);
   await expect(page.getByRole("heading", { name: "Grievance officer" })).toBeVisible();
-  await expect(page.locator("#grievance + p + dl").getByRole("link")).toHaveAttribute(
+  // Email and phone (owner, 2026-11-03).
+  const officer = page.locator("#grievance + p + dl");
+  await expect(officer.getByRole("link", { name: "contact@haircraft.in" })).toHaveAttribute(
     "href",
-    /^mailto:/,
+    "mailto:contact@haircraft.in",
   );
+  await expect(officer.getByRole("link", { name: "+91 99034 11497" })).toHaveAttribute(
+    "href",
+    "tel:+919903411497",
+  );
+  // The company and its map (no written address yet).
+  await expect(page.locator("main").getByText("U32904WB2024PTC273691")).toBeVisible();
+  await expect(
+    page.locator("main").getByRole("link", { name: /Find us on Google Maps/ }),
+  ).toHaveAttribute("href", /^https:\/\/maps\.google\.com\//);
   // Linked from the returns policy.
   await page.goto(OPEN + "/returns");
   await page.getByRole("link", { name: "Contact", exact: true }).click();

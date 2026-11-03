@@ -12,6 +12,12 @@ const mediaOrigin = process.env.MEDIA_BASE_URL ? new URL(process.env.MEDIA_BASE_
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // `next dev` only: other devices on the LAN (phones, teammates' laptops)
+  // that may load dev assets and hot reload. Comma-separated hosts or IPs.
+  allowedDevOrigins: (process.env.DEV_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
   // Link previews are drawn on the server with the brand fonts and logo, which
   // it reads from disk: ship those files with every server route that may draw one.
   outputFileTracingIncludes: {

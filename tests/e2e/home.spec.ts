@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type Locator } from "@playwright/test";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
+import { adminToken, auth, CLIP_INS, product } from "./support/shop";
 
 interface ApiCard {
   name: string;
@@ -24,6 +25,8 @@ async function apiBestRated(request: APIRequestContext) {
 }
 
 async function expectPhotosLoad(images: Locator, where: string) {
+  // Sections stream in after the page: wait for the first photo before counting.
+  await expect(images.first(), `photos in ${where}`).toBeAttached({ timeout: 15_000 });
   const count = await images.count();
   expect(count, `photos in ${where}`).toBeGreaterThan(0);
   for (let i = 0; i < count; i++) {
@@ -38,74 +41,144 @@ async function expectPhotosLoad(images: Locator, where: string) {
 }
 
 test.describe("home page", () => {
-  test("hero with its fixed photo, two ways in and a real product", async ({ page }) => {
+  test("hero banner: the wide photo, the words on the right, no button", async ({ page }) => {
     await page.goto(OPEN + "/");
     await expect(page).toHaveTitle("HairCraft — Human Hair Extensions, Toppers & Wigs in India");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Hair extensions, crafted for confidence.",
+    const heading = page.getByRole("heading", { level: 1 });
+    await expect(heading).toHaveText("Crafted for Pure Confidence.");
+    await expect(page.getByText("The Art of Bespoke Hair")).toBeVisible();
+    // No button in the hero (owner, 2026-11-03).
+    await expect(page.locator("section.hc-shutter a")).toHaveCount(0);
+    // "Pure Confidence." in the older elegant italic; the words under it in the older sans.
+    const italic = heading.locator("em");
+    await expect(italic).toHaveText("Pure Confidence.");
+    expect(await italic.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(
+      /Cormorant.?Garamond/,
     );
-    await expect(page.getByRole("link", { name: /^Shop the collection/ })).toHaveAttribute(
-      "href",
-      "/shop",
-    );
-    await expect(page.getByRole("link", { name: /Find my match/ })).toHaveAttribute(
-      "href",
-      "#match",
-    );
-    await expect(page.locator('img[src*="%2Fimages%2Fhome%2Fhero.webp"]')).toHaveCount(1);
-    // The floating card links to a real product.
-    await expect(page.getByRole("link", { name: /Quick view/ })).toHaveAttribute(
-      "href",
-      /^\/product\//,
-    );
+    expect(
+      await page
+        .getByText(/^100% ethically sourced Indian Remy hair extensions/)
+        .evaluate((el) => getComputedStyle(el).fontFamily),
+    ).toMatch(/Geist/);
+    // The owner's wide photo, across the whole width, with nothing over its left half.
+    const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner.webp"]');
+    await expect(photo).toHaveCount(1);
+    const box = await photo.boundingBox();
+    expect(box!.width).toBeGreaterThanOrEqual((page.viewportSize()?.width ?? 0) - 1);
+    const words = await heading.boundingBox();
+    expect(words!.x).toBeGreaterThan(box!.width / 2);
+    // The shutter: the hero stays put while the rest of the page slides up over it.
+    const hero = page.locator("section.hc-shutter");
+    await expect(hero).toHaveCSS("position", "sticky");
+    const panelTop = async () =>
+      (await page.getByRole("region", { name: /Concerns|What would you like/ }).boundingBox())!.y;
+    const before = await panelTop();
+    await page.mouse.wheel(0, 300);
+    await expect.poll(panelTop).toBeLessThan(before - 200);
+    await expect.poll(async () => (await hero.boundingBox())!.y).toBeLessThanOrEqual(1);
     // Exactly one h1 on the page; sections use h2.
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    await expect(heading).toHaveCount(1);
     const description = page.locator('meta[name="description"]');
     await expect(description).toHaveAttribute("content", /100% human hair extensions in India/);
   });
 
-  test("announcement bar and hero badges, with the free-shipping amount", async ({ page }) => {
+  test("announcement bar, with the free-shipping amount", async ({ page }) => {
     await page.goto(OPEN + "/");
     const offers = page.getByRole("region", { name: "Offers" });
     await expect(offers).toContainText("Free shipping above ₹1,999");
     await expect(offers.getByRole("listitem")).toHaveCount(4);
     // Still: no scrolling marquee any more.
     await expect(offers.locator(".hc-marquee-track")).toHaveCount(0);
-    for (const text of ["100% human hair", "On orders ₹1,999+", "UPI, cards & net banking"]) {
-      await expect(page.getByText(text, { exact: true }).first()).toBeVisible();
-    }
   });
 
-  test("find your match: a real product for the choices, and a link to all matches", async ({
-    page,
-  }) => {
+  test("shop by concern: each card opens its page, with a photo", async ({ page }) => {
     await page.goto(OPEN + "/");
-    const section = page.getByRole("region", { name: /Find your hair extension match/ });
-    const panel = section.getByTestId("match-panel");
-    // The first goal is chosen to start with, and its best product shows.
-    await expect(section.getByRole("button", { pressed: true })).toHaveCount(1);
-    await expect(panel.getByRole("link", { name: "View this match" })).toHaveAttribute(
-      "href",
-      /^\/product\//,
+    // "Find your match" is gone (owner, 2026-11-03).
+    await expect(page.getByRole("region", { name: /Find your hair extension match/ })).toHaveCount(
+      0,
     );
+    const section = page.getByRole("region", { name: "What would you like to change?" });
+    // The test shop has clip-ins, wigs and ponytails (no toppers).
+    for (const [concern, slug] of [
+      ["Want more length", "want-more-length"],
+      ["Hair loss or full coverage", "hair-loss-or-full-coverage"],
+      ["Instant volume for an occasion", "instant-volume-for-an-occasion"],
+    ]) {
+      const card = section.getByRole("link", { name: new RegExp(`^${concern}`) });
+      await expect(card).toHaveAttribute("href", `/concern/${slug}`);
+      await expect(card.locator("img")).toHaveCount(1);
+      await expect(card).toContainText("Shop now");
+    }
+    await expect(section.getByRole("link")).toHaveCount(3);
+  });
 
-    await section.getByRole("button", { name: "Wigs", exact: true }).click();
-    await expect(section.getByRole("button", { name: "Wigs", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    await expect(panel).toHaveAttribute("aria-busy", "false");
-    await expect(panel.getByRole("link", { name: "View this match" })).toHaveAttribute(
-      "href",
-      /^\/product\//,
-    );
-    const all = panel.getByRole("link", { name: /^See all \d+ matches$/ });
-    if ((await all.count()) > 0) await expect(all).toHaveAttribute("href", /^\/shop\/wigs/);
+  test("a concern page lists the products of all its categories, with filters", async ({
+    page,
+    request,
+  }) => {
+    // Lists are cached briefly: allow for the refresh.
+    test.setTimeout(180_000);
+    const token = await adminToken(request);
+    const headers = auth(token);
+    const concerns = (await (await request.get(`${API}/admin/concerns`, { headers })).json())
+      .data as { id: string; title: string; version: number; categories: { id: string }[] }[];
+    const length = concerns.find((c) => c.title === "Want more length")!;
+    const categories = (await (await request.get(`${API}/admin/categories`, { headers })).json())
+      .data as { id: string; slug: string }[];
+    const wigs = categories.find((c) => c.slug === "wigs")!;
+    const setCategories = async (ids: string[]) => {
+      const current = (
+        await (await request.get(`${API}/admin/concerns/${length.id}`, { headers })).json()
+      ).data as { version: number };
+      const res = await request.patch(`${API}/admin/concerns/${length.id}`, {
+        headers,
+        data: { version: current.version, categoryIds: ids },
+      });
+      expect(res.status()).toBe(200);
+    };
+    const original = length.categories.map((c) => c.id);
+    const [clipIns, wigList] = await Promise.all([
+      (await request.get(`${API}/products?category=clip-in-extensions&limit=50`)).json(),
+      (await request.get(`${API}/products?category=wigs&limit=50`)).json(),
+    ]);
+    const expected = clipIns.meta.total + wigList.meta.total;
+
+    await setCategories([...original, wigs.id]);
+    try {
+      await expect(async () => {
+        await page.goto(OPEN + "/concern/want-more-length");
+        await expect(page.getByText(`${expected} products`)).toBeVisible({ timeout: 1000 });
+        // The concern itself refreshes in the background too: its category links follow.
+        await expect(
+          page
+            .getByRole("navigation", { name: "Want more length: categories" })
+            .getByRole("link", { name: "Wigs" }),
+        ).toBeVisible({ timeout: 1000 });
+      }).toPass({ timeout: 90_000 });
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Want more length");
+      const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+      await expect(crumbs).toContainText("Shop by concern");
+      // Its categories, each a link to that category alone.
+      const links = page.getByRole("navigation", { name: "Want more length: categories" });
+      await expect(links.getByRole("link", { name: "Wigs" })).toHaveAttribute("href", "/shop/wigs");
+      // Sort works as on a category page, with a tidy address.
+      await page.goto(OPEN + "/concern/want-more-length?sort=price-asc");
+      await expect(page).toHaveURL(/\/concern\/want-more-length/);
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+        "href",
+        /\/concern\/want-more-length$/,
+      );
+    } finally {
+      await setCategories(original);
+    }
+    // An unknown or hidden concern has no page.
+    const missing = await page.goto(OPEN + "/concern/no-such-concern");
+    expect(missing?.status()).toBe(404);
   });
 
   test("product and category photos actually load (not just image tags)", async ({ page }) => {
     await page.goto(OPEN + "/");
-    for (const name of ["Shop by category", "Bestsellers & customer favourites"]) {
+    for (const name of ["Shop by category", "Customer favourites"]) {
       await expectPhotosLoad(page.getByRole("region", { name }).locator("img"), name);
     }
   });
@@ -140,7 +213,7 @@ test.describe("home page", () => {
       apiProducts(request, "sort=createdAt:desc&limit=8"),
     ]);
     await page.goto(OPEN + "/");
-    const section = page.getByRole("region", { name: "Bestsellers & customer favourites" });
+    const section = page.getByRole("region", { name: "Customer favourites" });
     const names = () => section.getByRole("tabpanel").getByRole("heading", { level: 3 });
     await expect(section.getByRole("link", { name: "View all products" })).toHaveAttribute(
       "href",
@@ -184,6 +257,109 @@ test.describe("home page", () => {
     await expect(newTab).toBeFocused();
     await expect(newTab).toHaveAttribute("tabindex", "0");
     await expect(ratedTab).toHaveAttribute("tabindex", "-1");
+  });
+
+  test("sections in the owner's order: concern, best sellers (if any), categories, favourites", async ({
+    page,
+  }) => {
+    await page.goto(OPEN + "/");
+    const order = await page
+      .locator("main section[aria-labelledby]")
+      .evaluateAll((sections) => sections.map((el) => el.getAttribute("aria-labelledby")));
+    const known = order.filter((id) =>
+      ["concerns-heading", "bestsellers-heading", "categories-heading", "loved-heading"].includes(
+        id ?? "",
+      ),
+    );
+    expect(known.filter((id) => id !== "bestsellers-heading")).toEqual([
+      "concerns-heading",
+      "categories-heading",
+      "loved-heading",
+    ]);
+    if (known.includes("bestsellers-heading")) expect(known[1]).toBe("bestsellers-heading");
+  });
+
+  test("shop by concern follows the admin: its heading, and a hidden concern disappears", async ({
+    page,
+    request,
+  }) => {
+    // The shop's lists are cached briefly: allow for the refresh.
+    test.setTimeout(180_000);
+    const token = await adminToken(request);
+    const headers = auth(token);
+    const concerns = (await (await request.get(`${API}/admin/concerns`, { headers })).json())
+      .data as { id: string; title: string; isActive: boolean; version: number }[];
+    const wigs = concerns.find((c) => c.title === "Hair loss or full coverage")!;
+    const section = (await (await request.get(`${API}/admin/concerns/section`, { headers })).json())
+      .data as { heading: string; intro: string };
+    const setActive = async (isActive: boolean) => {
+      const current = (
+        await (await request.get(`${API}/admin/concerns/${wigs.id}`, { headers })).json()
+      ).data as { version: number };
+      const res = await request.patch(`${API}/admin/concerns/${wigs.id}`, {
+        headers,
+        data: { version: current.version, isActive },
+      });
+      expect(res.status()).toBe(200);
+    };
+    const region = page.getByRole("region", { name: "Your hair, your way" });
+
+    await request.put(`${API}/admin/concerns/section`, {
+      headers,
+      data: { heading: "Your hair, your way", intro: "" },
+    });
+    await setActive(false);
+    try {
+      await expect(async () => {
+        await page.goto(OPEN + "/");
+        await expect(region).toBeVisible({ timeout: 1000 });
+        await expect(region.getByRole("link", { name: /^Hair loss or full coverage/ })).toHaveCount(
+          0,
+          { timeout: 1000 },
+        );
+      }).toPass({ timeout: 90_000 });
+      await expect(region.getByRole("link")).toHaveCount(2);
+    } finally {
+      await setActive(true);
+      await request.put(`${API}/admin/concerns/section`, { headers, data: section });
+    }
+  });
+
+  test("best sellers: the products ticked in the admin, with a badge; hidden when none", async ({
+    page,
+    request,
+  }) => {
+    // Lists are cached for about a minute: allow for the refresh.
+    test.setTimeout(180_000);
+    const token = await adminToken(request);
+    const { id, name } = await product(request, CLIP_INS);
+    const tick = async (bestSeller: boolean) => {
+      const current = await (
+        await request.get(`${API}/admin/products/${id}`, { headers: auth(token) })
+      ).json();
+      const res = await request.patch(`${API}/admin/products/${id}`, {
+        headers: auth(token),
+        data: { version: current.data.version, bestSeller },
+      });
+      expect(res.status()).toBe(200);
+    };
+    const section = page.getByRole("region", { name: "Our best sellers" });
+    await tick(true);
+    try {
+      await expect(async () => {
+        await page.goto(OPEN + "/");
+        await expect(section).toBeVisible({ timeout: 1000 });
+      }).toPass({ timeout: 90_000 });
+      const card = section.getByRole("link", { name: new RegExp(name) });
+      await expect(card).toHaveAttribute("href", `/product/${CLIP_INS}`);
+      await expect(card.getByText("Best seller", { exact: true })).toBeVisible();
+    } finally {
+      await tick(false);
+    }
+    await expect(async () => {
+      await page.goto(OPEN + "/");
+      await expect(section).toHaveCount(0, { timeout: 1000 });
+    }).toPass({ timeout: 90_000 });
   });
 
   test("why HairCraft: four cards, WhatsApp advice, and our story", async ({ page }) => {
@@ -246,20 +422,17 @@ test.describe("home page", () => {
     await expect(page.locator("canvas")).toHaveCount(0);
   });
 
-  test("when the API is down the hero, badges and FAQ still show, with calm messages", async ({
-    page,
-  }) => {
+  test("when the API is down the hero and FAQ still show, with calm messages", async ({ page }) => {
     const response = await page.goto(API_DOWN + "/");
     expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.getByText("On orders ₹1,999+")).toBeVisible();
     await expect(page.getByRole("region", { name: "Frequently asked questions" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "We'll be right back" }).first()).toBeVisible();
     // Sections that need the catalogue simply don't appear.
-    await expect(page.getByRole("region", { name: /Find your hair extension match/ })).toHaveCount(
+    await expect(page.getByRole("region", { name: "What would you like to change?" })).toHaveCount(
       0,
     );
-    await expect(page.getByRole("link", { name: /Quick view/ })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Our best sellers" })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Loved by women like you" })).toHaveCount(0);
     await expect(page.getByRole("tab")).toHaveCount(0);
   });

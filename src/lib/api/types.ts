@@ -57,14 +57,38 @@ export interface ProductCard {
   id: string;
   name: string;
   slug: string;
-  shortDescription: string | null;
   image: ImageUrls | null;
   imageAlt: string | null;
+  /** The second photo, shown when the card is hovered (older API answers leave it out). */
+  hoverImage?: ImageUrls | null;
   priceRange: { min: Money; max: Money };
   onSale: boolean;
   inStock: boolean;
   rating: number;
   reviewCount: number;
+  /** Ticked "Best seller" in the admin (older API answers leave it out). */
+  bestSeller?: boolean;
+}
+
+/** A "Shop by concern" card (owner, 2026-11-03), managed in the admin. */
+export interface PublicConcern {
+  id: string;
+  title: string;
+  line: string | null;
+  /** Its page in the shop: `/concern/<slug>`. */
+  slug: string;
+  /** Its own photo; null: show its first category's. */
+  image: ImageUrls | null;
+  imageAlt: string | null;
+  /** Its live categories (at least one), in the shop's order. */
+  categories: { name: string; slug: string }[];
+}
+
+/** The home page's "Shop by concern": heading, intro and the shown cards (at most 8). */
+export interface ConcernSection {
+  heading: string;
+  intro: string;
+  items: PublicConcern[];
 }
 
 /** An approved review, as the storefront may show it (first name and initial only). */
@@ -124,6 +148,8 @@ export interface PublicVariant {
   /** Size in cm (height × width), both or neither. */
   sizeHeightCm: number | null;
   sizeWidthCm: number | null;
+  /** The size's unit as typed (null: cm). */
+  sizeUnit?: string | null;
   /** The main variant this is a sub-variant of; null for a main variant. */
   parentVariantId: string | null;
   attributes: Record<string, string>;
@@ -138,8 +164,6 @@ export interface PublicProduct {
   name: string;
   slug: string;
   /** One line shown in bold above the short description (optional). */
-  headline: string | null;
-  shortDescription: string | null;
   description: string | null;
   attributes: Record<string, string>;
   categories: { id: string; name: string; slug: string }[];

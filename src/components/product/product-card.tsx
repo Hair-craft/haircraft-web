@@ -11,12 +11,18 @@ import { ratingLabel } from "./rating-stars";
 /** Where a product's page lives (the page itself is phase S5). */
 export const productHref = (slug: string) => `/product/${encodeURIComponent(slug)}`;
 
-/** Which labels a card shows: sold out wins over sale (a sale on nothing to buy says nothing). */
+/**
+ * Which labels a card shows: sold out wins over the others (a sale on nothing
+ * to buy says nothing); a best seller (ticked in the admin) and a sale may both show.
+ */
 export function cardBadges(
-  product: Pick<ProductCardData, "inStock" | "onSale">,
-): ("sale" | "soldOut")[] {
+  product: Pick<ProductCardData, "inStock" | "onSale" | "bestSeller">,
+): ("bestSeller" | "sale" | "soldOut")[] {
   if (!product.inStock) return ["soldOut"];
-  return product.onSale ? ["sale"] : [];
+  return [
+    ...(product.bestSeller ? (["bestSeller"] as const) : []),
+    ...(product.onSale ? (["sale"] as const) : []),
+  ];
 }
 
 /**
@@ -40,10 +46,12 @@ export function ProductCard({
   className?: string;
 }) {
   const badges = cardBadges(product);
+  // A second photo to show on hover (a sold-out card keeps its one faded photo).
+  const hover = product.image && product.inStock ? (product.hoverImage ?? null) : null;
   return (
     <div
       className={cx(
-        "group relative h-full rounded-2xl bg-white p-3 shadow-sm transition-shadow duration-300 hover:shadow-xl sm:p-4",
+        "hc-card group relative h-full rounded-2xl bg-white p-3 shadow-sm sm:p-4",
         className,
       )}
     >
@@ -60,16 +68,33 @@ export function ProductCard({
               sizes={sizes}
               priority={priority}
               className={cx(
-                "object-cover transition-transform duration-500 group-hover:scale-105",
+                "object-cover transition-[transform,opacity] duration-700 ease-out motion-safe:group-hover:scale-[1.06]",
                 !product.inStock && "opacity-60",
+                // With a second photo, the first fades out on hover (owner, 2026-11-03).
+                hover && "group-hover:opacity-0 group-has-[a:focus-visible]:opacity-0",
               )}
             />
           ) : (
             <PhotoPlaceholder />
           )}
+          {hover ? (
+            // The second photo, faded in on hover or keyboard focus; it loads only when needed.
+            <Image
+              src={hover.medium}
+              alt=""
+              fill
+              sizes={sizes}
+              loading="lazy"
+              className={cx(
+                "hc-hover-photo object-cover opacity-0 transition-[transform,opacity] duration-700 ease-out group-hover:opacity-100 group-has-[a:focus-visible]:opacity-100 motion-safe:group-hover:scale-[1.03]",
+              )}
+            />
+          ) : null}
+          <span aria-hidden className="hc-sheen" />
           {badges.length > 0 ? (
             <div className="absolute top-2.5 left-2.5 flex gap-2">
               {badges.includes("soldOut") ? <Badge tone="deep">Sold out</Badge> : null}
+              {badges.includes("bestSeller") ? <Badge tone="bright">Best seller</Badge> : null}
               {badges.includes("sale") ? <Badge tone="gold">Sale</Badge> : null}
             </div>
           ) : null}
@@ -94,9 +119,6 @@ export function ProductCard({
           <h3 className="line-clamp-2 font-display text-lg leading-6 font-semibold text-deep transition-colors group-hover:text-gold-ink">
             {product.name}
           </h3>
-          {product.shortDescription ? (
-            <p className="line-clamp-1 text-[0.8125rem] text-muted">{product.shortDescription}</p>
-          ) : null}
           <div className="mt-auto flex flex-col gap-3 pt-3">
             <PriceRange
               min={product.priceRange.min}
@@ -108,7 +130,11 @@ export function ProductCard({
               aria-hidden
               className="flex w-full items-center justify-center gap-2 rounded-full bg-deep px-4 py-2.5 text-xs font-semibold tracking-wide text-white transition-colors group-hover:bg-deep-hover"
             >
-              <BagIcon width={16} height={16} />
+              <BagIcon
+                width={16}
+                height={16}
+                className="transition-transform duration-300 motion-safe:group-hover:-rotate-6"
+              />
               Choose options
             </span>
           </div>

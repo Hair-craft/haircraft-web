@@ -67,7 +67,7 @@ test("on a tablet the category bar is shown too (the menu button is for phones)"
   expect(widths.page).toBeLessThanOrEqual(widths.screen);
 });
 
-test("a product's headline shows in bold above its short description; card names are bold", async ({
+test("a product's description shows the admin's formatting, safely; card names are bold", async ({
   page,
   request,
 }) => {
@@ -75,31 +75,39 @@ test("a product's headline shows in bold above its short description; card names
   test.setTimeout(180_000);
   const token = await adminToken(request);
   const { id } = await product(request, CLIP_INS);
-  const set = async (headline: string | null) => {
+  const set = async (description: string | null) => {
     const current = await (
       await request.get(`${API}/admin/products/${id}`, { headers: auth(token) })
     ).json();
+    const before = current.data.description as string | null;
     const res = await request.patch(`${API}/admin/products/${id}`, {
       headers: auth(token),
-      data: { version: current.data.version, headline },
+      data: { version: current.data.version, description },
     });
     expect(res.status()).toBe(200);
+    return before;
   };
-  await set("Salon-quality Remy hair, ready in 10 minutes");
+  const original = await set(
+    '<p>Salon-quality <strong>Remy hair</strong></p><ul><li>Ready in ten minutes</li></ul><img src="x" onerror="window.hacked=1">',
+  );
   try {
     await expect(async () => {
       await page.goto(`${OPEN}/product/${CLIP_INS}`);
-      await expect(page.getByText("Salon-quality Remy hair, ready in 10 minutes")).toBeVisible({
+      await expect(
+        page.getByRole("listitem").filter({ hasText: "Ready in ten minutes" }),
+      ).toBeVisible({
         timeout: 1000,
       });
     }).toPass({ timeout: 90_000 });
-    const headline = page.getByText("Salon-quality Remy hair, ready in 10 minutes");
+    const bold = page.locator(".rich-text strong", { hasText: "Remy hair" });
     expect(
-      Number(await headline.evaluate((el) => getComputedStyle(el).fontWeight)),
-    ).toBeGreaterThanOrEqual(700);
-    await expectAccessible(page, "product page with a headline");
+      Number(await bold.evaluate((el) => getComputedStyle(el).fontWeight)),
+    ).toBeGreaterThanOrEqual(600);
+    await expect(page.locator(".rich-text img")).toHaveCount(0);
+    expect(await page.evaluate(() => (window as { hacked?: number }).hacked)).toBeUndefined();
+    await expectAccessible(page, "product page with a formatted description");
   } finally {
-    await set(null);
+    await set(original);
   }
 
   await page.goto(OPEN + "/shop");

@@ -32,15 +32,12 @@ const policies: ShopPolicies = {
   cashOnDelivery: { enabled: false, maxOrderAmount: null },
 };
 
-type ProductBits = Pick<
-  PublicProduct,
-  "name" | "options" | "shortDescription" | "description" | "priceRange"
->;
+type ProductBits = Pick<PublicProduct, "name" | "options" | "description" | "priceRange">;
 const product = (over: Partial<ProductBits> = {}): ProductBits => ({
   name: "Wrap-around Ponytail",
   options: { lengths: [22], colors: [], textures: [], weights: [], sizes: [] },
-  shortDescription: "A full, sleek ponytail in seconds.",
-  description: null,
+  description:
+    "<p>A full, <strong>sleek</strong> ponytail in seconds. It clips on in one step.</p>",
   priceRange: { min: "4999.00", max: "6999.00" },
   ...over,
 });
@@ -94,7 +91,7 @@ describe("descriptions", () => {
 
   it("drop the promise, then shorten, when the product's own words are long", () => {
     const long = productDescription(
-      product({ shortDescription: "Soft, natural, ".repeat(12) + "and lovely" }),
+      product({ description: `<p>${"Soft, natural, ".repeat(12)}and lovely</p>` }),
       null,
     );
     expect(long.length).toBeLessThanOrEqual(DESCRIPTION_MAX);
@@ -103,7 +100,7 @@ describe("descriptions", () => {
   });
 
   it("never leave a description empty", () => {
-    expect(productDescription(product({ shortDescription: null }), null)).toMatch(
+    expect(productDescription(product({ description: null }), null)).toMatch(
       /^Wrap-around Ponytail\. 100% human hair/,
     );
     expect(categoryDescription("Wigs", null, policies)).toMatch(/^Shop wigs in 100% human hair\./);

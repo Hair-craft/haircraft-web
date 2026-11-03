@@ -82,5 +82,7 @@ export async function cartFormAction(form: FormData): Promise<void> {
     ? await attempt(() => changeCart(change))
     : { cart: EMPTY_CART, error: null, problem: null };
   // Only a code goes in the address; the cart page has the words.
-  redirect(result.problem ? `/cart?problem=${result.problem}` : "/cart");
+  if (result.problem) redirect(`/cart?problem=${result.problem}`);
+  // "Buy now" (without JavaScript): straight on to checkout.
+  redirect(op === "add" && form.get("then") === "checkout" ? "/checkout" : "/cart");
 }

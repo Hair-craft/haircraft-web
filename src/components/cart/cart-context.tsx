@@ -68,7 +68,13 @@ interface CartState {
   openDrawer: () => void;
   closeDrawer: () => void;
   /** Adds to the bag and opens the drawer; resolves to the problem, or null. */
-  add: (variantId: string, quantity: number, seenPrice: string) => Promise<string | null>;
+  /** Adds to the bag and opens the drawer (`quiet`: not, e.g. Buy now goes on to checkout). */
+  add: (
+    variantId: string,
+    quantity: number,
+    seenPrice: string,
+    options?: { quiet?: boolean },
+  ) => Promise<string | null>;
   setQuantity: (line: CartLine, quantity: number) => void;
   remove: (line: CartLine) => void;
   /** A fresher bag from the server (the cart page). */
@@ -132,7 +138,7 @@ export function CartProvider({
       startTransition(async () => apply(await loadCartAction()));
     },
     closeDrawer: () => setDrawerOpen(false),
-    add: (variantId, quantity, seenPrice) =>
+    add: (variantId, quantity, seenPrice, options) =>
       new Promise((resolve) => {
         startTransition(async () => {
           const result = await changeCartAction({ kind: "add", variantId, quantity });
@@ -146,7 +152,7 @@ export function CartProvider({
           }
           apply(result);
           writeSeen((seen) => ({ ...seen, [variantId]: seenPrice }));
-          setDrawerOpen(true);
+          if (!options?.quiet) setDrawerOpen(true);
           resolve(null);
         });
       }),

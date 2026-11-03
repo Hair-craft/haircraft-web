@@ -4,6 +4,8 @@ import { apiFetch, apiFetchPage, type QueryValue } from "./client";
 import type { FilterOptions } from "@/lib/listing/query";
 import type {
   Category,
+  ConcernSection,
+  PublicConcern,
   Paginated,
   ProductCard,
   PublicProduct,
@@ -25,6 +27,25 @@ export function getCategories(): Promise<Category[]> {
   });
 }
 
+/**
+ * "Shop by concern" for the home page (the admin manages it). Tagged with the
+ * categories, so an admin change refreshes it at once.
+ */
+export function getConcerns(): Promise<ConcernSection> {
+  return apiFetch<ConcernSection>("/concerns", {
+    revalidate: CATEGORY_REVALIDATE_SECONDS,
+    tags: ["categories"],
+  });
+}
+
+/** One shown concern, for its page (the API answers 404 when it is hidden or missing). */
+export function getConcern(slug: string): Promise<PublicConcern> {
+  return apiFetch<PublicConcern>(`/concerns/${encodeURIComponent(slug)}`, {
+    revalidate: CATEGORY_REVALIDATE_SECONDS,
+    tags: ["categories"],
+  });
+}
+
 export interface ProductListQuery {
   page?: number;
   limit?: number;
@@ -32,8 +53,12 @@ export interface ProductListQuery {
   sort?: string;
   /** Category slug (includes its sub-categories). */
   category?: string;
+  /** A concern's slug: products in any of its categories. */
+  concern?: string;
   search?: string;
   inStock?: boolean;
+  /** Only products ticked "Best seller" in the admin. */
+  bestSeller?: boolean;
   [key: string]: QueryValue;
 }
 
@@ -47,9 +72,13 @@ export function getProducts(query: ProductListQuery = {}): Promise<Paginated<Pro
 }
 
 /** What the listing filters can offer in a category (or the whole shop); refreshed every 5 minutes. */
-export function getFilterOptions(category?: string, search?: string): Promise<FilterOptions> {
+export function getFilterOptions(
+  category?: string,
+  search?: string,
+  concern?: string,
+): Promise<FilterOptions> {
   return apiFetch<FilterOptions>("/products/filters", {
-    query: { category, search },
+    query: { category, search, concern },
     revalidate: search ? SUGGESTION_REVALIDATE_SECONDS : CATEGORY_REVALIDATE_SECONDS,
     tags: ["products"],
   });
@@ -83,6 +112,11 @@ export function findCategory(
 /** The newest products, newest first. */
 export async function getNewArrivals(limit = 8): Promise<ProductCard[]> {
   return (await getProducts({ sort: "createdAt:desc", limit })).items;
+}
+
+/** Products ticked "Best seller" in the admin (owner, 2026-11-03), newest first. */
+export async function getBestSellers(limit = 8): Promise<ProductCard[]> {
+  return (await getProducts({ bestSeller: true, sort: "createdAt:desc", limit })).items;
 }
 
 /** Products that have reviews, highest rated first (empty when nothing is reviewed yet). */

@@ -1,4 +1,5 @@
 import type { PublicProduct } from "@/lib/api/types";
+import { descriptionText } from "@/lib/product/description";
 import { formatPrice } from "@/lib/format";
 import { alwaysFree, type ShopPolicies } from "@/lib/info/policies";
 
@@ -71,20 +72,46 @@ function servicePromise(policies: ShopPolicies | null): string {
 }
 
 /**
- * The product's own short description, then its price and the shop's
- * promise, within 160 characters (the promise is dropped first if needed).
+ * The product's own description (its first sentence), then its price and
+ * the shop's promise, within 160 characters (the promise is dropped first).
  */
 export function productDescription(
-  product: Pick<PublicProduct, "name" | "shortDescription" | "description" | "priceRange">,
+  product: Pick<PublicProduct, "name" | "description" | "priceRange">,
   policies: ShopPolicies | null,
 ): string {
-  const own = (product.shortDescription ?? product.description ?? "").trim();
+  const text = descriptionText(product.description);
+  const own = (/^.*?[.!?](\s|$)/.exec(text)?.[0] ?? text).trim();
   const lead = own ? (/[.!?]$/.test(own) ? own : `${own}.`) : `${product.name}.`;
   const price = `100% human hair, ${priceFrom(product)}.`;
   const promise = servicePromise(policies);
   for (const text of [`${lead} ${price} ${promise}`, `${lead} ${price}`])
     if (text.length <= DESCRIPTION_MAX) return text;
   return clip(`${lead} ${price}`, DESCRIPTION_MAX);
+}
+
+/** A concern page's title: "Thinning Hair or a Wide Parting: Human Hair Solutions". */
+export function concernTitle(title: string): string {
+  const full = `${title}: Human Hair Solutions`;
+  return full.length <= TITLE_MAX - BRAND_SUFFIX ? full : title;
+}
+
+/**
+ * A concern page's description: its own line, what it offers, then the
+ * shop's promise, within 160 characters.
+ */
+export function concernDescription(
+  title: string,
+  line: string | null,
+  categories: string[],
+  policies: ShopPolicies | null,
+): string {
+  const own = line?.trim() ? (/[.!?]$/.test(line.trim()) ? line.trim() : `${line.trim()}.`) : "";
+  const lead = own ? `${title}? ${own}` : `${title}?`;
+  const offer = `Shop ${categories.join(", ").toLowerCase()} in 100% human hair.`;
+  const promise = servicePromise(policies);
+  for (const text of [`${lead} ${offer} ${promise}`, `${lead} ${offer}`, lead])
+    if (text.length <= DESCRIPTION_MAX) return text;
+  return clip(lead, DESCRIPTION_MAX);
 }
 
 /** "Human Hair Clip-in Extensions in India" (no "Human Hair" twice). */

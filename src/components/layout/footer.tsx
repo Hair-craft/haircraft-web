@@ -5,7 +5,7 @@ import { INFO_PAGES } from "@/content/pages";
 import { socialName } from "@/lib/info/social";
 import { getCategories } from "@/lib/api/catalog";
 import { isApiError } from "@/lib/api/errors";
-import { whatsappChatHref } from "@/lib/info/contact";
+import { displayPhone, whatsappChatHref } from "@/lib/info/contact";
 import { categoryNav, routes } from "./nav";
 
 const link = (slug: string) => {
@@ -62,6 +62,31 @@ export async function Footer() {
           <p className="text-sm leading-relaxed text-muted">
             Premium hair extensions, wigs and ponytails, crafted for length, volume and confidence.
           </p>
+          <address className="flex flex-col gap-1 text-sm text-muted not-italic">
+            {business.legalName ? (
+              <span className="font-semibold text-deep">{business.legalName}</span>
+            ) : null}
+            {business.cin ? <span>CIN: {business.cin}</span> : null}
+            <a href={`mailto:${business.email}`} className="hover:text-deep hover:underline">
+              {business.email}
+            </a>
+            {business.phone ? (
+              <a href={`tel:${business.phone}`} className="hover:text-deep hover:underline">
+                {displayPhone(business.phone)}
+              </a>
+            ) : null}
+            {business.mapUrl ? (
+              <a
+                href={business.mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-sage-ink hover:underline"
+              >
+                Find us on Google Maps
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            ) : null}
+          </address>
           <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-sage px-3 py-1.5 text-xs font-semibold text-sage-ink">
             <span aria-hidden className="text-gold">
               ✦
@@ -132,7 +157,10 @@ export async function Footer() {
       </div>
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-5 text-sm text-muted sm:px-6 md:flex-row">
-          <p>© {year} HairCraft. All prices in INR, inclusive of all GST taxes.</p>
+          <p>
+            © {year} {business.legalName ?? "HairCraft"}. All prices in INR, inclusive of all GST
+            taxes.
+          </p>
           <ul className="flex items-center gap-6">
             {legal.map((item) => (
               <li key={item.href}>

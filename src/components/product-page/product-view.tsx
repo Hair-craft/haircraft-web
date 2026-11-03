@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useCart } from "@/components/cart/cart-context";
 import { AddToBag } from "@/components/cart/cart-ui";
-import { swatchFor } from "@/components/home/match";
+import { swatchFor } from "@/lib/product/swatch";
 import { business } from "@/content/business";
 import { whatsappChatHref } from "@/lib/info/contact";
 import { RatingStars } from "@/components/product/rating-stars";
@@ -51,9 +51,12 @@ const variantHref = (slug: string, variant: PublicVariant) =>
 export function ProductView({
   product,
   initialSku,
+  descriptionHtml,
 }: {
   product: PublicProduct;
   initialSku: string;
+  /** The description as safe HTML (null: none). */
+  descriptionHtml: string | null;
 }) {
   const { addedToBag } = useWishlist();
   const { freeShippingThreshold } = useCart();
@@ -84,7 +87,8 @@ export function ProductView({
           <div className="rounded-2xl bg-white p-3 shadow-[0_8px_24px_rgba(11,41,26,0.04)] sm:p-4">
             <Gallery key={variant?.id ?? "none"} images={images} name={product.name} />
           </div>
-          <ul className="grid gap-3 rounded-xl bg-white p-4 shadow-sm sm:grid-cols-3">
+          {/* Not on phones (owner, 2026-11-03). */}
+          <ul className="hidden gap-3 rounded-xl bg-white p-4 shadow-sm sm:grid sm:grid-cols-3">
             {productPromises.map((promise) => (
               <li key={promise.title} className="flex items-center gap-2.5">
                 <span
@@ -166,15 +170,6 @@ export function ProductView({
               </p>
               <p className="mt-1 text-sm text-muted">Inclusive of all taxes</p>
             </div>
-          ) : null}
-
-          {product.headline ? (
-            <p className="mt-5 text-lg leading-snug font-bold text-deep">{product.headline}</p>
-          ) : null}
-          {product.shortDescription ? (
-            <p className={cx("leading-relaxed text-muted", product.headline ? "mt-2" : "mt-5")}>
-              {product.shortDescription}
-            </p>
           ) : null}
 
           {variant ? (
@@ -279,25 +274,24 @@ export function ProductView({
 
       <InfoTabs
         tabs={[
-          ...(product.description
+          ...(descriptionHtml
             ? [
                 {
                   title: "Description",
-                  body: product.description
-                    .split(/\n\s*\n|\n/)
-                    .filter((p) => p.trim())
-                    .map((paragraph, i) => (
-                      <p key={i} className="mt-3 first:mt-0">
-                        {paragraph}
-                      </p>
-                    )),
+                  body: (
+                    <div
+                      className="rich-text"
+                      // Cleaned on the server (description-html.ts): only the editor's formatting.
+                      dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                    />
+                  ),
                 },
               ]
             : []),
           {
             title: "Details",
             body: (
-              <dl className="grid max-w-2xl grid-cols-[auto_1fr] gap-x-8 gap-y-2">
+              <dl className="grid max-w-2xl grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-[0.8125rem] sm:gap-x-8 sm:gap-y-2 sm:text-base">
                 {detailRows([
                   ...Object.entries(product.attributes),
                   ...(variant
@@ -318,8 +312,11 @@ export function ProductView({
                     : []),
                 ]).map(([name, value]) => (
                   <div key={name} className="contents">
-                    <dt className="rounded-l-lg bg-sand py-2.5 pl-3 text-muted">{name}</dt>
-                    <dd className="rounded-r-lg bg-sand py-2.5 pr-3 font-bold text-deep">
+                    {/* Name in bold, value light (owner, 2026-11-03). */}
+                    <dt className="rounded-l-lg bg-sand py-2 pl-3 font-bold text-deep sm:py-2.5">
+                      {name}
+                    </dt>
+                    <dd className="rounded-r-lg bg-sand py-2 pr-3 font-light text-muted sm:py-2.5">
                       {value}
                     </dd>
                   </div>
