@@ -220,7 +220,7 @@ function ProductRow({ products }: { products: ProductCardData[] }) {
     // scrolled up and down inside itself, catching the finger on phones (owner, 2026-11-04).
     <ul
       data-reveal-row
-      className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-4"
+      className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 md:grid-cols-3 lg:grid-cols-4"
     >
       {products.map((product, i) => (
         <li key={product.id} className="w-[72%] shrink-0 snap-start sm:w-auto">

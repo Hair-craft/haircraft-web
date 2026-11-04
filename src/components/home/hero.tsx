@@ -61,9 +61,10 @@ export function PromiseIcon({
  * photo across the whole page width, kept clear (only a light fade behind
  * the words). On wide screens the banner takes the photo's own shape, so the
  * whole picture shows, with the words and one button on the right, over its
- * open space. On phones and tablets the photo shows above the words, so
- * nothing covers it; on phones it is square (framed on the stylist) and the
- * words sit in a white panel over its foot. No button (owner).
+ * open space. Tablets get the same layout, shorter and with smaller words
+ * (owner, 2026-11-04). On phones the photo shows above the words, wide enough
+ * that the stylist and the head she is styling are both in view, and the words
+ * sit in a white panel just over its foot. No button (owner).
  *
  * The shutter (owner, 2026-11-03): the hero is sticky, and the rest of the
  * page (`HeroShutterPanel`) slides up over it as you scroll, while the hero
@@ -72,30 +73,30 @@ export function PromiseIcon({
  */
 export function Hero() {
   return (
-    <section className="hc-shutter sticky top-0 z-0 w-full overflow-hidden bg-white xl:flex xl:h-[38rem] xl:items-center 2xl:h-[42rem]">
-      <div className="relative aspect-square w-full sm:aspect-[16/8] xl:absolute xl:inset-0 xl:aspect-auto">
+    <section className="hc-shutter sticky top-0 z-0 w-full overflow-hidden bg-white md:flex md:h-[20rem] md:items-center lg:h-[28rem] xl:h-[38rem] 2xl:h-[42rem]">
+      <div className="relative aspect-[16/10] w-full sm:aspect-[16/8] md:absolute md:inset-0 md:aspect-auto">
         <Image
           src={heroImage.src}
           alt={heroImage.alt}
           fill
           priority
           sizes="100vw"
-          className="hc-settle object-cover object-[30%_center] sm:object-[35%_center] xl:object-[40%_center]"
+          className="hc-settle object-cover object-[12%_center] md:object-[40%_center]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-l from-white/50 via-white/10 to-transparent xl:block"
+          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-l from-white/50 via-white/10 to-transparent md:block"
         />
       </div>
-      <div className="relative z-10 mx-auto -mt-7 w-full max-w-7xl rounded-t-[1.75rem] bg-white px-5 pt-6 pb-8 sm:mt-0 sm:rounded-none sm:px-6 sm:py-8 xl:bg-transparent xl:py-10">
-        <div className="flex max-w-xl flex-col items-start gap-3 sm:gap-4 xl:ml-auto xl:w-[42%]">
-          <p className="hc-rise inline-flex items-center gap-2 rounded-full border border-line bg-white/90 px-3 py-1 text-[0.625rem] font-bold tracking-widest text-deep uppercase shadow-sm backdrop-blur-sm sm:px-3.5 sm:text-[0.7rem]">
+      <div className="relative z-10 mx-auto -mt-4 w-full max-w-7xl rounded-t-[1.5rem] bg-white px-5 pt-5 pb-8 sm:-mt-5 sm:px-6 sm:py-7 md:mt-0 md:rounded-none md:bg-transparent md:py-6 xl:py-10">
+        <div className="flex max-w-xl flex-col items-start gap-3 sm:gap-4 md:ml-auto md:w-[44%] md:gap-2.5 lg:w-[42%] lg:gap-4">
+          <p className="hc-rise inline-flex items-center gap-2 rounded-full border border-line bg-white/90 px-3 py-1 text-[0.625rem] font-bold tracking-widest text-deep uppercase shadow-sm backdrop-blur-sm sm:px-3.5 sm:text-[0.7rem] md:text-[0.6rem] lg:text-[0.7rem]">
             <span aria-hidden className="text-gold">
               ✦
             </span>
             The Art of Bespoke Hair
           </p>
-          <h1 className="hc-rise hc-delay font-display text-[1.95rem] leading-[1.15] font-semibold tracking-tight text-deep sm:text-5xl">
+          <h1 className="hc-rise hc-delay font-display text-[1.95rem] leading-[1.15] font-semibold tracking-tight text-deep sm:text-5xl md:text-[2rem] lg:text-[2.6rem] xl:text-5xl">
             Crafted for{" "}
             <em
               className={`${italic.className} hc-script text-[1.15em] leading-none text-gold-ink`}
@@ -105,7 +106,7 @@ export function Hero() {
           </h1>
           {/* The clean sans-serif of the older hero (owner, 2026-11-03). */}
           <p
-            className={`${clean.className} hc-rise hc-delay-2 max-w-md text-[0.95rem] leading-relaxed text-deep/80 sm:text-lg`}
+            className={`${clean.className} hc-rise hc-delay-2 max-w-md text-[0.95rem] leading-relaxed text-deep/80 sm:text-lg md:text-sm lg:text-base xl:text-lg`}
           >
             100% ethically sourced Indian Remy hair extensions, custom toppers, and couture pieces
             made to blend flawlessly.

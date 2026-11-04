@@ -82,6 +82,28 @@ test.describe("home page", () => {
     await expect(description).toHaveAttribute("content", /100% human hair extensions in India/);
   });
 
+  test("hero banner on a tablet: like desktop, the words on the right over the full-width photo", async ({
+    page,
+  }) => {
+    // Owner, 2026-11-04: tablets get the desktop layout, with smaller words.
+    for (const viewport of [
+      { width: 768, height: 1024 },
+      { width: 1024, height: 768 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(OPEN + "/");
+      const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner.webp"]');
+      const hero = (await page.locator("section.hc-shutter").boundingBox())!;
+      const box = (await photo.boundingBox())!;
+      const words = (await page.getByRole("heading", { level: 1 }).boundingBox())!;
+      expect(box.width).toBeGreaterThanOrEqual(viewport.width - 1);
+      expect(words.x).toBeGreaterThan(viewport.width / 2);
+      // The words sit over the photo, not below it.
+      expect(words.y + words.height).toBeLessThanOrEqual(hero.y + hero.height);
+      expect(Math.round(box.height)).toBe(Math.round(hero.height));
+    }
+  });
+
   test("announcement bar, with the free-shipping amount", async ({ page }) => {
     await page.goto(OPEN + "/");
     const offers = page.getByRole("region", { name: "Offers" });
