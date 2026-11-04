@@ -57,14 +57,14 @@ export function PromiseIcon({
 }
 
 /**
- * The hero banner, after the owner's design and photo (2026-11-03): the wide
- * photo across the whole page width, kept clear (only a light fade behind
- * the words). On wide screens the banner takes the photo's own shape, so the
- * whole picture shows, with the words and one button on the right, over its
- * open space. Tablets get the same layout, shorter and with smaller words
- * (owner, 2026-11-04). On phones the photo shows above the words, wide enough
- * that the stylist and the head she is styling are both in view, and the words
- * sit in a white panel just over its foot. No button (owner).
+ * The hero banner, after the owner's design and photo (2026-11-04: the
+ * stylist and the mannequin on a white ground, the words on the LEFT). From
+ * tablets up the words sit over the photo's open white space on the left;
+ * the photo is anchored right, so the two people are never cut. Phones keep
+ * their own style (below). No button (owner).
+ *
+ * Phones (owner, 2026-11-04): the words on top, over the photo's upper part,
+ * with a white fade behind them; the photo runs on below.
  *
  * The shutter (owner, 2026-11-03): the hero is sticky, and the rest of the
  * page (`HeroShutterPanel`) slides up over it as you scroll, while the hero
@@ -73,23 +73,9 @@ export function PromiseIcon({
  */
 export function Hero() {
   return (
-    <section className="hc-shutter sticky top-0 z-0 w-full overflow-hidden bg-white md:flex md:h-[20rem] md:items-center lg:h-[28rem] xl:h-[38rem] 2xl:h-[42rem]">
-      <div className="relative aspect-[16/10] w-full sm:aspect-[16/8] md:absolute md:inset-0 md:aspect-auto">
-        <Image
-          src={heroImage.src}
-          alt={heroImage.alt}
-          fill
-          priority
-          sizes="100vw"
-          className="hc-settle object-cover object-[12%_center] md:object-[40%_center]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-l from-white/50 via-white/10 to-transparent md:block"
-        />
-      </div>
-      <div className="relative z-10 mx-auto -mt-4 w-full max-w-7xl rounded-t-[1.5rem] bg-white px-5 pt-5 pb-8 sm:-mt-5 sm:px-6 sm:py-7 md:mt-0 md:rounded-none md:bg-transparent md:py-6 xl:py-10">
-        <div className="flex max-w-xl flex-col items-start gap-3 sm:gap-4 md:ml-auto md:w-[44%] md:gap-2.5 lg:w-[42%] lg:gap-4">
+    <section className="hc-shutter sticky top-0 z-0 w-full overflow-hidden bg-white md:flex md:h-[20rem] md:items-center lg:h-[26rem] xl:h-[34rem] 2xl:h-[36rem]">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pt-6 sm:px-6 sm:pt-8 md:py-6 xl:py-10">
+        <div className="flex max-w-xl flex-col items-start gap-3 sm:gap-4 md:w-[37%] md:gap-2.5 lg:w-[36%] lg:gap-4">
           <p className="hc-rise inline-flex items-center gap-2 rounded-full border border-line bg-white/90 px-3 py-1 text-[0.625rem] font-bold tracking-widest text-deep uppercase shadow-sm backdrop-blur-sm sm:px-3.5 sm:text-[0.7rem] md:text-[0.6rem] lg:text-[0.7rem]">
             <span aria-hidden className="text-gold">
               ✦
@@ -106,12 +92,31 @@ export function Hero() {
           </h1>
           {/* The clean sans-serif of the older hero (owner, 2026-11-03). */}
           <p
-            className={`${clean.className} hc-rise hc-delay-2 max-w-md text-[0.95rem] leading-relaxed text-deep/80 sm:text-lg md:text-sm lg:text-base xl:text-lg`}
+            className={`${clean.className} hc-rise hc-delay-2 max-w-md text-[0.95rem] leading-relaxed text-deep/80 sm:text-lg md:text-[0.8rem] lg:text-base xl:text-lg`}
           >
             100% ethically sourced Indian Remy hair extensions, custom toppers, and couture pieces
             made to blend flawlessly.
           </p>
         </div>
+      </div>
+      <div className="relative -mt-8 aspect-[6/5] w-full sm:-mt-24 sm:aspect-[16/8] md:absolute md:mt-0 md:inset-y-0 md:right-0 md:left-[max(0px,calc((100vw-80rem)/2))] md:aspect-auto md:w-auto">
+        <Image
+          src={heroImage.src}
+          alt={heroImage.alt}
+          fill
+          priority
+          sizes="100vw"
+          className="hc-settle object-cover object-[80%_20%] md:object-[100%_20%]"
+        />
+        {/* Phones: a white fade over the photo's top, behind the words (owner, 2026-11-04). */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-white to-transparent md:hidden"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-white/60 via-white/10 to-transparent md:block"
+        />
       </div>
     </section>
   );

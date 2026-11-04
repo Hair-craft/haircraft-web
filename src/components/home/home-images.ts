@@ -14,7 +14,7 @@ export interface HomeImage {
  * change it, replace the file with another wide photo laid out the same way.
  */
 export const heroImage: HomeImage = {
-  src: "/images/home/hero-banner.webp",
+  src: "/images/home/hero-banner-2.webp",
   alt: "A HairCraft stylist smiling as she parts and combs a long, dark human hair piece on a mannequin",
 };
 

@@ -41,7 +41,7 @@ async function expectPhotosLoad(images: Locator, where: string) {
 }
 
 test.describe("home page", () => {
-  test("hero banner: the wide photo, the words on the right, no button", async ({ page }) => {
+  test("hero banner: the wide photo, the words on the left, no button", async ({ page }) => {
     await page.goto(OPEN + "/");
     await expect(page).toHaveTitle("HairCraft — Human Hair Extensions, Toppers & Wigs in India");
     const heading = page.getByRole("heading", { level: 1 });
@@ -60,13 +60,13 @@ test.describe("home page", () => {
         .getByText(/^100% ethically sourced Indian Remy hair extensions/)
         .evaluate((el) => getComputedStyle(el).fontFamily),
     ).toMatch(/Geist/);
-    // The owner's wide photo, across the whole width, with nothing over its left half.
-    const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner.webp"]');
+    // The owner's photo (2026-11-04), to the right edge, with the words on its white left side.
+    const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner-2.webp"]');
     await expect(photo).toHaveCount(1);
     const box = await photo.boundingBox();
-    expect(box!.width).toBeGreaterThanOrEqual((page.viewportSize()?.width ?? 0) - 1);
+    expect(box!.x + box!.width).toBeGreaterThanOrEqual((page.viewportSize()?.width ?? 0) - 1);
     const words = await heading.boundingBox();
-    expect(words!.x).toBeGreaterThan(box!.width / 2);
+    expect(words!.x + words!.width).toBeLessThan((page.viewportSize()?.width ?? 0) / 2);
     // The shutter: the hero stays put while the rest of the page slides up over it.
     const hero = page.locator("section.hc-shutter");
     await expect(hero).toHaveCSS("position", "sticky");
@@ -82,7 +82,7 @@ test.describe("home page", () => {
     await expect(description).toHaveAttribute("content", /100% human hair extensions in India/);
   });
 
-  test("hero banner on a tablet: like desktop, the words on the right over the full-width photo", async ({
+  test("hero banner on a tablet: like desktop, the words on the left over the photo", async ({
     page,
   }) => {
     // Owner, 2026-11-04: tablets get the desktop layout, with smaller words.
@@ -92,12 +92,12 @@ test.describe("home page", () => {
     ]) {
       await page.setViewportSize(viewport);
       await page.goto(OPEN + "/");
-      const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner.webp"]');
+      const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner-2.webp"]');
       const hero = (await page.locator("section.hc-shutter").boundingBox())!;
       const box = (await photo.boundingBox())!;
       const words = (await page.getByRole("heading", { level: 1 }).boundingBox())!;
-      expect(box.width).toBeGreaterThanOrEqual(viewport.width - 1);
-      expect(words.x).toBeGreaterThan(viewport.width / 2);
+      expect(box.x + box.width).toBeGreaterThanOrEqual(viewport.width - 1);
+      expect(words.x + words.width).toBeLessThan(viewport.width / 2);
       // The words sit over the photo, not below it.
       expect(words.y + words.height).toBeLessThanOrEqual(hero.y + hero.height);
       expect(Math.round(box.height)).toBe(Math.round(hero.height));
