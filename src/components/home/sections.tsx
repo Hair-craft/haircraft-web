@@ -27,6 +27,7 @@ import { PromiseIcon } from "./hero";
 import { storyImage } from "./home-images";
 import { ProductTabs } from "./product-tabs";
 import { SectionHeader } from "./section-header";
+import { ConcernCarousel } from "./concern-carousel";
 import { concernPhoto } from "./concerns";
 
 /** Runs a section's data loading; an API outage becomes `null` (the section shows a calm message). */
@@ -93,13 +94,16 @@ export async function ConcernSection() {
         intro={section.intro || undefined}
         className="mb-8 max-w-3xl"
       />
-      {/* Wider, taller cards (owner, 2026-11-03): three across on desktop, two on tablets, a
-          sideways row of large cards on phones (the next one peeks in). */}
-      <ul className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3">
-        {section.items.map((concern, i) => {
+      {/* Wide, tall cards (owner, 2026-11-03) in a slider that moves on by itself on desktop
+          and slides by hand everywhere (owner, 2026-11-04): three in view on desktop, two on
+          tablets, one large card on phones (the next one peeks in). */}
+      <ConcernCarousel
+        label="Concerns"
+        items={section.items.map((concern, i) => {
           const photo = concernPhoto(concern, photos[i]?.image ?? null);
-          return (
-            <li key={concern.id} className="w-[78%] shrink-0 snap-start sm:w-auto">
+          return {
+            key: concern.id,
+            node: (
               <Reveal delay={Math.min(i, 7) * 0.06} className="h-full">
                 <Link
                   href={routes.concern(concern.slug)}
@@ -138,10 +142,10 @@ export async function ConcernSection() {
                   </span>
                 </Link>
               </Reveal>
-            </li>
-          );
+            ),
+          };
         })}
-      </ul>
+      />
     </section>
   );
 }
@@ -212,7 +216,12 @@ export async function CategorySection() {
 function ProductRow({ products }: { products: ProductCardData[] }) {
   return (
     // `relative` keeps the row's overflow inside it: without it, phone browsers widen the whole page.
-    <ul className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+    // `overflow-y-hidden`: cards waiting to fade up sit a little lower; without it the row also
+    // scrolled up and down inside itself, catching the finger on phones (owner, 2026-11-04).
+    <ul
+      data-reveal-row
+      className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-4"
+    >
       {products.map((product, i) => (
         <li key={product.id} className="w-[72%] shrink-0 snap-start sm:w-auto">
           <Reveal delay={Math.min(i, 7) * 0.08} className="h-full">

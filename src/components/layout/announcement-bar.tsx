@@ -1,6 +1,6 @@
 import { settings } from "@/lib/env";
 import { formatPrice } from "@/lib/format";
-import { cx } from "@/lib/cx";
+import { Marquee } from "@/components/motion/marquee";
 
 /** The offers strip above the header, on every shop page. */
 export function announcementItems(freeShippingThreshold: string | null): string[] {
@@ -18,24 +18,20 @@ export function announcementItems(freeShippingThreshold: string | null): string[
   ];
 }
 
-/** Which points fit: two on phones, three on tablets, all on desktop. */
-const fits = ["inline-flex", "inline-flex", "hidden md:inline-flex", "hidden lg:inline-flex"];
-
-/** A still strip of points, each after a gold sparkle (it used to scroll). */
+/**
+ * The points slide by on their own, endlessly (owner, 2026-11-04); the strip
+ * pauses on hover and stands still for people who prefer reduced motion.
+ */
 export function AnnouncementBar() {
   const items = announcementItems(settings().freeShippingThreshold);
   return (
-    <section aria-label="Offers" className="bg-deep px-3 py-1.5 text-white sm:px-4 sm:py-2">
-      <ul className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-0.5 text-[0.625rem] font-semibold tracking-wide uppercase sm:gap-x-6 sm:text-xs sm:tracking-wider">
-        {items.map((item, i) => (
-          <li key={item} className={cx("items-center gap-1.5", fits[i] ?? "hidden lg:inline-flex")}>
-            <span aria-hidden className="text-gold-light">
-              ✦
-            </span>
-            {item}
-          </li>
-        ))}
-      </ul>
-    </section>
+    <Marquee
+      items={items}
+      label="Offers"
+      repeat={2}
+      speedSeconds={36}
+      className="bg-deep py-1.5 text-white sm:py-2"
+      itemClassName="text-[0.625rem] font-semibold tracking-wide uppercase sm:text-xs sm:tracking-wider"
+    />
   );
 }

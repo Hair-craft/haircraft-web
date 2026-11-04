@@ -33,6 +33,9 @@ export function Reveal({
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     )
       return;
+    // Cards in a sideways row reveal with their row: one off to the side is "off screen" and
+    // would otherwise stay hidden until it is slid in.
+    const target = element.closest<HTMLElement>("[data-reveal-row]") ?? element;
     let first = true;
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -50,7 +53,7 @@ export function Reveal({
       },
       { rootMargin: "0px 0px -10% 0px" },
     );
-    observer.observe(element);
+    observer.observe(target);
     return () => observer.disconnect();
   }, []);
 

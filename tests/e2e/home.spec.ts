@@ -87,8 +87,8 @@ test.describe("home page", () => {
     const offers = page.getByRole("region", { name: "Offers" });
     await expect(offers).toContainText("Free shipping above ₹1,999");
     await expect(offers.getByRole("listitem")).toHaveCount(4);
-    // Still: no scrolling marquee any more.
-    await expect(offers.locator(".hc-marquee-track")).toHaveCount(0);
+    // It slides by on its own again (owner, 2026-11-04).
+    await expect(offers.locator(".hc-marquee-track")).toHaveCount(1);
   });
 
   test("shop by concern: each card opens its page, with a photo", async ({ page }) => {
