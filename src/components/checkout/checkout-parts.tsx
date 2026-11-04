@@ -96,7 +96,7 @@ export function TotalsList({
               Includes {formatPrice(totals.gstIncluded)} GST
             </span>
           </span>,
-          <span className="font-display text-[2rem] leading-none font-medium">
+          <span className="font-display text-[1.75rem] leading-none font-medium">
             {formatPrice(totals.grandTotal)}
           </span>,
           "mt-2 rounded-xl bg-sand px-4 py-4",

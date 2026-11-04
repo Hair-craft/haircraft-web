@@ -23,11 +23,16 @@ async function newCustomer(request: APIRequestContext): Promise<string> {
 }
 
 async function signIn(page: Page, email: string, next?: string) {
-  await page.goto(OPEN + "/sign-in" + (next ? `?next=${encodeURIComponent(next)}` : ""));
+  await page.goto(
+    OPEN + "/sign-in?method=email" + (next ? `&next=${encodeURIComponent(next)}` : ""),
+  );
   await signInHere(page, email);
 }
 
 async function signInHere(page: Page, email: string) {
+  // Phone sign-in is offered first; these shoppers use email.
+  const useEmail = page.getByRole("link", { name: "Use email and password" });
+  if (await useEmail.isVisible()) await useEmail.click();
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();

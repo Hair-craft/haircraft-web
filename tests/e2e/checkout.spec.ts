@@ -77,7 +77,7 @@ async function shopper(
 }
 
 async function signIn(page: Page, email: string) {
-  await page.goto(OPEN + "/sign-in");
+  await page.goto(OPEN + "/sign-in?method=email");
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
@@ -138,6 +138,8 @@ test.describe("opening checkout", () => {
     const drawer = page.getByRole("dialog", { name: /^Your bag/ });
     await drawer.getByRole("link", { name: /^Secure checkout/ }).click();
     await expect(page).toHaveURL(`${OPEN}/sign-in?next=${encodeURIComponent("/checkout")}`);
+    // Phone sign-in is offered first; these shoppers use email.
+    await page.getByRole("link", { name: "Use email and password" }).click();
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();

@@ -43,7 +43,8 @@ export function sessionCookieOptions(
 
 export interface Who {
   firstName: string;
-  email: string;
+  /** null for a customer who signed up with a phone number and gave no email. */
+  email: string | null;
 }
 
 /** The display cookie's value: base64url JSON (cookie-safe). */
@@ -58,8 +59,12 @@ export function decodeWho(value: string | undefined): Who | null {
       f?: unknown;
       e?: unknown;
     };
-    if (typeof data.f !== "string" || typeof data.e !== "string") return null;
-    return { firstName: data.f.slice(0, 100), email: data.e.slice(0, 254) };
+    if (typeof data.f !== "string") return null;
+    if (typeof data.e !== "string" && data.e !== null && data.e !== undefined) return null;
+    return {
+      firstName: data.f.slice(0, 100),
+      email: typeof data.e === "string" ? data.e.slice(0, 254) : null,
+    };
   } catch {
     return null;
   }
@@ -71,7 +76,7 @@ export interface TokenPair {
   accessTokenExpiresIn: number;
   refreshToken: string;
   refreshTokenExpiresAt: string;
-  user: { id: string; email: string; firstName: string; lastName: string | null };
+  user: { id: string; email: string | null; firstName: string; lastName: string | null };
 }
 
 export interface CookieToSet {

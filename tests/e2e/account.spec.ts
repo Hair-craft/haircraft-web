@@ -17,7 +17,7 @@ async function newCustomer(request: APIRequestContext, firstName = "Meera") {
 }
 
 async function signIn(page: Page, email: string, password = PASSWORD) {
-  await page.goto(OPEN + "/sign-in");
+  await page.goto(OPEN + "/sign-in?method=email");
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
@@ -63,6 +63,8 @@ test.describe("the account area", () => {
     await expect(page).toHaveURL(
       `${OPEN}/sign-in?next=${encodeURIComponent("/account/addresses")}`,
     );
+    // Phone sign-in is offered first; these shoppers use email.
+    await page.getByRole("link", { name: "Use email and password" }).click();
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
@@ -95,8 +97,10 @@ test.describe("profile", () => {
     const { email } = await newCustomer(request);
     await signIn(page, email);
     await page.goto(OPEN + "/account/profile");
-    await expect(main(page).getByText(email)).toBeVisible();
+    // In the form, and again under "Ways you can sign in".
+    await expect(main(page).getByText(email).first()).toBeVisible();
     await expect(main(page).getByText("To change your email, please")).toBeVisible();
+    await expect(main(page).getByText("Ways you can sign in")).toBeVisible();
 
     await page.getByLabel("First name").fill("Meenakshi");
     await page.getByLabel("Last name").fill("Rao");

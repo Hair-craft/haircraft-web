@@ -10,7 +10,7 @@ test.describe("wishlist on a phone", () => {
     await request.post(`${API}/auth/register`, {
       data: { email, password: "Silky2026!", firstName: "Meera" },
     });
-    await page.goto(OPEN + "/sign-in");
+    await page.goto(OPEN + "/sign-in?method=email");
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill("Silky2026!");
     await page.getByRole("button", { name: "Sign in" }).tap();

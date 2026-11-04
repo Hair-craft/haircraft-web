@@ -24,11 +24,20 @@ import {
 
 const EMPTY: AccountFormState = { error: null, fields: {}, values: {} };
 
-/** Name and mobile; the email is shown but can't be changed here. */
+/**
+ * Name and mobile; the email is shown but can't be changed here. A verified
+ * number (used to sign in) is shown, not edited: it changes with a code.
+ */
 export function ProfileForm({
   profile,
 }: {
-  profile: { email: string; firstName: string; lastName: string | null; phone: string | null };
+  profile: {
+    email: string | null;
+    firstName: string;
+    lastName: string | null;
+    phone: string | null;
+    phoneVerifiedAt: string | null;
+  };
 }) {
   const [state, action, pending] = useActionState(saveProfileAction, EMPTY);
   const form = useFocusFirstProblem(state);
@@ -60,20 +69,35 @@ export function ProfileForm({
           error={state.fields.lastName}
         />
       </div>
-      <Input
-        label="Mobile number"
-        name="phone"
-        type="tel"
-        autoComplete="tel-national"
-        inputMode="tel"
-        hint="Optional. For delivery updates, e.g. 98765 43210."
-        defaultValue={value("phone", localMobile(profile.phone))}
-        error={state.fields.phone}
-      />
+      {profile.phoneVerifiedAt && profile.phone ? (
+        <div className="flex flex-col gap-1.5">
+          <p className="text-sm font-medium text-deep">Mobile number</p>
+          <p className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white/40 px-4 py-2.5 text-muted">
+            +91 {localMobile(profile.phone)}
+            <span className="rounded-full bg-sage px-2.5 py-0.5 text-xs font-semibold text-sage-ink">
+              Verified
+            </span>
+          </p>
+          <p className="text-xs text-muted">
+            Used to sign in. Change it under &ldquo;Sign-in phone number&rdquo; below.
+          </p>
+        </div>
+      ) : (
+        <Input
+          label="Mobile number"
+          name="phone"
+          type="tel"
+          autoComplete="tel-national"
+          inputMode="tel"
+          hint="Optional. For delivery updates, e.g. 98765 43210."
+          defaultValue={value("phone", localMobile(profile.phone))}
+          error={state.fields.phone}
+        />
+      )}
       <div className="flex flex-col gap-1.5">
         <p className="text-sm font-medium text-deep">Email</p>
         <p className="rounded-xl border border-line bg-white/40 px-4 py-2.5 text-muted">
-          {profile.email}
+          {profile.email ?? "No email added"}
         </p>
         <p className="text-xs text-muted">
           To change your email, please{" "}

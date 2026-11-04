@@ -124,3 +124,60 @@ export function indianMobile(raw: string): string | null | undefined {
   const match = /^(?:\+?91|0)?([6-9]\d{9})$/.exec(digits);
   return match ? `+91${match[1]}` : undefined;
 }
+
+/**
+ * The API's phone-code and Google sign-in errors in the shop's words
+ * (owner, 2026-11-04). `data` is the error's extra detail (tries left, wait).
+ */
+export function phoneAuthMessage(
+  status: number,
+  code: string,
+  message: string,
+  data: unknown = null,
+): string {
+  const detail = (data ?? {}) as { attemptsLeft?: unknown; retryAfterSeconds?: unknown };
+  switch (code) {
+    case "OTP_INVALID": {
+      const left = typeof detail.attemptsLeft === "number" ? detail.attemptsLeft : null;
+      return left === null
+        ? "That code isn't right. Please check it and try again."
+        : `That code isn't right. ${left} ${left === 1 ? "try" : "tries"} left.`;
+    }
+    case "OTP_EXPIRED":
+      return "This code has expired. Please ask for a new one.";
+    case "OTP_TOO_MANY_ATTEMPTS":
+      return "Too many wrong codes. Please ask for a new one.";
+    case "OTP_RATE_LIMITED":
+      // The API's sentence already says how long to wait.
+      return message || "Too many codes requested. Please try again later.";
+    case "SMS_UNAVAILABLE":
+      return "We couldn't send the code just now. Please try again in a minute.";
+    case "SIGN_IN_METHOD_UNAVAILABLE":
+      return "This way of signing in isn't available right now. Please use another one.";
+    case "SIGNUP_TOKEN_INVALID":
+      return "That took a little too long. Please enter your number again.";
+    case "PHONE_IN_USE":
+      return "This number is already used by another account.";
+    case "EMAIL_ALREADY_REGISTERED":
+      return "An account with this email already exists. Sign in with it, or leave the email empty.";
+    case "ACCOUNT_SUSPENDED":
+      return "This account has been suspended. Please contact us.";
+    case "GOOGLE_TOKEN_INVALID":
+      return "Google sign-in didn't work. Please try again.";
+    case "GOOGLE_STAFF_ACCOUNT":
+      return "This Google account belongs to a staff member. Please use your email and password.";
+    case "TOO_MANY_REQUESTS":
+      return "Too many attempts from here. Please wait a minute and try again.";
+    case "FORBIDDEN":
+      return "This number can't be used to sign in to the shop.";
+  }
+  if (status === 0 || status >= 500)
+    return "We can't reach the shop at the moment. Please try again in a minute.";
+  return "Please check the details and try again.";
+}
+
+/** A 6-digit SMS code from what was typed or pasted ("123 456", "Code: 123456"). */
+export function smsCode(raw: string): string | null {
+  const digits = raw.replace(/\D/g, "");
+  return digits.length === 6 ? digits : null;
+}

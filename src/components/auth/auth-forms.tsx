@@ -189,7 +189,7 @@ export function SignInForm({ next, notice }: { next: string | null; notice?: str
 }
 
 /** India's flag, drawn (emoji flags show as letters on Windows). */
-function IndiaFlag() {
+export function IndiaFlag() {
   return (
     <svg viewBox="0 0 640 480" className="h-3.5 w-5 overflow-hidden rounded-[2px]">
       <path d="M0 0h640v160H0z" fill="#f93" />
@@ -258,7 +258,7 @@ export function RegisterForm({ next }: { next: string | null }) {
           </>
         }
         placeholder="98765 43210"
-        hint="Optional. For delivery updates, e.g. 98765 43210."
+        hint="Optional"
         defaultValue={state.values.phone}
         error={state.fields.phone}
       />

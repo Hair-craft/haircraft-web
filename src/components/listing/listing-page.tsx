@@ -32,8 +32,6 @@ import {
   concernDescription,
   concernTitle,
 } from "@/lib/seo/titles";
-import { categoryGuide } from "@/content/categories";
-import { CategoryGuideSection } from "./category-guide";
 import { getShopPolicies } from "@/lib/api/shop";
 import { jsonLdScript } from "@/lib/seo/json-ld";
 import { ListingProvider, ListingResults } from "./listing-provider";
@@ -282,11 +280,6 @@ export async function ListingPage({
   // Any other spelling of this view (`?page=1`, the plain form's `length=18&length=20&min=`,
   // unknown values) is sent to its tidy address, so each view has exactly one.
   const tidy = listingHref(base, state);
-  // A category's buying guide: its own, or its nearest parent's (search has none).
-  const guide =
-    !search && !concern && found
-      ? categoryGuide([found.category.slug, ...[...found.ancestors].reverse().map((c) => c.slug)])
-      : null;
   if (tidy !== addressOf(base, params)) redirect(tidy);
 
   // A search that finds nothing on its own: just the help, full width (no empty filters or sort).
@@ -369,12 +362,10 @@ export async function ListingPage({
         </section>
         {result.items.length > 0 ? (
           <div className="mt-12">
-            <ConsultBanner headingId="listing-consult-heading" promises />
+            <ConsultBanner headingId="listing-consult-heading" />
           </div>
         ) : null}
       </div>
-      {/* The category's buying guide, on its first page only (later pages would repeat it). */}
-      {guide && state.page === 1 ? <CategoryGuideSection guide={guide} /> : null}
     </ListingProvider>,
   );
 }

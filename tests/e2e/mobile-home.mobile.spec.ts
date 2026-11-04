@@ -36,11 +36,17 @@ test.describe("home page on a phone", () => {
       .getByRole("region", { name: "What would you like to change?" })
       .getByRole("listitem");
     await expect(concerns.first()).toBeVisible();
-    const [first, second] = await Promise.all([
-      concerns.nth(0).boundingBox(),
-      concerns.nth(1).boundingBox(),
-    ]);
-    expect(Math.round(first!.y)).toBe(Math.round(second!.y));
+    // Side by side in one row. On a phone the row swaps to its pinned, scroll-driven form
+    // once the page has loaded (owner, 2026-11-04), so wait for it to settle.
+    await expect
+      .poll(async () => {
+        const [first, second] = await Promise.all([
+          concerns.nth(0).boundingBox(),
+          concerns.nth(1).boundingBox(),
+        ]);
+        return first && second ? Math.round(first.y) === Math.round(second.y) : null;
+      })
+      .toBe(true);
     // Scroll through every section (so each one reveals), then check the width again.
     await page.evaluate(async () => {
       for (let y = 0; y < document.body.scrollHeight; y += 600) {

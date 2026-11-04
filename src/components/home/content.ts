@@ -12,32 +12,15 @@ import { plainText } from "@/lib/info/rich-text";
  */
 
 export interface WhyCard {
-  eyebrow: string;
   title: string;
-  text: string;
 }
 
+/** Short on purpose (owner, 2026-11-04: "make it minimal"). */
 export const whyCards: WhyCard[] = [
-  {
-    eyebrow: "Real human hair",
-    title: "Looks like real hair. Because it is.",
-    text: "Soft, natural human hair that moves like your own, and can be washed, styled, curled and coloured.",
-  },
-  {
-    eyebrow: "Made to be worn",
-    title: "Comfortable enough for all-day wear.",
-    text: "Light wefts and secure clips and tapes that sit flat, so you forget you're wearing them.",
-  },
-  {
-    eyebrow: "Your shade, your style",
-    title: "Matched to your length, colour and texture.",
-    text: "Choose from many lengths, shades and textures. Not sure what suits you? Ask us before you buy.",
-  },
-  {
-    eyebrow: "Shop with confidence",
-    title: "Secure payments, tracked delivery.",
-    text: "Pay by UPI, card, net banking or wallet, and follow your order from our door to yours.",
-  },
+  { title: "100% human hair" },
+  { title: "All-day comfort" },
+  { title: "Your shade & length" },
+  { title: "Secure payments, tracked delivery" },
 ];
 
 /** The home page's short FAQ; the full list is on /faq (src/content/faq.ts). */

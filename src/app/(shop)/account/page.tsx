@@ -111,13 +111,17 @@ export default async function AccountPage() {
               {initials}
             </span>
             <div>
-              <h1 className="font-display text-2xl leading-tight font-medium sm:text-[2rem] sm:leading-10">
+              <h1 className="font-display text-2xl leading-tight font-medium sm:text-[1.75rem] sm:leading-10">
                 Welcome back, {profile.firstName}
               </h1>
               <p className="mt-1 text-sm text-muted">
                 {name}
-                <span className="mx-1.5 text-[#c2c8c1]">•</span>
-                {profile.email}
+                {profile.email ? (
+                  <>
+                    <span className="mx-1.5 text-[#c2c8c1]">•</span>
+                    {profile.email}
+                  </>
+                ) : null}
                 {profile.phone ? (
                   <>
                     <span className="mx-1.5 text-[#c2c8c1]">•</span>

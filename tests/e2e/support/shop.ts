@@ -168,7 +168,7 @@ export async function setProductStatus(
 }
 
 export async function signIn(page: Page, email: string) {
-  await page.goto(OPEN + "/sign-in");
+  await page.goto(OPEN + "/sign-in?method=email");
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();

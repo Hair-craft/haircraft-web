@@ -48,25 +48,12 @@ test("an unknown guide is not found", async ({ page }) => {
   expect(response?.status()).toBe(404);
 });
 
-test("a category's first page shows its buying guide; its sub-category shows the parent's", async ({
+test("category pages show no buying guide under the products (owner, 2026-11-04: minimal)", async ({
   page,
 }) => {
   await page.goto(OPEN + "/shop/clip-in-extensions");
-  const guide = page.getByRole("region", { name: "Buying guide: clip-in hair extensions" });
-  await expect(guide).toBeVisible();
-  const question = guide.locator("details", { hasText: "Will clip-ins damage my hair?" });
-  await question.locator("summary").click();
-  await expect(question).toHaveAttribute("open", "");
-  await expect(guide.getByRole("link", { name: /How to choose hair extensions/ })).toBeVisible();
-
-  // Page 2 doesn't repeat it (the test shop shows 2 products a page).
-  await page.goto(OPEN + "/shop?page=2");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByRole("region", { name: /^Buying guide/ })).toHaveCount(0);
-
-  await page.goto(OPEN + "/shop/seamless-clip-ins");
-  await expect(
-    page.getByRole("region", { name: "Buying guide: clip-in hair extensions" }),
-  ).toBeVisible();
 });
 
 test("titles and descriptions use the words people search for", async ({ page, request }) => {

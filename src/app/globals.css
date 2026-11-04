@@ -44,10 +44,29 @@
   --font-accent: var(--font-accent);
 }
 
+/*
+ * Type scale about 8% smaller than Tailwind's (owner, 2026-11-04: "the font
+ * sizes should be decreased"). Every text-xs … text-5xl class follows it; the
+ * line heights keep Tailwind's ratios.
+ */
+@theme {
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.125rem;
+  --text-2xl: 1.375rem;
+  --text-3xl: 1.625rem;
+  --text-4xl: 2rem;
+  --text-5xl: 2.625rem;
+  --text-6xl: 3.25rem;
+}
+
 body {
   background: var(--mint);
   color: var(--deep);
   font-family: var(--font-body), system-ui, sans-serif;
+  font-size: var(--text-base);
 }
 
 /*

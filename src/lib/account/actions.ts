@@ -96,10 +96,13 @@ export async function saveProfileAction(
   const checked = checkProfile(values);
   if ("fields" in checked)
     return { error: "Please check the details below.", fields: checked.fields, values };
+  // A verified number isn't in the form (it changes only with a code): leave it as it is.
+  const { phone, ...rest } = checked.input;
+  const input = form.has("phone") ? { ...rest, phone } : rest;
   const accessToken = await token();
   if (!accessToken) return endSession("/account/profile");
   try {
-    const profile = await updateProfile(accessToken, checked.input);
+    const profile = await updateProfile(accessToken, input);
     const store = await cookies();
     const who = decodeWho(store.get(WHO_COOKIE)?.value);
     // The display name lives as long as a session can (7 days); signing out removes it.

@@ -11,7 +11,7 @@ export function AccountCard({ children, className }: { children: ReactNode; clas
 export function AccountHeading({ title, lead }: { title: string; lead?: ReactNode }) {
   return (
     <div className="mb-6">
-      <h1 className="font-display text-2xl leading-tight font-medium sm:text-[2rem] sm:leading-10">
+      <h1 className="font-display text-2xl leading-tight font-medium sm:text-[1.75rem] sm:leading-10">
         {title}
       </h1>
       {lead ? <p className="mt-2 text-muted">{lead}</p> : null}

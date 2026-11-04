@@ -18,12 +18,10 @@ import {
 } from "@/lib/api/catalog";
 import { isApiError } from "@/lib/api/errors";
 import type { ProductCard as ProductCardData } from "@/lib/api/types";
-import { story } from "@/content/about";
-import { returnRules } from "@/content/returns-rules";
 import { ConsultBanner } from "@/components/layout/consult-banner";
+import { story } from "@/content/about";
 import { faqJsonLd, faqs, whyCards } from "./content";
 import { FaqAccordion } from "./faq-accordion";
-import { PromiseIcon } from "./hero";
 import { storyImage } from "./home-images";
 import { ProductTabs } from "./product-tabs";
 import { SectionHeader } from "./section-header";
@@ -86,19 +84,22 @@ export async function ConcernSection() {
       aria-labelledby="concerns-heading"
       className={`${shell} scroll-mt-28 py-10`}
     >
-      <SectionHeader
-        id="concerns-heading"
-        align="left"
-        eyebrow="Shop by concern"
-        title={section.heading}
-        intro={section.intro || undefined}
-        className="mb-8 max-w-3xl"
-      />
       {/* Wide, tall cards (owner, 2026-11-03) in a slider that moves on by itself on desktop
           and slides by hand everywhere (owner, 2026-11-04): three in view on desktop, two on
-          tablets, one large card on phones (the next one peeks in). */}
+          tablets, one large card on phones (the next one peeks in). On phones the heading and
+          row stay pinned while scrolling slides the cards past (owner, 2026-11-04). */}
       <ConcernCarousel
         label="Concerns"
+        header={
+          <SectionHeader
+            id="concerns-heading"
+            align="left"
+            eyebrow="Shop by concern"
+            title={section.heading}
+            intro={section.intro || undefined}
+            className="mb-8 max-w-3xl"
+          />
+        }
         items={section.items.map((concern, i) => {
           const photo = concernPhoto(concern, photos[i]?.image ?? null);
           return {
@@ -315,9 +316,6 @@ export async function TestimonialsSection() {
     <section aria-labelledby="reviews-heading" className={`${shell} py-10`}>
       <div className="grid items-center gap-8 rounded-3xl bg-white p-6 shadow-lg sm:p-8 lg:grid-cols-12 lg:p-12">
         <div className="flex flex-col gap-4 lg:col-span-6">
-          <p className="inline-flex w-fit items-center gap-2 rounded-full bg-sage px-3 py-1 text-[0.65rem] font-bold tracking-wider text-sage-ink uppercase">
-            Real customers, real reviews
-          </p>
           <h2 id="reviews-heading" className="font-display text-3xl font-semibold sm:text-4xl">
             Loved by women like you
           </h2>
@@ -355,7 +353,6 @@ export async function TestimonialsSection() {
           <figcaption className="flex flex-wrap items-end justify-between gap-4">
             <span className="font-semibold">{review.reviewerName}</span>
             <span className="text-right">
-              <span className="block text-xs text-muted">Product used</span>
               <Link
                 href={productHref(product.slug)}
                 className="text-sm font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-deep"
@@ -395,18 +392,18 @@ export function WhySection() {
         eyebrow="The HairCraft promise"
         title="Why women choose HairCraft"
       />
-      <ul className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <ul className="mx-auto mt-6 grid max-w-4xl grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {whyCards.map((card, i) => (
           <li key={card.title}>
             <Reveal
               delay={i * 0.06}
-              className="flex h-full flex-col gap-3 rounded-2xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+              className="flex h-full flex-col items-center gap-2 rounded-xl bg-white px-3 py-4 text-center shadow-sm transition-shadow hover:shadow-md"
             >
-              <span className="flex size-12 items-center justify-center rounded-full bg-sage text-deep">
+              <span className="flex size-9 items-center justify-center rounded-full bg-sage text-deep">
                 <svg
                   viewBox="0 0 24 24"
-                  width={22}
-                  height={22}
+                  width={18}
+                  height={18}
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={1.6}
@@ -417,8 +414,9 @@ export function WhySection() {
                   <path d={whyIcons[i % whyIcons.length]} />
                 </svg>
               </span>
-              <h3 className="font-display text-lg leading-snug font-semibold">{card.title}</h3>
-              <p className="text-sm leading-relaxed text-muted">{card.text}</p>
+              <h3 className="font-display text-sm leading-snug font-semibold sm:text-base">
+                {card.title}
+              </h3>
             </Reveal>
           </li>
         ))}
@@ -439,12 +437,22 @@ export function ConsultSection() {
 
 // ── Our story and FAQ ───────────────────────────────────────────────────
 
-/** HairCraft's story (shared with /about, src/content/about.ts) beside the short FAQ. */
+/** The questions shown on the home page (the rest are on /faq). */
+const homeFaqCount = 4;
+
+/**
+ * The story's photo (uncropped) with a heading and a three-line excerpt,
+ * beside a few common questions (owner, 2026-11-04: full-length photo, about
+ * three lines of text, then "Read our story"; the full story is on /about and
+ * every question on /faq).
+ */
 export function StoryFaqSection() {
+  const shown = faqs.slice(0, homeFaqCount);
   return (
     <div className={`${shell} grid items-start gap-12 py-10 pb-20 lg:grid-cols-12`}>
-      <section aria-labelledby="story-heading" className="flex flex-col gap-5 lg:col-span-5">
-        <div className="relative aspect-[5/4] overflow-hidden rounded-3xl bg-sand shadow-sm">
+      <section aria-labelledby="story-heading" className="flex flex-col gap-4 lg:col-span-5">
+        {/* The photo's own 3:4 shape, so the whole picture shows uncropped. */}
+        <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-sand shadow-sm">
           <Image
             src={storyImage.src}
             alt={storyImage.alt}
@@ -462,48 +470,26 @@ export function StoryFaqSection() {
         >
           Crafted for the way <em className="text-gold-ink">you</em> wear your hair.
         </h2>
-        {story.paragraphs.map((paragraph) => (
-          <p key={paragraph} className="leading-relaxed text-muted">
-            {paragraph}
-          </p>
-        ))}
+        {/* The story's opening, cut off after three lines; the rest is on /about. */}
+        <p className="line-clamp-3 leading-relaxed text-muted">{story.paragraphs[0]}</p>
         <Link
-          href="/returns"
-          className="inline-flex w-fit items-center gap-3 rounded-2xl bg-white p-3 pr-5 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-deep"
+          href="/about"
+          className="w-fit font-semibold underline decoration-gold underline-offset-4 hover:decoration-deep"
         >
-          <span className="flex size-10 items-center justify-center rounded-full bg-sage text-deep">
-            <PromiseIcon icon="hair" />
-          </span>
-          <span className="flex flex-col">
-            <span className="text-sm font-semibold">Exchange for defective items</span>
-            <span className="text-xs text-muted">
-              Within {returnRules.exchangeDays} days of delivery, if unused
-            </span>
-          </span>
+          Read our story
         </Link>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
-          <ButtonLink href={routes.shop} variant="secondary">
-            Discover the collection
-          </ButtonLink>
-          <Link
-            href="/about"
-            className="font-semibold underline decoration-gold underline-offset-4 hover:decoration-deep"
-          >
-            Read our story
-          </Link>
-        </div>
       </section>
       <section aria-labelledby="faq-heading" className="lg:col-span-7">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(faqJsonLd(faqs)).replace(/</g, "\\u003c"),
+            __html: JSON.stringify(faqJsonLd(shown)).replace(/</g, "\\u003c"),
           }}
         />
         <h2 id="faq-heading" className="font-display text-2xl font-semibold sm:text-3xl">
           Frequently asked questions
         </h2>
-        <FaqAccordion faqs={faqs} />
+        <FaqAccordion faqs={shown} />
         <p className="mt-6">
           <Link
             href="/faq"

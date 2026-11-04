@@ -384,21 +384,24 @@ test.describe("home page", () => {
     }).toPass({ timeout: 90_000 });
   });
 
-  test("why HairCraft: four cards, WhatsApp advice, and our story", async ({ page }) => {
+  test("why HairCraft: four short cards, WhatsApp advice, and our story", async ({ page }) => {
     await page.goto(OPEN + "/");
     const why = page.getByRole("region", { name: "Why women choose HairCraft" });
     await expect(why.getByRole("heading", { level: 3 })).toHaveCount(4);
+    // Titles only (owner, 2026-11-04: minimal).
+    await expect(why.locator("li p")).toHaveCount(0);
     const consult = page.getByRole("region", { name: "Unsure about your shade or length?" });
     await expect(consult.getByRole("link", { name: /Chat on WhatsApp/ })).toHaveAttribute(
       "href",
       /^https:\/\/(wa\.me|api\.whatsapp\.com)\//,
     );
+    // The story: its photo, a heading and one line (owner, 2026-11-04: minimal text).
     const story = page.getByRole("region", { name: /Crafted for the way you wear/ });
     await expect(story.locator('img[src*="%2Fimages%2Fhome%2Fstory.webp"]')).toHaveCount(1);
-    // The exchange note says what the policy really is.
-    await expect(story.getByRole("link", { name: /Exchange for defective items/ })).toHaveAttribute(
+    await expect(story.locator("p")).toHaveCount(2);
+    await expect(story.getByRole("link", { name: "Read our story" })).toHaveAttribute(
       "href",
-      "/returns",
+      "/about",
     );
   });
 
@@ -420,7 +423,7 @@ test.describe("home page", () => {
     await page.goto(OPEN + "/");
     const section = page.getByRole("region", { name: "Frequently asked questions" });
     const questions = section.getByRole("button");
-    await expect(questions).toHaveCount(6);
+    await expect(questions).toHaveCount(4);
     await expect(questions.nth(0)).toHaveAttribute("aria-expanded", "true");
     await expect(section).toContainText("sulphate-free shampoo");
 
@@ -434,7 +437,7 @@ test.describe("home page", () => {
     const jsonLd = await section.locator('script[type="application/ld+json"]').textContent();
     const data = JSON.parse(jsonLd ?? "{}");
     expect(data["@type"]).toBe("FAQPage");
-    expect(data.mainEntity).toHaveLength(6);
+    expect(data.mainEntity).toHaveLength(4);
   });
 
   test("with reduced motion: the hero doesn't animate", async ({ page }) => {

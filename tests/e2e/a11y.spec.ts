@@ -97,7 +97,7 @@ test.describe("accessibility: guests", () => {
     await settle(page);
     await expectAccessible(page, "bag drawer");
 
-    await page.goto(OPEN + "/sign-in");
+    await page.goto(OPEN + "/sign-in?method=email");
     await page.getByRole("button", { name: "Sign in" }).click();
     await settle(page);
     await expectAccessible(page, "sign-in with errors");

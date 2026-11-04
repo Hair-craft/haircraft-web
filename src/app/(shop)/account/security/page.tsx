@@ -4,6 +4,7 @@ import { PasswordForm } from "@/components/account/account-forms";
 import { AccountCard, AccountHeading } from "@/components/account/account-parts";
 import { Button } from "@/components/ui/button";
 import { signOutEverywhereAction } from "@/lib/session/actions";
+import { getProfile } from "@/lib/session/api";
 import { getSession } from "@/lib/session/session";
 
 export const metadata: Metadata = {
@@ -15,16 +16,29 @@ export const metadata: Metadata = {
 export default async function SecurityPage() {
   const { accessToken } = await getSession();
   if (!accessToken) redirect("/sign-in?next=/account/security");
+  // Accounts made with a phone code or Google have no password to change.
+  const hasPassword = await getProfile(accessToken)
+    .then((profile) => profile.hasPassword)
+    .catch(() => true);
   return (
     <>
       <AccountHeading title="Password and security" />
       <div className="flex flex-col gap-6">
         <AccountCard>
           <h2 className="font-display text-2xl">Change password</h2>
-          <p className="mt-1 mb-6 text-sm text-muted">
-            You stay signed in here; any other phone or computer is signed out.
-          </p>
-          <PasswordForm />
+          {hasPassword ? (
+            <>
+              <p className="mt-1 mb-6 text-sm text-muted">
+                You stay signed in here; any other phone or computer is signed out.
+              </p>
+              <PasswordForm />
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-muted">
+              Your account doesn&apos;t use a password: you sign in with a code sent to your phone,
+              or with Google.
+            </p>
+          )}
         </AccountCard>
         <AccountCard>
           <h2 className="font-display text-2xl">Sign out on all devices</h2>

@@ -111,6 +111,8 @@ test.describe("writing a review", () => {
     await page.goto(`${OPEN}/product/${CLIP_INS}`);
     await main(page).getByRole("link", { name: "Write a review" }).click();
     await expect(page).toHaveURL(/\/sign-in\?next=/);
+    // Phone sign-in is offered first; this shopper uses email.
+    await page.getByRole("link", { name: "Use email and password" }).click();
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill("Silky2026!");
     await page.getByRole("button", { name: "Sign in" }).click();

@@ -4,7 +4,8 @@ import { ACCESS_COOKIE, decodeWho, WHO_COOKIE } from "./cookies";
 
 export interface SessionUser {
   firstName: string;
-  email: string;
+  /** null for a customer who signed up with a phone number and gave no email. */
+  email: string | null;
 }
 
 export interface Session {
@@ -26,5 +27,5 @@ export async function getSession(): Promise<Session> {
   const accessToken = store.get(ACCESS_COOKIE)?.value || null;
   if (!accessToken) return { user: null, accessToken: null };
   const who = decodeWho(store.get(WHO_COOKIE)?.value);
-  return { user: who ?? { firstName: "", email: "" }, accessToken };
+  return { user: who ?? { firstName: "", email: null }, accessToken };
 }

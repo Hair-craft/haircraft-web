@@ -136,7 +136,7 @@ export function ProductView({
             ) : null}
           </div>
           <div className="mt-2 flex items-start justify-between gap-4">
-            <h1 className="font-display text-3xl leading-tight font-semibold sm:text-[2rem]">
+            <h1 className="font-display text-3xl leading-tight font-semibold sm:text-[1.75rem]">
               {product.name}
             </h1>
             <HeartButton

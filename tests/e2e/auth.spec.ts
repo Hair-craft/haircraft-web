@@ -36,7 +36,7 @@ async function signIn(
   password = PASSWORD,
   expect_: "works" | "refused" = password === PASSWORD ? "works" : "refused",
 ) {
-  await page.goto(OPEN + "/sign-in");
+  await page.goto(OPEN + "/sign-in?method=email");
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
@@ -50,7 +50,7 @@ const cookie = async (context: BrowserContext, name: string) =>
 test.describe("register", () => {
   test("creates the account, signs in and shows the account page", async ({ page, context }) => {
     const email = freshEmail();
-    await page.goto(OPEN + "/register");
+    await page.goto(OPEN + "/register?method=email");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Create your account");
     await page.getByLabel("First name").fill("Priya");
     await page.getByLabel("Last name").fill("Sharma");
@@ -77,7 +77,7 @@ test.describe("register", () => {
     page,
     request,
   }) => {
-    await page.goto(OPEN + "/register");
+    await page.goto(OPEN + "/register?method=email");
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByText("Please check the details below.")).toBeVisible();
     await expect(page.getByText("Enter your first name.")).toBeVisible();
@@ -119,6 +119,8 @@ test.describe("sign in", () => {
     await expect(page).toHaveURL(
       `${OPEN}/sign-in?next=${encodeURIComponent("/account/orders?page=2")}`,
     );
+    // Phone sign-in is offered first; these shoppers use email.
+    await page.getByRole("link", { name: "Use email and password" }).click();
 
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill("Wrong-password-1");
@@ -132,7 +134,7 @@ test.describe("sign in", () => {
   });
 
   test("Show reveals the password; links to register and forgot password", async ({ page }) => {
-    await page.goto(OPEN + "/sign-in");
+    await page.goto(OPEN + "/sign-in?method=email");
     const password = page.getByRole("textbox", { name: "Password", exact: true });
     await password.fill("secret1");
     await expect(password).toHaveAttribute("type", "password");
@@ -180,7 +182,7 @@ test.describe("sign in", () => {
   test("signed-in shoppers skip the sign-in pages", async ({ page, request }) => {
     const { email } = await apiAccount(request);
     await signIn(page, email);
-    await page.goto(OPEN + "/sign-in");
+    await page.goto(OPEN + "/sign-in?method=email");
     await expect(page).toHaveURL(OPEN + "/account");
     await page.goto(OPEN + "/register?next=/shop");
     await expect(page).toHaveURL(OPEN + "/shop");
@@ -188,7 +190,9 @@ test.describe("sign in", () => {
 
   test("next can't send the shopper to another site", async ({ page, request }) => {
     const { email } = await apiAccount(request);
-    await page.goto(`${OPEN}/sign-in?next=${encodeURIComponent("//evil.example/steal")}`);
+    await page.goto(
+      `${OPEN}/sign-in?method=email&next=${encodeURIComponent("//evil.example/steal")}`,
+    );
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
@@ -295,7 +299,7 @@ test("without JavaScript, register and sign in still work", async ({ browser }) 
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   const email = freshEmail();
-  await page.goto(OPEN + "/register");
+  await page.goto(OPEN + "/register?method=email");
   await page.getByLabel("First name").fill("Lata");
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);

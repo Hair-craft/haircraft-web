@@ -98,7 +98,8 @@ export interface RazorpayCheckout {
   name: string;
   description: string;
   orderNumber: string;
-  prefill: { name: string; email: string; contact: string | null };
+  /** `email` is null for a customer who signed up with a phone number and gave no email. */
+  prefill: { name: string; email: string | null; contact: string | null };
   notes: Record<string, string>;
   timeoutSeconds: number;
   expiresAt: string;

@@ -3,8 +3,8 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { isApiError } from "@/lib/api/errors";
-import { forgetCart, mergeGuestCartInto } from "@/lib/cart/server";
-import { forgetWishlist, wishlistAfterSignIn } from "@/lib/wishlist/server";
+import { forgetCart } from "@/lib/cart/server";
+import { forgetWishlist } from "@/lib/wishlist/server";
 import type { FieldError } from "@/lib/api/types";
 import {
   clientFrom,
@@ -13,15 +13,8 @@ import {
   signOutEverywhereRequest,
   signOutRequest,
 } from "./api";
-import {
-  ACCESS_COOKIE,
-  clearedSessionCookies,
-  flashCookie,
-  REFRESH_COOKIE,
-  sessionCookies,
-  type CookieToSet,
-  type TokenPair,
-} from "./cookies";
+import { ACCESS_COOKIE, clearedSessionCookies, flashCookie, REFRESH_COOKIE } from "./cookies";
+import { setCookies, startSession } from "./start";
 import {
   authErrorMessage,
   DEFAULT_AFTER_SIGN_IN,
@@ -47,23 +40,6 @@ const text = (form: FormData, name: string, max = 254) =>
     .trim()
     .slice(0, max);
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-async function setCookies(list: CookieToSet[]) {
-  const store = await cookies();
-  for (const cookie of list) store.set(cookie.name, cookie.value, cookie.options);
-}
-
-/**
- * Signs the shopper in on this browser, and brings their guest bag along
- * (it joins the account's; a note says if anything couldn't be added), and
- * saves the product they pressed a heart on as a guest.
- */
-async function startSession(tokens: TokenPair) {
-  await setCookies(sessionCookies(tokens, production(), Date.now()));
-  const skipped = await mergeGuestCartInto(tokens.accessToken);
-  await wishlistAfterSignIn(tokens.accessToken);
-  if (skipped > 0) await setCookies([flashCookie("cart-skipped", production())]);
-}
 
 /** The API's field errors in plain sentences ("password must contain …" → "Password must contain …."). */
 function fieldMessages(errors: FieldError[]): Record<string, string> {

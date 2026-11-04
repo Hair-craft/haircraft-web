@@ -33,7 +33,7 @@ test.describe("checkout on a phone", () => {
       data: { variantId: defaultVariant(clip.variants)!.id, quantity: 1 },
     });
 
-    await page.goto(OPEN + "/sign-in");
+    await page.goto(OPEN + "/sign-in?method=email");
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill("Silky2026!");
     await page.getByRole("button", { name: "Sign in" }).tap();

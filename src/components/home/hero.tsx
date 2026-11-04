@@ -82,7 +82,7 @@ export function Hero() {
             </span>
             The Art of Bespoke Hair
           </p>
-          <h1 className="hc-rise hc-delay font-display text-[1.95rem] leading-[1.15] font-semibold tracking-tight text-deep sm:text-5xl md:text-[2rem] lg:text-[2.6rem] xl:text-5xl">
+          <h1 className="hc-rise hc-delay font-display text-[1.75rem] leading-[1.15] font-semibold tracking-tight text-deep sm:text-5xl md:text-[1.75rem] lg:text-[2.25rem] xl:text-5xl">
             Crafted for{" "}
             <em
               className={`${italic.className} hc-script text-[1.15em] leading-none text-gold-ink`}
@@ -99,7 +99,7 @@ export function Hero() {
           </p>
         </div>
       </div>
-      <div className="relative -mt-8 aspect-[6/5] w-full sm:-mt-24 sm:aspect-[16/8] md:absolute md:mt-0 md:inset-y-0 md:right-0 md:left-[max(0px,calc((100vw-80rem)/2))] md:aspect-auto md:w-auto">
+      <div className="relative -mt-8 aspect-[6/5] w-full sm:-mt-24 sm:aspect-[16/8] md:absolute md:inset-y-0 md:right-0 md:left-[max(0px,calc((100vw-80rem)/2))] md:mt-0 md:aspect-auto md:w-auto">
         <Image
           src={heroImage.src}
           alt={heroImage.alt}

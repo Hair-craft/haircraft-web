@@ -1,32 +1,11 @@
 import { business } from "@/content/business";
-import { returnRules } from "@/content/returns-rules";
 import { whatsappChatHref } from "@/lib/info/contact";
-
-/** What the shop page's banner lists beside the WhatsApp offer (the real policies). */
-const promises = [
-  {
-    title: "Exchange for defective items",
-    text: `Within ${returnRules.exchangeDays} days of delivery, if unused`,
-  },
-  { title: "Secure payments", text: "UPI, cards, net banking and wallets" },
-  {
-    title: "Quick dispatch",
-    text: `Packed and sent in ${returnRules.dispatchWorkingDays} working days`,
-  },
-];
 
 /**
  * The emerald WhatsApp advice banner (home page and shop pages), hidden
- * when the business has no WhatsApp. With `promises`, a short list of the
- * shop's real policies sits beside it.
+ * when the business has no WhatsApp. Kept short (owner, 2026-11-04).
  */
-export function ConsultBanner({
-  headingId,
-  promises: withPromises = false,
-}: {
-  headingId: string;
-  promises?: boolean;
-}) {
+export function ConsultBanner({ headingId }: { headingId: string }) {
   const href = whatsappChatHref(business);
   if (!href) return null;
   return (
@@ -47,10 +26,6 @@ export function ConsultBanner({
           <h2 id={headingId} className="font-display text-3xl font-semibold sm:text-4xl">
             Unsure about your shade or length?
           </h2>
-          <p className="text-base leading-relaxed text-white/85 sm:text-lg">
-            Send us a daylight photo of your hair on WhatsApp, and we&apos;ll help you choose the
-            shade, length and texture that suit you, before you buy.
-          </p>
           <a
             href={href}
             target="_blank"
@@ -61,24 +36,6 @@ export function ConsultBanner({
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
         </div>
-        {withPromises ? (
-          <ul className="flex w-full max-w-xs shrink-0 flex-col gap-4 rounded-2xl bg-white/10 p-6 backdrop-blur-md md:w-auto">
-            {promises.map((promise) => (
-              <li key={promise.title} className="flex items-center gap-3">
-                <span
-                  aria-hidden
-                  className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gold/20 text-gold-light"
-                >
-                  ✦
-                </span>
-                <span>
-                  <span className="block font-display font-semibold">{promise.title}</span>
-                  <span className="block text-sm text-white/75">{promise.text}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </div>
     </section>
   );

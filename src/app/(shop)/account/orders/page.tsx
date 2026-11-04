@@ -96,7 +96,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/account/o
             </span>
             Your orders
           </p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-[2.5rem] sm:leading-[3rem]">
+          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-[2.125rem] sm:leading-[2.625rem]">
             My orders
           </h1>
           <p className="text-sm leading-relaxed text-muted">
@@ -305,7 +305,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/account/o
           <div className="flex items-center justify-between">
             <h2
               id="all-orders"
-              className="flex items-center gap-3 font-display text-2xl font-medium sm:text-[2rem]"
+              className="flex items-center gap-3 font-display text-2xl font-medium sm:text-[1.75rem]"
             >
               <span aria-hidden className="size-3 rounded-full bg-deep" />
               {query.status
@@ -391,7 +391,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/account/o
           </span>
           <h2
             id="order-promises"
-            className="font-display text-2xl leading-tight font-semibold sm:text-[2rem] sm:leading-10"
+            className="font-display text-2xl leading-tight font-semibold sm:text-[1.75rem] sm:leading-10"
           >
             Our promise on every order
           </h2>

@@ -137,7 +137,11 @@ export function PaymentPanel({
       currency: c.currency,
       name: c.name,
       description: c.description,
-      prefill: { name: c.prefill.name, email: c.prefill.email, contact: c.prefill.contact ?? "" },
+      prefill: {
+        name: c.prefill.name,
+        email: c.prefill.email ?? "",
+        contact: c.prefill.contact ?? "",
+      },
       notes: c.notes,
       timeout: c.timeoutSeconds,
       theme: { color: "#0b291a" },

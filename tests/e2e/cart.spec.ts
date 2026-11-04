@@ -234,7 +234,7 @@ test.describe("bag and accounts", () => {
     await expect(drawer(page)).toHaveAccessibleName("Your bag (2)");
     expect(await cookie(context, "hc_cart")).toBeDefined();
 
-    await page.goto(OPEN + "/sign-in");
+    await page.goto(OPEN + "/sign-in?method=email");
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
@@ -245,7 +245,7 @@ test.describe("bag and accounts", () => {
     // The account's bag, from another browser.
     const other = await browser.newContext();
     const elsewhere = await other.newPage();
-    await elsewhere.goto(OPEN + "/sign-in");
+    await elsewhere.goto(OPEN + "/sign-in?method=email");
     await elsewhere.getByLabel("Email").fill(email);
     await elsewhere.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
     await elsewhere.getByRole("button", { name: "Sign in" }).click();

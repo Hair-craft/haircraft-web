@@ -4,7 +4,7 @@ import { OPEN } from "../../playwright.config";
 test.describe("sign-in pages on a phone", () => {
   test("register and sign in fit the screen and work by touch", async ({ page }) => {
     const email = `phone.${Date.now()}@example.com`;
-    await page.goto(OPEN + "/register");
+    await page.goto(OPEN + "/register?method=email");
     const screen = page.viewportSize()!.width;
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       screen,
