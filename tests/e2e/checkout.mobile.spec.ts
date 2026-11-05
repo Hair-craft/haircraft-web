@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { PublicProduct } from "@/lib/api/types";
 import { defaultVariant } from "@/lib/product/variants";
 import { API, OPEN } from "../../playwright.config";
+import { registerViaApi } from "./support/shop";
 
 test.describe("checkout on a phone", () => {
   test("the summary is folded to its total, and the page fits the screen", async ({
@@ -9,7 +10,7 @@ test.describe("checkout on a phone", () => {
     request,
   }) => {
     const email = `checkout.phone.${Date.now()}@example.com`;
-    const registered = await request.post(`${API}/auth/register`, {
+    const registered = await registerViaApi(request, {
       data: { email, password: "Silky2026!", firstName: "Divya" },
     });
     const token = (await registered.json()).data.accessToken;
@@ -33,7 +34,7 @@ test.describe("checkout on a phone", () => {
       data: { variantId: defaultVariant(clip.variants)!.id, quantity: 1 },
     });
 
-    await page.goto(OPEN + "/sign-in?method=email");
+    await page.goto(OPEN + "/sign-in");
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill("Silky2026!");
     await page.getByRole("button", { name: "Sign in" }).tap();

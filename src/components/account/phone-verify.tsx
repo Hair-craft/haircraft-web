@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { FormError, IndiaFlag } from "@/components/auth/auth-forms";
-import { CodeInput, TestCodeNotice, useCountdown } from "@/components/auth/phone-sign-in";
+import { CodeInput, TestCodeNotice, useCountdown } from "@/components/auth/code-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/fields";
 import { localMobile } from "@/lib/account/rules";

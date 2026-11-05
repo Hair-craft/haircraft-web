@@ -13,7 +13,7 @@ import { isApiError } from "@/lib/api/errors";
 import { panelState } from "@/lib/checkout/payment";
 import { settings } from "@/lib/env";
 import { buyAgainAction } from "@/lib/orders/actions";
-import { getOrderDetail, type OrderDetail } from "@/lib/orders/api";
+import { getOrderDetail, type OrderDetail, type OrderTracking } from "@/lib/orders/api";
 import { orderDate, orderDateTime, progressSteps, refundText } from "@/lib/orders/rules";
 import { getSession } from "@/lib/session/session";
 
@@ -95,6 +95,9 @@ export default async function OrderPage({ params }: PageProps<"/account/orders/[
                   </a>
                 ) : null}
               </div>
+            ) : null}
+            {order.tracking?.live && order.status === "SHIPPED" ? (
+              <LiveTracking tracking={order.tracking} />
             ) : null}
           </AccountCard>
         )}
@@ -208,5 +211,51 @@ export default async function OrderPage({ params }: PageProps<"/account/orders/[
         {order.canCancel ? <CancelOrder orderNumber={order.orderNumber} paid={paidOnline} /> : null}
       </div>
     </>
+  );
+}
+
+/**
+ * The courier's latest status, expected delivery and scans, followed through
+ * Shiprocket or directly with Delhivery and Blue Dart (owner, 2026-11-05). The
+ * page asks the courier again when the
+ * last update is over 30 minutes old.
+ */
+function LiveTracking({ tracking }: { tracking: OrderTracking }) {
+  const scans = tracking.scans ?? [];
+  return (
+    <section
+      aria-labelledby="live-tracking"
+      className="mt-4 rounded-2xl border border-line px-4 py-4"
+    >
+      <h3 id="live-tracking" className="sr-only">
+        Where your parcel is
+      </h3>
+      <p className="text-sm">
+        <strong>{tracking.status ?? "Waiting for the courier's first scan"}</strong>
+        {tracking.expectedDelivery ? (
+          <span className="text-muted"> · expected by {orderDate(tracking.expectedDelivery)}</span>
+        ) : null}
+      </p>
+      {scans.length > 0 ? (
+        <ol className="mt-3 flex flex-col gap-3 border-l border-line pl-4 text-sm">
+          {scans.slice(0, 8).map((scan) => (
+            <li key={scan.at + scan.activity} className="relative">
+              <span
+                aria-hidden
+                className="absolute top-1.5 -left-[1.3rem] size-2 rounded-full bg-gold first:bg-deep"
+              />
+              <span className="block">{scan.activity}</span>
+              <span className="block text-xs text-muted">
+                {orderDateTime(scan.at)}
+                {scan.location ? ` · ${scan.location}` : ""}
+              </span>
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      {tracking.checkedAt ? (
+        <p className="mt-3 text-xs text-muted">Last update {orderDateTime(tracking.checkedAt)}</p>
+      ) : null}
+    </section>
   );
 }

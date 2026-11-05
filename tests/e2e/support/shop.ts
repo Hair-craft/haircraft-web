@@ -58,7 +58,7 @@ export async function cancelUnpaidOrders(request: APIRequestContext) {
 /** A new customer with one address and the clip-ins in the bag. */
 export async function shopper(request: APIRequestContext, prefix: string) {
   const email = freshEmail(prefix);
-  const registered = await request.post(`${API}/auth/register`, {
+  const registered = await registerViaApi(request, {
     data: { email, password: PASSWORD, firstName: "Meera" },
   });
   expect(registered.status()).toBe(201);
@@ -168,9 +168,65 @@ export async function setProductStatus(
 }
 
 export async function signIn(page: Page, email: string) {
-  await page.goto(OPEN + "/sign-in?method=email");
+  await page.goto(OPEN + "/sign-in");
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL((url) => url.pathname !== "/sign-in");
+}
+
+let mobileCounter = 0;
+/** A fresh Indian mobile number for each registration (10 digits, starting 9). */
+export function freshMobile(): string {
+  mobileCounter = (mobileCounter + 1) % 1000;
+  const stamp = String(Date.now() % 1e6).padStart(6, "0");
+  return `9${stamp}${String(mobileCounter).padStart(3, "0")}`;
+}
+
+/** The code the test API's console driver "sent" to a number. */
+export async function lastSmsCode(request: APIRequestContext, phone: string): Promise<string> {
+  const response = await request.get(`${API}/dev/sms/last-code`, { params: { phone } });
+  expect(response.status(), "the console driver kept the code").toBe(200);
+  return (await response.json()).data.code;
+}
+
+/**
+ * Registers a customer through the API with a verified phone, as the shop's
+ * form does (owner, 2026-11-04): code → check → register. Same shape as
+ * `request.post(${API}/auth/register, { data })`; a fresh number unless given.
+ */
+export async function registerViaApi(
+  request: APIRequestContext,
+  options: { data: Record<string, unknown> },
+) {
+  const phone = String(options.data.phone ?? `+91${freshMobile()}`);
+  const sent = await request.post(`${API}/auth/phone/send`, { data: { phone } });
+  expect(sent.status(), "a code was sent").toBe(200);
+  const checked = await request.post(`${API}/auth/phone/check`, {
+    data: { phone, code: await lastSmsCode(request, phone) },
+  });
+  expect(checked.status(), "the code was accepted").toBe(200);
+  const { phoneToken } = (await checked.json()).data;
+  return request.post(`${API}/auth/register`, {
+    data: { ...options.data, phone, phoneToken },
+  });
+}
+
+/**
+ * On the create-account form: types a fresh number, presses Verify and enters
+ * the code the test API "sent" (the live shop never shows it). Returns the
+ * 10-digit number.
+ */
+export async function verifyPhoneOnForm(
+  page: Page,
+  request: APIRequestContext,
+  local = freshMobile(),
+): Promise<string> {
+  await page.getByLabel("Mobile number").fill(local);
+  await page.getByRole("button", { name: "Verify", exact: true }).click();
+  await expect(page.getByLabel("6-digit code")).toBeVisible();
+  await page.getByLabel("6-digit code").fill(await lastSmsCode(request, `+91${local}`));
+  await page.getByRole("button", { name: "Confirm code" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Verified" })).toBeVisible();
+  return local;
 }

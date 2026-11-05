@@ -161,6 +161,13 @@ test.describe("an order's page", () => {
       "https://www.delhivery.com/track/package/1234567890123",
     );
     await expect(page.getByText("Cancel this order")).toHaveCount(0);
+    // Delhivery is tracked live, directly (the test API's stand-in):
+    // the courier's status, expected date and scans (owner, 2026-11-05).
+    const live = page.getByRole("region", { name: "Where your parcel is" });
+    await expect(live).toContainText("In Transit");
+    await expect(live).toContainText("expected by");
+    await expect(live.getByRole("listitem")).toHaveCount(2);
+    await expect(live).toContainText("Shipment arrived at hub");
   });
 
   test("an unpaid order can be paid from its page", async ({ page, request }) => {

@@ -1,13 +1,14 @@
 import { expect, test } from "@playwright/test";
-import { API, OPEN } from "../../playwright.config";
+import { OPEN } from "../../playwright.config";
+import { registerViaApi } from "./support/shop";
 
 test.describe("account on a phone", () => {
   test("the menu is a row of tabs, and the pages fit the screen", async ({ page, request }) => {
     const email = `acct.phone.${Date.now()}@example.com`;
-    await request.post(`${API}/auth/register`, {
+    await registerViaApi(request, {
       data: { email, password: "Silky2026!", firstName: "Divya" },
     });
-    await page.goto(OPEN + "/sign-in?method=email");
+    await page.goto(OPEN + "/sign-in");
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill("Silky2026!");
     await page.getByRole("button", { name: "Sign in" }).tap();

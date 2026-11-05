@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
+import { registerViaApi } from "./support/shop";
 
 const PASSWORD = "Silky2026!";
 
@@ -9,7 +10,7 @@ const freshEmail = () => `acct.${Date.now()}.${++counter}@example.com`;
 /** A new customer, registered through the API; returns the email and an access token. */
 async function newCustomer(request: APIRequestContext, firstName = "Meera") {
   const email = freshEmail();
-  const response = await request.post(`${API}/auth/register`, {
+  const response = await registerViaApi(request, {
     data: { email, password: PASSWORD, firstName },
   });
   expect(response.status(), "the customer is registered").toBe(201);
@@ -17,7 +18,7 @@ async function newCustomer(request: APIRequestContext, firstName = "Meera") {
 }
 
 async function signIn(page: Page, email: string, password = PASSWORD) {
-  await page.goto(OPEN + "/sign-in?method=email");
+  await page.goto(OPEN + "/sign-in");
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
@@ -64,7 +65,6 @@ test.describe("the account area", () => {
       `${OPEN}/sign-in?next=${encodeURIComponent("/account/addresses")}`,
     );
     // Phone sign-in is offered first; these shoppers use email.
-    await page.getByRole("link", { name: "Use email and password" }).click();
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
@@ -93,7 +93,12 @@ test.describe("the account area", () => {
 });
 
 test.describe("profile", () => {
-  test("edit the name and mobile; the header greets the new name", async ({ page, request }) => {
+  // Every account has a verified mobile number now (owner, 2026-11-04): it is shown,
+  // and changed only with a code (Change), not typed over in this form.
+  test("edit the name; the verified mobile is shown; the header greets the new name", async ({
+    page,
+    request,
+  }) => {
     const { email } = await newCustomer(request);
     await signIn(page, email);
     await page.goto(OPEN + "/account/profile");
@@ -104,18 +109,16 @@ test.describe("profile", () => {
 
     await page.getByLabel("First name").fill("Meenakshi");
     await page.getByLabel("Last name").fill("Rao");
-    await page.getByLabel("Mobile number").fill("98765 43210");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByText("Your details are saved.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Account menu for Meenakshi" })).toBeVisible();
 
     await page.reload();
     await expect(page.getByLabel("Last name")).toHaveValue("Rao");
-    await expect(page.getByLabel("Mobile number")).toHaveValue("98765 43210");
+    await expect(main(page).getByText("Verified").first()).toBeVisible();
 
-    // Clearing the optional fields.
+    // Clearing the optional last name.
     await page.getByLabel("Last name").fill("");
-    await page.getByLabel("Mobile number").fill("");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByText("Your details are saved.")).toBeVisible();
     await page.goto(OPEN + "/account");
@@ -127,11 +130,9 @@ test.describe("profile", () => {
     await signIn(page, email);
     await page.goto(OPEN + "/account/profile");
     await page.getByLabel("First name").fill(" ");
-    await page.getByLabel("Mobile number").fill("12345");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByText("Please check the details below.")).toBeVisible();
     await expect(page.getByText("Enter your first name.")).toBeVisible();
-    await expect(page.getByLabel("Mobile number")).toHaveAttribute("aria-invalid", "true");
     await page.reload();
     await expect(page.getByLabel("First name")).toHaveValue("Meera");
   });

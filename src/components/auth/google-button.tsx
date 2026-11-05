@@ -122,7 +122,7 @@ export function GoogleButton({
       <FormError message={error} />
       {failedToLoad ? (
         <p className="text-center text-sm text-muted">
-          Google sign-in couldn&apos;t load here. Please use your phone number instead.
+          Google sign-in couldn&apos;t load here. Please use the form below instead.
         </p>
       ) : (
         <div

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AccountNav } from "@/components/account/account-nav";
+import { requirePhone } from "@/lib/session/phone-gate";
 
 /** Every account page: the account menu beside (or above) the page. proxy.ts admits only signed-in shoppers. */
-export default function AccountLayout({ children }: { children: ReactNode }) {
+export default async function AccountLayout({ children }: { children: ReactNode }) {
+  await requirePhone("/account");
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
       <nav aria-label="Breadcrumb" className="mb-6 text-xs font-semibold text-muted">

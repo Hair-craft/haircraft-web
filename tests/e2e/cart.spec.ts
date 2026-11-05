@@ -9,6 +9,7 @@ import type { PublicProduct, PublicVariant } from "@/lib/api/types";
 import { formatPrice } from "@/lib/format";
 import { defaultVariant } from "@/lib/product/variants";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
+import { registerViaApi } from "./support/shop";
 
 const PASSWORD = "Silky2026!";
 const ADMIN = { email: "admin@example.com", password: "HcDev@2026!" };
@@ -227,14 +228,14 @@ test.describe("bag and accounts", () => {
     request,
   }) => {
     const email = freshEmail();
-    await request.post(`${API}/auth/register`, {
+    await registerViaApi(request, {
       data: { email, password: PASSWORD, firstName: "Sana" },
     });
     await addFromProductPage(page, 2);
     await expect(drawer(page)).toHaveAccessibleName("Your bag (2)");
     expect(await cookie(context, "hc_cart")).toBeDefined();
 
-    await page.goto(OPEN + "/sign-in?method=email");
+    await page.goto(OPEN + "/sign-in");
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
@@ -245,7 +246,7 @@ test.describe("bag and accounts", () => {
     // The account's bag, from another browser.
     const other = await browser.newContext();
     const elsewhere = await other.newPage();
-    await elsewhere.goto(OPEN + "/sign-in?method=email");
+    await elsewhere.goto(OPEN + "/sign-in");
     await elsewhere.getByLabel("Email").fill(email);
     await elsewhere.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
     await elsewhere.getByRole("button", { name: "Sign in" }).click();

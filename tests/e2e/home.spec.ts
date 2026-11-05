@@ -94,7 +94,8 @@ test.describe("home page", () => {
       await page.goto(OPEN + "/");
       const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner-2.webp"]');
       const hero = (await page.locator("section.hc-shutter").boundingBox())!;
-      const box = (await photo.boundingBox())!;
+      // The photo's frame (the photo itself zooms in gently as the page opens).
+      const box = (await photo.locator("..").boundingBox())!;
       const words = (await page.getByRole("heading", { level: 1 }).boundingBox())!;
       expect(box.x + box.width).toBeGreaterThanOrEqual(viewport.width - 1);
       expect(words.x + words.width).toBeLessThan(viewport.width / 2);

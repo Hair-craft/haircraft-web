@@ -3,43 +3,52 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { isApiError } from "@/lib/api/errors";
+import { updateProfile } from "@/lib/account/api";
 import {
+  checkRegisterCodeRequest,
   clientFrom,
-  completePhoneSignupRequest,
+  forgotPasswordRequest,
   googleSignInRequest,
+  resetPasswordRequest,
   sendPhoneChangeCodeRequest,
+  sendRegisterCodeRequest,
   sendSignInCodeRequest,
   verifyPhoneChangeRequest,
   verifySignInCodeRequest,
 } from "./api";
-import { ACCESS_COOKIE, clearedSessionCookies } from "./cookies";
-import { DEFAULT_AFTER_SIGN_IN, indianMobile, phoneAuthMessage, safeNext, smsCode } from "./rules";
-import { setCookies, startSession } from "./start";
+import { ACCESS_COOKIE, clearedSessionCookies, type PhoneStatus } from "./cookies";
+import {
+  DEFAULT_AFTER_SIGN_IN,
+  indianMobile,
+  passwordProblem,
+  phoneAuthMessage,
+  safeNext,
+  smsCode,
+} from "./rules";
+import { afterSignIn, setCookies, setWhoPhone, startSession } from "./start";
 
 /**
- * Signing in and registering with a phone code, "Continue with Google", and
- * adding a verified number to the account (owner, 2026-11-04). Called from
- * the client step by step; each returns what the next step needs, or an
- * error in the shop's words. On a finished sign-in they redirect to `next`.
+ * The phone on the create-account form, a forgotten password, "Continue with
+ * Google", and adding the phone to the account (owner, 2026-11-04). Called
+ * from the client step by step; each returns what the next step needs, or an
+ * error in the shop's words. On a finished sign-in they redirect to `next`
+ * (through the "add your phone" step when the account needs one).
  */
 
 export type StepResult<T = object> =
-  | ({ ok: true } & T)
-  | { ok: false; error: string; field?: "phone" | "code" | "firstName" | "email" };
+  ({ ok: true } & T) | { ok: false; error: string; field?: Field };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+type Field = "phone" | "code" | "newPassword";
+
 const production = () => process.env.NODE_ENV === "production";
 const clip = (value: unknown, max: number) =>
   String(value ?? "")
     .trim()
     .slice(0, max);
-const afterSignIn = (next: unknown) =>
+const afterSignInPath = (next: unknown) =>
   safeNext(typeof next === "string" ? next.slice(0, 512) : null) ?? DEFAULT_AFTER_SIGN_IN;
 
-function failure(
-  error: unknown,
-  field?: "phone" | "code" | "firstName" | "email",
-): StepResult<never> {
+function failure(error: unknown, field?: Field): StepResult<never> {
   if (!isApiError(error)) throw error;
   return {
     ok: false,
@@ -64,99 +73,139 @@ const BAD_CODE: StepResult<never> = {
   field: "code",
 };
 
-// ── Sign in / register ────────────────────────────────────────────────
+type CodeStep = StepResult<{ phone: string; resendInSeconds: number; devCode: string | null }>;
 
-export async function sendSignInCodeAction(
-  rawPhone: string,
-): Promise<StepResult<{ phone: string; resendInSeconds: number; devCode: string | null }>> {
+function codeSent(phone: string, sent: { resendInSeconds: number; devCode?: string }): CodeStep {
+  return {
+    ok: true,
+    phone,
+    resendInSeconds: sent.resendInSeconds,
+    // The API includes it only in development; never shown on the live shop.
+    devCode: production() ? null : (sent.devCode ?? null),
+  };
+}
+
+// ── Sign in with a code (owner, 2026-11-05) ───────────────────────────
+
+export async function sendSignInCodeAction(rawPhone: string): Promise<CodeStep> {
   const phone = readPhone(rawPhone);
   if (!phone) return BAD_PHONE;
   try {
-    const sent = await sendSignInCodeRequest(phone, clientFrom(await headers()));
-    return {
-      ok: true,
-      phone,
-      resendInSeconds: sent.resendInSeconds,
-      // The API includes it only in development; never shown on the live shop.
-      devCode: production() ? null : (sent.devCode ?? null),
-    };
+    return codeSent(phone, await sendSignInCodeRequest(phone, clientFrom(await headers())));
   } catch (error) {
     return failure(error, "phone");
   }
 }
 
-/** A known number signs in (and redirects); a new one returns a sign-up token. */
+/**
+ * Signs in with the code (and moves on). A number no account has verified
+ * answers `noAccount`: accounts are made with the full form, email included.
+ */
 export async function verifySignInCodeAction(
   rawPhone: string,
   rawCode: string,
   next: string,
-): Promise<StepResult<{ signupToken: string }>> {
+): Promise<StepResult | { ok: false; noAccount: true; error: string }> {
   const phone = readPhone(rawPhone);
   if (!phone) return BAD_PHONE;
   const code = smsCode(clip(rawCode, 20));
   if (!code) return BAD_CODE;
-  let signupToken: string;
+  let destination: string;
   try {
     const result = await verifySignInCodeRequest(phone, code, clientFrom(await headers()));
-    if (result.session) {
-      await startSession(result.session);
-      signupToken = "";
-    } else if (result.signupToken) {
-      signupToken = result.signupToken;
-    } else {
-      return { ok: false, error: "Something went wrong. Please try again." };
-    }
+    if (!result.session)
+      return { ok: false, noAccount: true, error: "No account uses this number yet." };
+    await startSession(result.session);
+    destination = await afterSignIn(result.session, afterSignInPath(next));
   } catch (error) {
     return failure(error, "code");
   }
-  // Outside try: redirect works by throwing.
-  if (!signupToken) redirect(afterSignIn(next));
-  return { ok: true, signupToken };
+  redirect(destination);
 }
 
-export async function completePhoneSignupAction(input: {
-  signupToken: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+// ── Create account: verify the phone ──────────────────────────────────
+
+export async function sendRegisterCodeAction(rawPhone: string): Promise<CodeStep> {
+  const phone = readPhone(rawPhone);
+  if (!phone) return BAD_PHONE;
+  try {
+    return codeSent(phone, await sendRegisterCodeRequest(phone, clientFrom(await headers())));
+  } catch (error) {
+    return failure(error, "phone");
+  }
+}
+
+/** The token that proves the number goes with the registration form. */
+export async function checkRegisterCodeAction(
+  rawPhone: string,
+  rawCode: string,
+): Promise<StepResult<{ phone: string; phoneToken: string }>> {
+  const phone = readPhone(rawPhone);
+  if (!phone) return BAD_PHONE;
+  const code = smsCode(clip(rawCode, 20));
+  if (!code) return BAD_CODE;
+  try {
+    const { phoneToken } = await checkRegisterCodeRequest(phone, code, clientFrom(await headers()));
+    return { ok: true, phone, phoneToken };
+  } catch (error) {
+    return failure(error, "code");
+  }
+}
+
+// ── Forgotten password ────────────────────────────────────────────────
+
+export async function sendResetCodeAction(rawPhone: string): Promise<CodeStep> {
+  const phone = readPhone(rawPhone);
+  if (!phone) return BAD_PHONE;
+  try {
+    return codeSent(phone, await forgotPasswordRequest(phone, clientFrom(await headers())));
+  } catch (error) {
+    return failure(error, "phone");
+  }
+}
+
+/** Sets the new password and signs the customer in. */
+export async function resetPasswordAction(input: {
+  phone: string;
+  code: string;
+  newPassword: string;
   next: string;
 }): Promise<StepResult> {
-  const firstName = clip(input.firstName, 100);
-  const lastName = clip(input.lastName, 100);
-  const email = clip(input.email, 254).toLowerCase();
-  if (!firstName) return { ok: false, error: "Enter your first name.", field: "firstName" };
-  if (email && !EMAIL.test(email))
-    return { ok: false, error: "Enter a valid email address, or leave it empty.", field: "email" };
+  const phone = readPhone(input.phone);
+  if (!phone) return BAD_PHONE;
+  const code = smsCode(clip(input.code, 20));
+  if (!code) return BAD_CODE;
+  const newPassword = String(input.newPassword ?? "").slice(0, 1024);
+  const problem = passwordProblem(newPassword);
+  if (problem) return { ok: false, error: problem, field: "newPassword" };
+  let destination: string;
   try {
-    await startSession(
-      await completePhoneSignupRequest(
-        {
-          signupToken: clip(input.signupToken, 2048),
-          firstName,
-          ...(lastName ? { lastName } : {}),
-          ...(email ? { email } : {}),
-        },
-        clientFrom(await headers()),
-      ),
+    const tokens = await resetPasswordRequest(
+      { phone, code, newPassword },
+      clientFrom(await headers()),
     );
+    await startSession(tokens);
+    destination = await afterSignIn(tokens, afterSignInPath(input.next));
   } catch (error) {
-    const field =
-      isApiError(error) && error.code === "EMAIL_ALREADY_REGISTERED" ? "email" : undefined;
+    const field = isApiError(error) && error.code === "VALIDATION_FAILED" ? "newPassword" : "code";
     return failure(error, field);
   }
-  redirect(afterSignIn(input.next));
+  redirect(destination);
 }
 
 /** Google's button gives the page an ID token ("credential"); the API checks it. */
 export async function googleSignInAction(idToken: string, next: string): Promise<StepResult> {
   const token = clip(idToken, 4096);
   if (!token) return { ok: false, error: "Google sign-in didn't work. Please try again." };
+  let destination: string;
   try {
-    await startSession(await googleSignInRequest(token, clientFrom(await headers())));
+    const tokens = await googleSignInRequest(token, clientFrom(await headers()));
+    await startSession(tokens);
+    destination = await afterSignIn(tokens, afterSignInPath(next));
   } catch (error) {
     return failure(error);
   }
-  redirect(afterSignIn(next));
+  redirect(destination);
 }
 
 // ── Add or change the number on the account ──────────────────────────
@@ -204,9 +253,35 @@ export async function verifyPhoneChangeAction(
   if (!token) return sessionEnded("/account/profile");
   try {
     const profile = await verifyPhoneChangeRequest(token, phone, code);
+    await setWhoPhone("verified");
     return { ok: true, phone: profile.phone ?? phone };
   } catch (error) {
     if (isApiError(error) && error.status === 401) return sessionEnded("/account/profile");
     return failure(error, "code");
   }
+}
+
+/**
+ * While SMS codes are off: saves the phone on the account, unverified, for
+ * the "add your phone" step (owner, 2026-11-04).
+ */
+export async function savePhoneAction(rawPhone: string): Promise<StepResult<{ phone: string }>> {
+  const phone = readPhone(rawPhone);
+  if (!phone) return BAD_PHONE;
+  const token = await accessToken();
+  if (!token) return sessionEnded("/add-phone");
+  try {
+    await updateProfile(token, { phone });
+    await setWhoPhone("unverified");
+    return { ok: true, phone };
+  } catch (error) {
+    if (isApiError(error) && error.status === 401) return sessionEnded("/add-phone");
+    return failure(error, "phone");
+  }
+}
+
+/** The "add your phone" step found the account already has one: note it here and go on. */
+export async function notePhoneAddedAction(status: PhoneStatus, next: string): Promise<void> {
+  if (status === "verified" || status === "unverified") await setWhoPhone(status);
+  redirect(afterSignInPath(next));
 }

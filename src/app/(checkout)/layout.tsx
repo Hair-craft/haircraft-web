@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { LockIcon } from "@/components/ui/icons";
+import { requirePhone } from "@/lib/session/phone-gate";
 import { getSession } from "@/lib/session/session";
 
 /**
@@ -10,6 +11,8 @@ import { getSession } from "@/lib/session/session";
  */
 export default async function CheckoutLayout({ children }: LayoutProps<"/">) {
   await getSession();
+  // Orders need a mobile number on the account (owner, 2026-11-04).
+  await requirePhone("/checkout");
   return (
     <>
       <a

@@ -1,16 +1,18 @@
 import { expect, test } from "@playwright/test";
 import { OPEN } from "../../playwright.config";
+import { verifyPhoneOnForm } from "./support/shop";
 
 test.describe("sign-in pages on a phone", () => {
-  test("register and sign in fit the screen and work by touch", async ({ page }) => {
+  test("register and sign in fit the screen and work by touch", async ({ page, request }) => {
     const email = `phone.${Date.now()}@example.com`;
-    await page.goto(OPEN + "/register?method=email");
+    await page.goto(OPEN + "/register");
     const screen = page.viewportSize()!.width;
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       screen,
     );
     await page.getByLabel("First name").fill("Divya");
     await page.getByLabel("Email").fill(email);
+    await verifyPhoneOnForm(page, request);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill("Silky2026!");
     await page.getByRole("button", { name: "Create account" }).tap();
     await expect(page).toHaveURL(OPEN + "/account");

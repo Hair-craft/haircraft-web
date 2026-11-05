@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SignInForm } from "@/components/auth/auth-forms";
-import { SignInOptions } from "@/components/auth/sign-in-options";
+import { GoogleOr } from "@/components/auth/google-or";
+import { SignInChoice } from "@/components/auth/sign-in-choice";
 import { getSignInMethods, type SignInMethods } from "@/lib/session/api";
 import { safeNext } from "@/lib/session/rules";
 
@@ -14,8 +14,8 @@ const notices: Record<string, string> = {
   ended: "Your session has ended. Please sign in again.",
 };
 
-/** Which ways in are on; if the API can't say, email and password (always there). */
-async function methodsOrEmailOnly(): Promise<SignInMethods> {
+/** Which ways in are on; if the API can't say, the password form alone. */
+async function methods(): Promise<SignInMethods> {
   try {
     return await getSignInMethods();
   } catch {
@@ -24,20 +24,15 @@ async function methodsOrEmailOnly(): Promise<SignInMethods> {
 }
 
 /**
- * `/sign-in`: just the form, with a heading and one line (owner, 2026-11-04:
- * "make it minimal"). Phone code first, then Google, then email and password
- * (`?method=email`), as the owner chose on 2026-11-04.
+ * `/sign-in` (owner, 2026-11-04/05): "Continue with Google", or a toggle
+ * between the email or phone number with the password, and the phone number
+ * with a texted code. A heading and one line, as kept minimal.
  */
 export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
   const query = await searchParams;
   const next = safeNext(typeof query.next === "string" ? query.next : null);
   const notice = typeof query.notice === "string" ? (notices[query.notice] ?? null) : null;
-  const methods = await methodsOrEmailOnly();
-  const others = methods.phone || Boolean(methods.googleClientId);
-  const withEmail = query.method === "email" || !others;
-  const keep = next ? `next=${encodeURIComponent(next)}` : "";
-  const emailHref = `/sign-in?method=email${keep ? `&${keep}` : ""}`;
-  const otherHref = `/sign-in${keep ? `?${keep}` : ""}`;
+  const on = await methods();
 
   return (
     <div className="mx-auto w-full max-w-md px-4 pt-10 pb-20 sm:pt-14">
@@ -53,30 +48,8 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
           <p className="text-sm text-muted">Sign in to see your orders and wishlist.</p>
         </div>
 
-        {withEmail ? (
-          <>
-            <SignInForm next={next} notice={notice} />
-            {others ? (
-              <p className="mt-6 text-center text-sm">
-                <Link
-                  href={otherHref}
-                  className="font-semibold text-deep underline-offset-4 transition-colors hover:text-gold-ink hover:underline"
-                >
-                  {methods.phone ? "Use your phone number instead" : "Continue with Google instead"}
-                </Link>
-              </p>
-            ) : null}
-          </>
-        ) : (
-          <>
-            {notice ? (
-              <p role="status" className="mb-5 rounded-2xl bg-mint-deep px-4 py-3 text-sm">
-                {notice}
-              </p>
-            ) : null}
-            <SignInOptions methods={methods} next={next} mode="sign-in" emailHref={emailHref} />
-          </>
-        )}
+        <GoogleOr clientId={on.googleClientId} next={next} mode="sign-in" />
+        <SignInChoice next={next} notice={notice} smsOn={on.phone} />
 
         <p className="mt-8 text-center text-sm text-muted">
           New to HairCraft?{" "}

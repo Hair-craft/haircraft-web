@@ -21,7 +21,7 @@ export interface OrderSummary {
 export interface OrderDetail extends PlacedOrder {
   /** `productId` and `variantId` are null once the product has been deleted (the line keeps its own copy). */
   items: (PlacedOrder["items"][number] & { variantId: string | null; productId: string | null })[];
-  tracking: { carrier: string; trackingNumber: string; trackingUrl: string | null } | null;
+  tracking: OrderTracking | null;
   shippedAt: string | null;
   deliveredAt: string | null;
   cancelledAt: string | null;
@@ -56,4 +56,18 @@ export function cancelOrder(
     token,
     body: { reason },
   });
+}
+
+/** The courier details; `live`: followed live, through Shiprocket or directly with Delhivery or Blue Dart (owner, 2026-11-05). */
+export interface OrderTracking {
+  carrier: string;
+  trackingNumber: string;
+  trackingUrl: string | null;
+  /** Older API answers leave these out. */
+  live?: boolean;
+  status?: string | null;
+  expectedDelivery?: string | null;
+  checkedAt?: string | null;
+  /** Newest first. */
+  scans?: { at: string; status: string; activity: string; location: string | null }[];
 }

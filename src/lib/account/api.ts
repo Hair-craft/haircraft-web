@@ -32,7 +32,7 @@ export function deleteAddress(token: string, id: string): Promise<unknown> {
 /** Changes the name and phone (B9); returns the profile. */
 export function updateProfile(
   token: string,
-  input: { firstName: string; lastName: string | null; phone?: string | null },
+  input: { firstName?: string; lastName?: string | null; phone?: string | null },
 ): Promise<Profile> {
   return apiFetch<Profile>("/profile", { method: "PATCH", token, body: input });
 }

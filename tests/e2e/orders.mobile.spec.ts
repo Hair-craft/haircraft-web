@@ -9,7 +9,7 @@ test.describe("my orders on a phone", () => {
   }) => {
     const { email, token, addressId } = await shopper(request, "orders.phone");
     const order = await placeOrderByApi(request, token, addressId, { skipAdd: true });
-    await page.goto(OPEN + "/sign-in?method=email");
+    await page.goto(OPEN + "/sign-in");
     await signIn(page, email);
     const width = page.viewportSize()!.width;
     for (const path of ["/account/orders", `/account/orders/${order.orderNumber}`]) {

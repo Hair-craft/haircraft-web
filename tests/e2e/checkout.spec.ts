@@ -3,6 +3,7 @@ import type { PublicProduct } from "@/lib/api/types";
 import { formatPrice } from "@/lib/format";
 import { defaultVariant } from "@/lib/product/variants";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
+import { registerViaApi } from "./support/shop";
 
 const PASSWORD = "Silky2026!";
 const ADMIN = { email: "admin@example.com", password: "HcDev@2026!" };
@@ -58,7 +59,7 @@ async function shopper(
   options: { addresses?: object[]; slug?: string; quantity?: number } = {},
 ) {
   const email = freshEmail();
-  const registered = await request.post(`${API}/auth/register`, {
+  const registered = await registerViaApi(request, {
     data: { email, password: PASSWORD, firstName: "Meera" },
   });
   expect(registered.status()).toBe(201);
@@ -77,7 +78,7 @@ async function shopper(
 }
 
 async function signIn(page: Page, email: string) {
-  await page.goto(OPEN + "/sign-in?method=email");
+  await page.goto(OPEN + "/sign-in");
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
@@ -130,7 +131,7 @@ test.beforeAll(async ({ request }) => {
 test.describe("opening checkout", () => {
   test("a guest signs in first and comes back with the bag", async ({ page, request }) => {
     const email = freshEmail();
-    await request.post(`${API}/auth/register`, {
+    await registerViaApi(request, {
       data: { email, password: PASSWORD, firstName: "Asha" },
     });
     await page.goto(`${OPEN}/product/${CLIP_INS}`);
@@ -139,7 +140,6 @@ test.describe("opening checkout", () => {
     await drawer.getByRole("link", { name: /^Secure checkout/ }).click();
     await expect(page).toHaveURL(`${OPEN}/sign-in?next=${encodeURIComponent("/checkout")}`);
     // Phone sign-in is offered first; these shoppers use email.
-    await page.getByRole("link", { name: "Use email and password" }).click();
     await page.getByLabel("Email").fill(email);
     await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
@@ -154,7 +154,7 @@ test.describe("opening checkout", () => {
 
   test("an empty bag goes back to the bag page", async ({ page, request }) => {
     const email = freshEmail();
-    await request.post(`${API}/auth/register`, {
+    await registerViaApi(request, {
       data: { email, password: PASSWORD, firstName: "Asha" },
     });
     await signIn(page, email);

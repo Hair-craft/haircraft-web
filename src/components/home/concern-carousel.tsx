@@ -9,24 +9,35 @@ export interface CarouselItem {
   node: ReactNode;
 }
 
-/** How long each card stays before the row moves on, on desktop. */
+/** How long each card stays before the row moves on. */
 const AUTO_SLIDE_MS = 4500;
+/** The preview when the row first comes into view: out, then back to the first card. */
+const PREVIEW_OUT_MS = 1200;
+const PREVIEW_BACK_MS = 800;
+/** After the preview, the arrows and the auto-slide arrive this much later. */
+const READY_DELAY_MS = 750;
+/** A finger lifted: auto-sliding waits this long before it goes on. */
+const TOUCH_REST_MS = 4000;
+
+type Phase = "waiting" | "preview" | "ready";
+
+const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
 /**
- * The concern cards as a sideways slider (owner, 2026-11-04): it moves on by
- * itself on desktop, and can be slid by hand everywhere (swipe, trackpad, the
- * arrows). It loops: the cards repeat on both sides, and once a slide settles
- * the row jumps by one whole set, which looks the same, so it never runs out.
+ * The concern cards as a sideways slider, the same on phones and desktop
+ * (owner, 2026-11-05).
  *
- * Only the middle set is real for screen readers and the keyboard; the repeats
- * are hidden and inert. Auto-sliding stops while the row is hovered, focused
- * or touched, and while it is off screen or the tab is hidden; it never starts
- * for people who prefer reduced motion. No pause button (owner, 2026-11-04).
+ * When the row first comes into view, the cards glide on for about two
+ * seconds as a preview and come back to the first card; 0.75 s later the
+ * arrows appear and the row starts moving on by itself. It can be slid by
+ * hand at any time (swipe, trackpad, arrows), which also ends the preview.
  *
- * On phones (owner, 2026-11-04) the row is pinned instead: it stays on screen
- * while scrolling down slides the cards sideways, once each (no loop), and
- * the page moves on after the last card. Not with reduced motion, where the
- * row is the normal swipeable slider.
+ * It loops: the cards repeat on both sides, and once a slide settles the row
+ * jumps by one whole set, which looks the same, so it never runs out. Only
+ * the middle set is real for screen readers and the keyboard; the repeats are
+ * hidden and inert. Auto-sliding stops while the row is hovered, focused or
+ * touched, and while it is off screen or the tab is hidden. With reduced
+ * motion there is no preview and no auto-slide: the arrows are there at once.
  */
 export function ConcernCarousel({
   items,
@@ -35,92 +46,23 @@ export function ConcernCarousel({
 }: {
   items: CarouselItem[];
   label: string;
-  /** The section's heading, shown above the row (and pinned with it on phones). */
+  /** The section's heading, shown above the row. */
   header?: ReactNode;
 }) {
   const list = useRef<HTMLUListElement>(null);
-  const outer = useRef<HTMLDivElement>(null);
-  const pin = useRef<HTMLDivElement>(null);
   const n = items.length;
-
-  const [pinned, setPinned] = useState(false);
-  /** While pinned: the space the pinned row takes up, and where it sticks. */
-  const [pinLayout, setPinLayout] = useState<{ height: number; top: number } | null>(null);
-
-  const loops = n >= 2 && !pinned;
+  const loops = n >= 2;
   // Enough repeats that the row can always slide a card further either way.
   const copies = loops ? Math.max(3, Math.ceil(8 / n) + 2) : 1;
   const realCopy = loops ? 1 : 0;
 
+  const [phase, setPhase] = useState<Phase>("waiting");
   const [held, setHeld] = useState(false);
-  const [autoAllowed, setAutoAllowed] = useState(false);
+  const [motionOk, setMotionOk] = useState(false);
   const [onScreen, setOnScreen] = useState(false);
-
-  // Pinned on phones only, and never with reduced motion.
-  useEffect(() => {
-    const query = window.matchMedia(
-      "(max-width: 639px) and (prefers-reduced-motion: no-preference)",
-    );
-    const update = () => setPinned(query.matches && n >= 2);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, [n]);
-
-  // While pinned, the page's scroll position drives the row's: the wrapper is as
-  // tall as the row plus the row's sideways travel, and the row sticks inside it.
-  useEffect(() => {
-    const el = list.current;
-    const box = pin.current;
-    const wrap = outer.current;
-    if (!pinned || !el || !box || !wrap) {
-      setPinLayout(null);
-      return;
-    }
-    let distance = 0;
-    let top = 0;
-    let frame = 0;
-    const sync = () => {
-      frame = 0;
-      const travelled = top - wrap.getBoundingClientRect().top;
-      el.scrollLeft = distance > 0 ? Math.min(distance, Math.max(0, travelled)) : 0;
-    };
-    const layout = () => {
-      distance = Math.max(0, el.scrollWidth - el.clientWidth);
-      const header = document.querySelector("header")?.offsetHeight ?? 0;
-      // Centred in the space below the sticky site header.
-      top = header + Math.max(8, (window.innerHeight - header - box.offsetHeight) / 2);
-      setPinLayout({ height: box.offsetHeight + distance, top });
-      sync();
-    };
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(sync);
-    };
-    // A card focused from the keyboard: scroll the page to where it is in view.
-    const onFocusIn = (event: FocusEvent) => {
-      const card = (event.target as HTMLElement).closest("li");
-      if (!card) return;
-      const target = Math.min(distance, Math.max(0, card.offsetLeft - 16));
-      window.scrollTo({
-        top: window.scrollY + wrap.getBoundingClientRect().top - top + target,
-        behavior: "instant",
-      });
-    };
-    layout();
-    const resize = new ResizeObserver(layout);
-    resize.observe(el);
-    resize.observe(box);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", layout);
-    el.addEventListener("focusin", onFocusIn);
-    return () => {
-      cancelAnimationFrame(frame);
-      resize.disconnect();
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", layout);
-      el.removeEventListener("focusin", onFocusIn);
-    };
-  }, [pinned]);
+  const preview = useRef<{ frame: number; cancel: () => void } | null>(null);
+  const touchRest = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const readyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   /** Width of one card plus the gap, and of one whole set. */
   const measure = useCallback(() => {
@@ -136,7 +78,7 @@ export function ConcernCarousel({
   const recentre = useCallback(() => {
     const el = list.current;
     const size = measure();
-    if (!el || !size || !loops || size.set <= 0) return;
+    if (!el || !size || !loops || size.set <= 0 || preview.current) return;
     const { set } = size;
     if (el.scrollLeft < set - size.step / 2)
       el.scrollTo({ left: el.scrollLeft + set, behavior: "instant" });
@@ -149,6 +91,7 @@ export function ConcernCarousel({
       const el = list.current;
       const size = measure();
       if (!el || !size) return;
+      preview.current?.cancel();
       recentre();
       const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       el.scrollBy({ left: direction * size.step, behavior: smooth ? "smooth" : "instant" });
@@ -182,12 +125,10 @@ export function ConcernCarousel({
     };
   }, [loops, measure, recentre]);
 
-  // Auto-sliding: desktop only, and never with reduced motion.
+  // Motion only for people who haven't asked for less.
   useEffect(() => {
-    const query = window.matchMedia(
-      "(min-width: 1024px) and (prefers-reduced-motion: no-preference)",
-    );
-    const update = () => setAutoAllowed(query.matches);
+    const query = window.matchMedia("(prefers-reduced-motion: no-preference)");
+    const update = () => setMotionOk(query.matches);
     update();
     query.addEventListener("change", update);
     return () => query.removeEventListener("change", update);
@@ -203,7 +144,67 @@ export function ConcernCarousel({
     return () => observer.disconnect();
   }, []);
 
-  const running = loops && autoAllowed && onScreen && !held;
+  // The preview, once, the first time the row is in view: glide on, then back to the first card.
+  useEffect(() => {
+    if (phase !== "waiting" || !onScreen) return;
+    const el = list.current;
+    const size = measure();
+    if (!loops || !motionOk || !el || !size) {
+      setPhase("ready");
+      return;
+    }
+    const start = size.set;
+    const distance = Math.min(size.set - size.step / 2, size.step * 2);
+    const began = performance.now();
+    // No snapping while the row is moved frame by frame.
+    el.style.scrollSnapType = "none";
+    const finish = () => {
+      if (!preview.current) return;
+      cancelAnimationFrame(preview.current.frame);
+      preview.current = null;
+      el.style.scrollSnapType = "";
+      readyTimer.current = setTimeout(() => setPhase("ready"), READY_DELAY_MS);
+    };
+    const tick = (now: number) => {
+      const t = now - began;
+      if (t < PREVIEW_OUT_MS) {
+        el.scrollLeft = start + distance * easeInOut(t / PREVIEW_OUT_MS);
+      } else if (t < PREVIEW_OUT_MS + PREVIEW_BACK_MS) {
+        el.scrollLeft = start + distance * (1 - easeInOut((t - PREVIEW_OUT_MS) / PREVIEW_BACK_MS));
+      } else {
+        el.scrollLeft = start;
+        return finish();
+      }
+      if (preview.current) preview.current.frame = requestAnimationFrame(tick);
+    };
+    preview.current = { frame: requestAnimationFrame(tick), cancel: finish };
+    setPhase("preview");
+    // A swipe, a wheel or a press ends the preview where it is.
+    const stop = () => preview.current?.cancel();
+    el.addEventListener("pointerdown", stop);
+    el.addEventListener("wheel", stop, { passive: true });
+    el.addEventListener("touchstart", stop, { passive: true });
+    return () => {
+      el.removeEventListener("pointerdown", stop);
+      el.removeEventListener("wheel", stop);
+      el.removeEventListener("touchstart", stop);
+    };
+    // Runs again only to start; the preview finishes on its own.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onScreen, motionOk]);
+
+  // Cleanup when leaving the page mid-preview.
+  useEffect(
+    () => () => {
+      if (preview.current) cancelAnimationFrame(preview.current.frame);
+      clearTimeout(touchRest.current);
+      clearTimeout(readyTimer.current);
+    },
+    [],
+  );
+
+  const ready = phase === "ready";
+  const running = loops && ready && motionOk && onScreen && !held;
   useEffect(() => {
     if (!running) return;
     const timer = setInterval(() => {
@@ -212,76 +213,75 @@ export function ConcernCarousel({
     return () => clearInterval(timer);
   }, [running, slide]);
 
-  const arrow =
-    "absolute top-[38%] z-10 hidden size-11 -translate-y-1/2 place-items-center rounded-full bg-white/95 text-deep shadow-md transition-[transform,background-color] hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep motion-safe:hover:scale-105 sm:grid";
+  const arrow = cx(
+    "absolute top-[38%] z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/95 text-deep shadow-md transition-[opacity,transform,background-color] duration-500 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep motion-safe:hover:scale-105 sm:size-11",
+    ready ? "opacity-100" : "pointer-events-none opacity-0",
+  );
 
   return (
-    <div ref={outer} style={pinLayout ? { height: pinLayout.height } : undefined}>
+    <div>
+      {header}
       <div
-        ref={pin}
-        className={cx(pinned && "sticky")}
-        style={pinLayout ? { top: pinLayout.top } : undefined}
+        className="relative"
+        onMouseEnter={() => setHeld(true)}
+        onMouseLeave={() => setHeld(false)}
+        onFocus={() => setHeld(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHeld(false);
+        }}
+        onTouchStart={() => {
+          clearTimeout(touchRest.current);
+          setHeld(true);
+        }}
+        onTouchEnd={() => {
+          clearTimeout(touchRest.current);
+          touchRest.current = setTimeout(() => setHeld(false), TOUCH_REST_MS);
+        }}
       >
-        {header}
-        <div
-          className="relative"
-          onMouseEnter={() => setHeld(true)}
-          onMouseLeave={() => setHeld(false)}
-          onFocus={() => setHeld(true)}
-          onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHeld(false);
-          }}
-          onTouchStart={() => setHeld(true)}
+        <ul
+          ref={list}
+          aria-label={label}
+          data-reveal-row
+          className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 [scrollbar-width:none] gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain px-4 pt-2 pb-5 sm:mx-0 sm:scroll-px-0 sm:gap-6 sm:px-0 [&::-webkit-scrollbar]:hidden"
         >
-          <ul
-            ref={list}
-            aria-label={label}
-            data-reveal-row
-            className={cx(
-              "relative -mx-4 flex scroll-px-4 [scrollbar-width:none] gap-4 overflow-y-hidden px-4 pt-2 pb-5 sm:mx-0 sm:scroll-px-0 sm:gap-6 sm:px-0 [&::-webkit-scrollbar]:hidden",
-              // Pinned: the page's scroll moves the row, so no swiping or snapping of its own.
-              pinned
-                ? "overflow-x-hidden"
-                : "snap-x snap-mandatory overflow-x-auto overscroll-x-contain",
-            )}
-          >
-            {Array.from({ length: copies }, (_, copy) =>
-              items.map((item) => {
-                const real = copy === realCopy;
-                return (
-                  <li
-                    key={`${copy}-${item.key}`}
-                    aria-hidden={real ? undefined : true}
-                    inert={!real}
-                    className="w-[78%] shrink-0 snap-start sm:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-3rem)/3)]"
-                  >
-                    {item.node}
-                  </li>
-                );
-              }),
-            )}
-          </ul>
-          {loops ? (
-            <>
-              <button
-                type="button"
-                aria-label="Previous concerns"
-                onClick={() => slide(-1)}
-                className={cx(arrow, "left-2 lg:-left-5")}
-              >
-                <ChevronRightIcon width={20} height={20} className="rotate-180" />
-              </button>
-              <button
-                type="button"
-                aria-label="Next concerns"
-                onClick={() => slide(1)}
-                className={cx(arrow, "right-2 lg:-right-5")}
-              >
-                <ChevronRightIcon width={20} height={20} />
-              </button>
-            </>
-          ) : null}
-        </div>
+          {Array.from({ length: copies }, (_, copy) =>
+            items.map((item) => {
+              const real = copy === realCopy;
+              return (
+                <li
+                  key={`${copy}-${item.key}`}
+                  aria-hidden={real ? undefined : true}
+                  inert={!real}
+                  className="w-[78%] shrink-0 snap-start sm:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-3rem)/3)]"
+                >
+                  {item.node}
+                </li>
+              );
+            }),
+          )}
+        </ul>
+        {loops ? (
+          <>
+            <button
+              type="button"
+              aria-label="Previous concerns"
+              tabIndex={ready ? undefined : -1}
+              onClick={() => slide(-1)}
+              className={cx(arrow, "left-2 lg:-left-5")}
+            >
+              <ChevronRightIcon width={20} height={20} className="rotate-180" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next concerns"
+              tabIndex={ready ? undefined : -1}
+              onClick={() => slide(1)}
+              className={cx(arrow, "right-2 lg:-right-5")}
+            >
+              <ChevronRightIcon width={20} height={20} />
+            </button>
+          </>
+        ) : null}
       </div>
     </div>
   );

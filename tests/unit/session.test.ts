@@ -78,7 +78,11 @@ describe("cookies", () => {
       });
     expect(cookies[0].options.maxAge).toBe(870);
     expect(sessionCookies(tokens, false, now)[0].options.secure).toBe(false);
-    expect(decodeWho(cookies[2].value)).toEqual({ firstName: "Priya", email: "priya@example.com" });
+    expect(decodeWho(cookies[2].value)).toEqual({
+      firstName: "Priya",
+      email: "priya@example.com",
+      phone: "none",
+    });
   });
 
   it("clears them all; the flash note is readable by the page", () => {
@@ -89,7 +93,7 @@ describe("cookies", () => {
   });
 
   it("reads the display cookie safely, whatever it contains", () => {
-    expect(decodeWho(encodeWho({ firstName: "Ā<b>", email: "a@b.in" }))).toEqual({
+    expect(decodeWho(encodeWho({ firstName: "Ā<b>", email: "a@b.in" }))).toMatchObject({
       firstName: "Ā<b>",
       email: "a@b.in",
     });

@@ -14,7 +14,7 @@ import {
   signOutRequest,
 } from "./api";
 import { ACCESS_COOKIE, clearedSessionCookies, flashCookie, REFRESH_COOKIE } from "./cookies";
-import { setCookies, startSession } from "./start";
+import { afterSignIn, setCookies, smsCodesOn, startSession } from "./start";
 import {
   authErrorMessage,
   DEFAULT_AFTER_SIGN_IN,
@@ -56,19 +56,24 @@ export async function signInAction(
   _previous: AuthFormState,
   form: FormData,
 ): Promise<AuthFormState> {
-  const email = text(form, "email");
+  // The email or the phone number (owner, 2026-11-04).
+  const login = text(form, "login");
   const password = String(form.get("password") ?? "").slice(0, 1024);
   const next = safeNext(text(form, "next", 512)) ?? DEFAULT_AFTER_SIGN_IN;
-  const values = { email };
+  const values = { login };
 
   const fields: Record<string, string> = {};
-  if (!EMAIL.test(email)) fields.email = "Enter your email address.";
+  if (login.includes("@") ? !EMAIL.test(login) : !indianMobile(login))
+    fields.login = "Enter your email address or 10-digit mobile number.";
   if (!password) fields.password = "Enter your password.";
   if (Object.keys(fields).length > 0)
     return { error: "Please check the details below.", fields, values };
 
+  let destination: string;
   try {
-    await startSession(await signInRequest(email, password, clientFrom(await headers())));
+    const tokens = await signInRequest(login, password, clientFrom(await headers()));
+    await startSession(tokens);
+    destination = await afterSignIn(tokens, next);
   } catch (error) {
     if (!isApiError(error)) throw error;
     return {
@@ -77,7 +82,7 @@ export async function signInAction(
       values,
     };
   }
-  redirect(next);
+  redirect(destination);
 }
 
 export async function registerAction(
@@ -88,6 +93,7 @@ export async function registerAction(
   const lastName = text(form, "lastName", 100);
   const email = text(form, "email");
   const phoneText = text(form, "phone", 30);
+  const phoneToken = text(form, "phoneToken", 2000);
   const password = String(form.get("password") ?? "").slice(0, 1024);
   const next = safeNext(text(form, "next", 512)) ?? DEFAULT_AFTER_SIGN_IN;
   const values = { firstName, lastName, email, phone: phoneText };
@@ -95,27 +101,31 @@ export async function registerAction(
   const fields: Record<string, string> = {};
   if (!firstName) fields.firstName = "Enter your first name.";
   if (!EMAIL.test(email)) fields.email = "Enter a valid email address.";
+  // Required (owner, 2026-11-04), and verified first while SMS codes are on.
   const phone = indianMobile(phoneText);
-  if (phone === undefined)
-    fields.phone = "Enter a 10-digit Indian mobile number, or leave it empty.";
+  if (!phone) fields.phone = "Enter your 10-digit mobile number.";
+  else if (!phoneToken && (await smsCodesOn()))
+    fields.phone = "Verify your mobile number with the code we send you.";
   const problem = passwordProblem(password);
   if (problem) fields.password = problem;
   if (Object.keys(fields).length > 0)
     return { error: "Please check the details below.", fields, values };
 
+  let destination: string;
   try {
-    await startSession(
-      await registerRequest(
-        {
-          email,
-          password,
-          firstName,
-          ...(lastName ? { lastName } : {}),
-          ...(phone ? { phone } : {}),
-        },
-        clientFrom(await headers()),
-      ),
+    const tokens = await registerRequest(
+      {
+        email,
+        password,
+        firstName,
+        ...(lastName ? { lastName } : {}),
+        phone: phone as string,
+        ...(phoneToken ? { phoneToken } : {}),
+      },
+      clientFrom(await headers()),
     );
+    await startSession(tokens);
+    destination = await afterSignIn(tokens, next);
   } catch (error) {
     if (!isApiError(error)) throw error;
     const taken = error.code === "EMAIL_ALREADY_REGISTERED";
@@ -128,7 +138,7 @@ export async function registerAction(
       emailTaken: taken,
     };
   }
-  redirect(next);
+  redirect(destination);
 }
 
 /** Signs out of this device: the API ends the session; the cookies go. */

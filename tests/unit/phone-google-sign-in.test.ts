@@ -41,11 +41,11 @@ describe("phone and Google sign-in (owner, 2026-11-04)", () => {
   });
 
   it("keeps the header's name for customers without an email", () => {
-    expect(decodeWho(encodeWho({ firstName: "Asha", email: null }))).toEqual({
+    expect(decodeWho(encodeWho({ firstName: "Asha", email: null }))).toMatchObject({
       firstName: "Asha",
       email: null,
     });
-    expect(decodeWho(encodeWho({ firstName: "Meera", email: "meera@example.com" }))).toEqual({
+    expect(decodeWho(encodeWho({ firstName: "Meera", email: "meera@example.com" }))).toMatchObject({
       firstName: "Meera",
       email: "meera@example.com",
     });
@@ -53,7 +53,7 @@ describe("phone and Google sign-in (owner, 2026-11-04)", () => {
     const old = Buffer.from(JSON.stringify({ f: "Ravi", e: "ravi@example.com" })).toString(
       "base64url",
     );
-    expect(decodeWho(old)).toEqual({ firstName: "Ravi", email: "ravi@example.com" });
+    expect(decodeWho(old)).toMatchObject({ firstName: "Ravi", email: "ravi@example.com" });
     const bad = Buffer.from(JSON.stringify({ f: "X", e: 5 })).toString("base64url");
     expect(decodeWho(bad)).toBeNull();
   });

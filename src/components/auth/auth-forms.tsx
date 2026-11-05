@@ -5,6 +5,7 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/fields";
 import { cx } from "@/lib/cx";
+import { RegisterPhoneField } from "./register-phone-field";
 import { registerAction, signInAction, type AuthFormState } from "@/lib/session/actions";
 import { PASSWORD_MAX_BYTES, passwordChecks } from "@/lib/session/rules";
 
@@ -155,13 +156,13 @@ export function SignInForm({ next, notice }: { next: string | null; notice?: str
       <FormError message={state.error} />
       <input type="hidden" name="next" value={next ?? ""} />
       <Input
-        label="Email"
-        name="email"
-        type="email"
-        autoComplete="email"
+        label="Email or phone number"
+        name="login"
+        type="text"
+        autoComplete="username"
         required
-        defaultValue={state.values.email}
-        error={state.fields.email}
+        defaultValue={state.values.login}
+        error={state.fields.login}
       />
       <PasswordField
         label="Password"
@@ -200,8 +201,10 @@ export function IndiaFlag() {
   );
 }
 
-export function RegisterForm({ next }: { next: string | null }) {
+export function RegisterForm({ next, smsOn }: { next: string | null; smsOn: boolean }) {
   const [state, action, pending] = useActionState(registerAction, EMPTY);
+  // Create account waits for a verified phone while SMS codes are on (owner, 2026-11-04).
+  const [phoneReady, setPhoneReady] = useState(!smsOn);
   const form = useFocusFirstProblem(state);
   const signInHref = `/sign-in${next ? `?next=${encodeURIComponent(next)}` : ""}`;
   return (
@@ -245,22 +248,11 @@ export function RegisterForm({ next }: { next: string | null }) {
         defaultValue={state.values.email}
         error={state.fields.email}
       />
-      <Input
-        label="Mobile number"
-        name="phone"
-        type="tel"
-        autoComplete="tel-national"
-        inputMode="tel"
-        addon={
-          <>
-            <IndiaFlag />
-            +91
-          </>
-        }
-        placeholder="98765 43210"
-        hint="Optional"
+      <RegisterPhoneField
+        smsOn={smsOn}
         defaultValue={state.values.phone}
         error={state.fields.phone}
+        onReadyChange={setPhoneReady}
       />
       <PasswordField
         label="Password"
@@ -283,10 +275,17 @@ export function RegisterForm({ next }: { next: string | null }) {
         type="submit"
         size="lg"
         loading={pending}
+        disabled={!phoneReady}
+        aria-describedby={phoneReady ? undefined : "verify-first"}
         className="h-14 w-full text-sm tracking-wider uppercase shadow-lg hover:shadow-xl"
       >
         Create account <span aria-hidden>→</span>
       </Button>
+      {phoneReady ? null : (
+        <p id="verify-first" className="-mt-2 text-center text-sm text-muted">
+          Verify your mobile number to create your account.
+        </p>
+      )}
     </form>
   );
 }

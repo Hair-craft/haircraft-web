@@ -41,15 +41,40 @@ export function sessionCookieOptions(
   };
 }
 
+/** The account's phone (owner, 2026-11-04: every account needs one, verified while SMS is on). */
+export type PhoneStatus = "none" | "unverified" | "verified";
+
 export interface Who {
   firstName: string;
   /** null for a customer who signed up with a phone number and gave no email. */
   email: string | null;
+  /** Older cookies carry none: treated as "verified", so nobody is stopped by mistake. */
+  phone?: PhoneStatus;
 }
+
+const PHONE_CODES: Record<PhoneStatus, number> = { none: 0, unverified: 1, verified: 2 };
 
 /** The display cookie's value: base64url JSON (cookie-safe). */
 export function encodeWho(who: Who): string {
-  return Buffer.from(JSON.stringify({ f: who.firstName, e: who.email })).toString("base64url");
+  return Buffer.from(
+    JSON.stringify({ f: who.firstName, e: who.email, p: PHONE_CODES[who.phone ?? "verified"] }),
+  ).toString("base64url");
+}
+
+/** The phone status of an account, from the API's user. */
+export function phoneStatusOf(user: {
+  phone?: string | null;
+  phoneVerifiedAt?: string | null;
+}): PhoneStatus {
+  if (!user.phone) return "none";
+  return user.phoneVerifiedAt ? "verified" : "unverified";
+}
+
+/** Whether to ask for the phone before going on: none, or not verified while SMS codes are on. */
+export function phoneNeeded(who: Who | null, smsOn: boolean): boolean {
+  if (!who) return false;
+  const status = who.phone ?? "verified";
+  return status === "none" || (smsOn && status === "unverified");
 }
 
 export function decodeWho(value: string | undefined): Who | null {
@@ -58,12 +83,14 @@ export function decodeWho(value: string | undefined): Who | null {
     const data = JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as {
       f?: unknown;
       e?: unknown;
+      p?: unknown;
     };
     if (typeof data.f !== "string") return null;
     if (typeof data.e !== "string" && data.e !== null && data.e !== undefined) return null;
     return {
       firstName: data.f.slice(0, 100),
       email: typeof data.e === "string" ? data.e.slice(0, 254) : null,
+      phone: data.p === 0 ? "none" : data.p === 1 ? "unverified" : "verified",
     };
   } catch {
     return null;
@@ -76,7 +103,14 @@ export interface TokenPair {
   accessTokenExpiresIn: number;
   refreshToken: string;
   refreshTokenExpiresAt: string;
-  user: { id: string; email: string | null; firstName: string; lastName: string | null };
+  user: {
+    id: string;
+    email: string | null;
+    firstName: string;
+    lastName: string | null;
+    phone?: string | null;
+    phoneVerifiedAt?: string | null;
+  };
 }
 
 export interface CookieToSet {
@@ -101,7 +135,11 @@ export function sessionCookies(tokens: TokenPair, production: boolean, now: numb
     },
     {
       name: WHO_COOKIE,
-      value: encodeWho({ firstName: tokens.user.firstName, email: tokens.user.email }),
+      value: encodeWho({
+        firstName: tokens.user.firstName,
+        email: tokens.user.email,
+        phone: phoneStatusOf(tokens.user),
+      }),
       options: sessionCookieOptions(refreshSeconds, production),
     },
   ];

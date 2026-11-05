@@ -1,6 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import type { PublicProduct } from "@/lib/api/types";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
+import { registerViaApi } from "./support/shop";
 
 const PASSWORD = "Silky2026!";
 const ADMIN = { email: "admin@example.com", password: "HcDev@2026!" };
@@ -15,7 +16,7 @@ const freshEmail = () => `wish.${Date.now()}.${++counter}@example.com`;
 
 async function newCustomer(request: APIRequestContext): Promise<string> {
   const email = freshEmail();
-  const response = await request.post(`${API}/auth/register`, {
+  const response = await registerViaApi(request, {
     data: { email, password: PASSWORD, firstName: "Meera" },
   });
   expect(response.status(), "the customer is registered").toBe(201);
@@ -23,16 +24,11 @@ async function newCustomer(request: APIRequestContext): Promise<string> {
 }
 
 async function signIn(page: Page, email: string, next?: string) {
-  await page.goto(
-    OPEN + "/sign-in?method=email" + (next ? `&next=${encodeURIComponent(next)}` : ""),
-  );
+  await page.goto(OPEN + "/sign-in" + (next ? `?next=${encodeURIComponent(next)}` : ""));
   await signInHere(page, email);
 }
 
 async function signInHere(page: Page, email: string) {
-  // Phone sign-in is offered first; these shoppers use email.
-  const useEmail = page.getByRole("link", { name: "Use email and password" });
-  if (await useEmail.isVisible()) await useEmail.click();
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();

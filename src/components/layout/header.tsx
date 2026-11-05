@@ -49,7 +49,7 @@ export async function Header() {
   const consultHref = whatsappChatHref(business);
   const [{ items, unavailable }, session] = await Promise.all([loadNav(), getSession()]);
   return (
-    <header className="sticky top-0 z-30 bg-white/95 shadow-[0_4px_20px_rgba(11,41,26,0.06)] backdrop-blur-md">
+    <header className="sticky top-0 z-30 bg-white/95 shadow-[0_4px_20px_rgba(11,41,26,0.06)]">
       {unavailable ? (
         <p role="status" className="bg-gold/20 px-4 py-2 text-center text-sm">
           We can&apos;t reach the shop right now, so some things may be missing. Please try again in

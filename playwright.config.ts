@@ -101,6 +101,16 @@ export default defineConfig({
         STOREFRONT_URL: OPEN,
         REVALIDATE_SECRET: E2E_REVALIDATE_SECRET,
         LOG_LEVEL: "warn",
+        // Phone codes on, written to the dev endpoint (owner, 2026-11-04: a verified
+        // phone on every account); every test registers, so the per-address limit is raised.
+        PHONE_OTP_ENABLED: "true",
+        SMS_DRIVER: "console",
+        OTP_PER_IP_PER_HOUR: "100000",
+        // Live courier tracking with the stand-in Shiprocket (owner, 2026-11-05).
+        SHIPROCKET_ENABLED: "true",
+        COURIER_FAKE: "true",
+        DELHIVERY_ENABLED: "true",
+        BLUEDART_ENABLED: "true",
       },
     },
     // The open shop behaves like the live site, which search engines may index.

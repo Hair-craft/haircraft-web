@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RegisterForm } from "@/components/auth/auth-forms";
-import { SignInOptions } from "@/components/auth/sign-in-options";
+import { GoogleOr } from "@/components/auth/google-or";
 import { getSignInMethods, type SignInMethods } from "@/lib/session/api";
 import { safeNext } from "@/lib/session/rules";
 
-/** Which ways in are on; if the API can't say, email and password (always there). */
-async function methodsOrEmailOnly(): Promise<SignInMethods> {
+export const metadata: Metadata = {
+  title: "Create an account",
+  robots: { index: false, follow: true },
+};
+
+/** Which ways in are on; if the API can't say, the form without SMS or Google. */
+async function methods(): Promise<SignInMethods> {
   try {
     return await getSignInMethods();
   } catch {
@@ -14,26 +19,16 @@ async function methodsOrEmailOnly(): Promise<SignInMethods> {
   }
 }
 
-export const metadata: Metadata = {
-  title: "Create an account",
-  robots: { index: false, follow: true },
-};
-
 /**
- * `/register`: just the form, with a heading and one line (owner, 2026-11-04:
- * "make it minimal"). Phone number first (a new number registers), then
- * Google, then email and password (`?method=email`).
+ * `/register` (owner, 2026-11-04): "Continue with Google", or the form with
+ * name, email, a mobile number verified with a code (while SMS codes are
+ * on) and a password.
  */
 export default async function RegisterPage({ searchParams }: PageProps<"/register">) {
   const query = await searchParams;
   const next = safeNext(typeof query.next === "string" ? query.next : null);
   const signInHref = `/sign-in${next ? `?next=${encodeURIComponent(next)}` : ""}`;
-  const methods = await methodsOrEmailOnly();
-  const others = methods.phone || Boolean(methods.googleClientId);
-  const withEmail = query.method === "email" || !others;
-  const keep = next ? `next=${encodeURIComponent(next)}` : "";
-  const emailHref = `/register?method=email${keep ? `&${keep}` : ""}`;
-  const otherHref = `/register${keep ? `?${keep}` : ""}`;
+  const on = await methods();
 
   return (
     <div className="mx-auto w-full max-w-md px-4 pt-10 pb-20 sm:pt-14">
@@ -49,25 +44,8 @@ export default async function RegisterPage({ searchParams }: PageProps<"/registe
           <p className="text-sm text-muted">Check out faster and follow your orders.</p>
         </div>
 
-        {withEmail ? (
-          <>
-            <RegisterForm next={next} />
-            {others ? (
-              <p className="mt-6 text-center text-sm">
-                <Link
-                  href={otherHref}
-                  className="font-semibold text-deep underline-offset-4 transition-colors hover:text-gold-ink hover:underline"
-                >
-                  {methods.phone
-                    ? "Register with your phone number instead"
-                    : "Continue with Google instead"}
-                </Link>
-              </p>
-            ) : null}
-          </>
-        ) : (
-          <SignInOptions methods={methods} next={next} mode="register" emailHref={emailHref} />
-        )}
+        <GoogleOr clientId={on.googleClientId} next={next} mode="register" />
+        <RegisterForm next={next} smsOn={on.phone} />
 
         <p className="mt-8 text-center text-sm text-muted">
           Already have an account?{" "}

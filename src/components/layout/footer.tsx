@@ -42,8 +42,9 @@ export async function Footer() {
   const whatsapp = whatsappChatHref(business);
   return (
     <footer className="mt-auto bg-cream text-deep shadow-[0_-4px_24px_rgba(11,41,26,0.03)]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 pt-14 pb-10 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
-        <div className="flex flex-col gap-4">
+      {/* Phones and tablets: Quick Shop and Customer Care side by side (owner, 2026-11-05). */}
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-10 px-4 pt-14 pb-10 sm:px-6 lg:grid-cols-4">
+        <div className="col-span-2 flex flex-col gap-4 lg:col-span-1">
           <div className="flex items-center gap-3">
             <Image
               src="/images/logo.png"
@@ -67,25 +68,18 @@ export async function Footer() {
               <span className="font-semibold text-deep">{business.legalName}</span>
             ) : null}
             {business.cin ? <span>CIN: {business.cin}</span> : null}
-            <a href={`mailto:${business.email}`} className="hover:text-deep hover:underline">
+            <a href={`mailto:${business.email}`} className="inline-flex min-h-6 w-fit items-center hover:text-deep hover:underline">
               {business.email}
             </a>
             {business.phone ? (
-              <a href={`tel:${business.phone}`} className="hover:text-deep hover:underline">
+              <a href={`tel:${business.phone}`} className="inline-flex min-h-6 w-fit items-center hover:text-deep hover:underline">
                 {displayPhone(business.phone)}
               </a>
             ) : null}
-            {business.mapUrl ? (
-              <a
-                href={business.mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-sage-ink hover:underline"
-              >
-                Find us on Google Maps
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>
-            ) : null}
+            {/* The address as text, not a map link (owner, 2026-11-05). */}
+            {business.address?.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
           </address>
           <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-sage px-3 py-1.5 text-xs font-semibold text-sage-ink">
             <span aria-hidden className="text-gold">
@@ -136,7 +130,7 @@ export async function Footer() {
             </a>
           ) : null}
         </div>
-        <div className="flex flex-col gap-8">
+        <div className="col-span-2 flex flex-col gap-8 lg:col-span-1">
           <FooterLinks title="HairCraft" links={company} />
           <div>
             <h2 className="text-[0.65rem] font-bold tracking-[0.15em] text-muted uppercase">

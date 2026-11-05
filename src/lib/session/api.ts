@@ -35,14 +35,15 @@ export function clientFrom(headers: Headers): ShopperClient {
   };
 }
 
+/** `login`: the account's email or phone number (owner, 2026-11-04). */
 export function signInRequest(
-  email: string,
+  login: string,
   password: string,
   client: ShopperClient,
 ): Promise<TokenPair> {
   return apiFetch<TokenPair>("/auth/login", {
     method: "POST",
-    body: { email, password },
+    body: { login, password },
     headers: clientHeaders(client),
   });
 }
@@ -52,7 +53,10 @@ export interface RegisterInput {
   password: string;
   firstName: string;
   lastName?: string;
-  phone?: string;
+  /** Required (owner, 2026-11-04). */
+  phone: string;
+  /** From `checkRegisterCodeRequest`; required while SMS codes are on. */
+  phoneToken?: string;
 }
 
 export function registerRequest(input: RegisterInput, client: ShopperClient): Promise<TokenPair> {
@@ -121,6 +125,7 @@ export interface CodeSent {
   devCode?: string;
 }
 
+/** Sign in with a code (owner, 2026-11-05): the same answer whether or not the number has an account. */
 export function sendSignInCodeRequest(phone: string, client: ShopperClient): Promise<CodeSent> {
   return apiFetch<CodeSent>("/auth/otp/send", {
     method: "POST",
@@ -130,10 +135,9 @@ export function sendSignInCodeRequest(phone: string, client: ShopperClient): Pro
 }
 
 export interface PhoneSignInResult {
+  /** true: no account has verified this number. */
   needsProfile: boolean;
   session: TokenPair | null;
-  signupToken: string | null;
-  signupExpiresInSeconds: number | null;
 }
 
 export function verifySignInCodeRequest(
@@ -148,11 +152,43 @@ export function verifySignInCodeRequest(
   });
 }
 
-export function completePhoneSignupRequest(
-  input: { signupToken: string; firstName: string; lastName?: string; email?: string },
+/** Create account: text a code to the phone typed on the form. */
+export function sendRegisterCodeRequest(phone: string, client: ShopperClient): Promise<CodeSent> {
+  return apiFetch<CodeSent>("/auth/phone/send", {
+    method: "POST",
+    body: { phone },
+    headers: clientHeaders(client),
+  });
+}
+
+/** Create account: check the code; the token goes with the registration. */
+export function checkRegisterCodeRequest(
+  phone: string,
+  code: string,
+  client: ShopperClient,
+): Promise<{ phoneToken: string; expiresInSeconds: number }> {
+  return apiFetch<{ phoneToken: string; expiresInSeconds: number }>("/auth/phone/check", {
+    method: "POST",
+    body: { phone, code },
+    headers: clientHeaders(client),
+  });
+}
+
+/** Forgotten password: a code to the account's verified phone (same answer for any number). */
+export function forgotPasswordRequest(phone: string, client: ShopperClient): Promise<CodeSent> {
+  return apiFetch<CodeSent>("/auth/password/forgot", {
+    method: "POST",
+    body: { phone },
+    headers: clientHeaders(client),
+  });
+}
+
+/** Forgotten password: the code and the new password; signs the customer in. */
+export function resetPasswordRequest(
+  input: { phone: string; code: string; newPassword: string },
   client: ShopperClient,
 ): Promise<TokenPair> {
-  return apiFetch<TokenPair>("/auth/otp/complete", {
+  return apiFetch<TokenPair>("/auth/password/reset", {
     method: "POST",
     body: input,
     headers: clientHeaders(client),
