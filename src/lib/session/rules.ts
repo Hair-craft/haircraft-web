@@ -181,3 +181,11 @@ export function smsCode(raw: string): string | null {
   const digits = raw.replace(/\D/g, "");
   return digits.length === 6 ? digits : null;
 }
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** A plausible email address, trimmed and in lower case; null when it isn't one. */
+export function emailAddress(raw: string): string | null {
+  const email = raw.trim().toLowerCase();
+  return email.length <= 254 && EMAIL_PATTERN.test(email) ? email : null;
+}

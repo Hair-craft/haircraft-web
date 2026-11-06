@@ -4,8 +4,9 @@ import Image from "next/image";
 import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ChevronRightIcon, CloseIcon } from "@/components/ui/icons";
-import type { ProductImage } from "@/lib/api/types";
+import type { ProductImage, ProductVideo } from "@/lib/api/types";
 import { cx } from "@/lib/cx";
+import { HoverZoom } from "./hover-zoom";
 
 /** The same `sizes` everywhere, so the phone row and the desktop photo share one download. */
 const SIZES = "(min-width: 1024px) 50vw, 100vw";
@@ -24,28 +25,106 @@ const alt = (image: LightboxPhoto, name: string, i: number, total: number) =>
   image.altText ?? `${name}, photo ${i + 1} of ${total}`;
 
 /**
- * Product photos. Desktop: a large photo with thumbnails beside it and
- * arrows. Phones: a row to swipe through, with dots. Either opens a
- * full-screen view. Re-mounted (by its key) when the option changes, so it
- * starts again from that option's first photo.
+ * Product photos, then videos (owner, 2026-11-06). Desktop: a large view
+ * with thumbnails under it and arrows; hovering a photo zooms it. Phones: a
+ * row to swipe through, with dots. Photos open a full-screen view; videos
+ * play muted and looping where they are, with the player's own controls
+ * (sound, full screen). Re-mounted (by its key) when the option changes, so
+ * it starts again from that option's first photo.
  */
-export function Gallery({ images, name }: { images: ProductImage[]; name: string }) {
-  // Photos are optional: without any, one placeholder in the photo's place.
-  if (images.length === 0)
+export function Gallery({
+  images,
+  videos = [],
+  name,
+}: {
+  images: ProductImage[];
+  videos?: ProductVideo[];
+  name: string;
+}) {
+  // Photos are optional: without any (and no video), one placeholder in the photo's place.
+  if (images.length === 0 && videos.length === 0)
     return (
       <div className={cx("relative overflow-hidden rounded-xl", FRAME)}>
         <PhotoPlaceholder />
       </div>
     );
-  return <PhotoGallery images={images} name={name} />;
+  return <PhotoGallery images={images} videos={videos} name={name} />;
 }
 
-function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }) {
+type Item = { kind: "photo"; image: ProductImage } | { kind: "video"; video: ProductVideo };
+
+const itemKey = (item: Item) => (item.kind === "photo" ? item.image.id : item.video.id);
+const itemLabel = (item: Item, i: number, total: number) =>
+  item.kind === "photo" ? `Photo ${i + 1} of ${total}` : `Video ${i + 1} of ${total}`;
+
+/** A video in the gallery: plays (muted, looping) only while it is the one shown. */
+function VideoView({
+  video,
+  active,
+  name,
+  className,
+}: {
+  video: ProductVideo;
+  active: boolean;
+  name: string;
+  className?: string;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (active && !window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+      el.play().catch(() => undefined);
+    else el.pause();
+  }, [active]);
+  return (
+    <video
+      ref={ref}
+      src={video.url}
+      poster={video.poster.large}
+      muted
+      loop
+      playsInline
+      controls
+      preload={active ? "metadata" : "none"}
+      aria-label={`${name}, video (${video.durationSeconds} seconds)`}
+      className={cx("size-full bg-white object-contain", className)}
+    />
+  );
+}
+
+function PlayBadge() {
+  return (
+    <span
+      aria-hidden
+      className="absolute inset-0 m-auto grid size-8 place-items-center rounded-full bg-deep/80 text-white shadow"
+    >
+      <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor">
+        <path d="M8 5v14l11-7z" />
+      </svg>
+    </span>
+  );
+}
+
+function PhotoGallery({
+  images,
+  videos,
+  name,
+}: {
+  images: ProductImage[];
+  videos: ProductVideo[];
+  name: string;
+}) {
   const [active, setActive] = useState(0);
   const [zoomed, setZoomed] = useState<number | null>(null);
   const row = useRef<HTMLUListElement>(null);
   const thumbs = useRef<HTMLUListElement>(null);
-  const total = images.length;
+  // Photos first, then videos: a photo's place is its place in `images` (for the full-screen view).
+  const items: Item[] = [
+    ...images.map((image) => ({ kind: "photo" as const, image })),
+    ...videos.map((video) => ({ kind: "video" as const, video })),
+  ];
+  const total = items.length;
 
   // Keep the chosen thumbnail in view when the column of thumbnails scrolls
   // (scrolling only the column, never the page).
@@ -72,32 +151,41 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
   };
   const scrollTo = (i: number) =>
     row.current?.scrollTo({ left: i * row.current.clientWidth, behavior: "smooth" });
+  const current = items[Math.min(active, total - 1)];
 
   return (
     <div>
-      {/* Desktop: the large photo, then a row of thumbnails under it. */}
+      {/* Desktop: the large photo or video, then a row of thumbnails under it. */}
       <div className="hidden flex-col gap-4 lg:flex">
         <div className="relative" onKeyDown={onKeyDown}>
-          <button
-            type="button"
-            onClick={() => setZoomed(active)}
-            aria-label={`View photo ${active + 1} of ${total} full screen`}
-            className={cx(
-              "relative block w-full cursor-zoom-in overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep",
-              // Square, as in the design; the whole photo shows (contained) on white, for a natural look.
-              "aspect-square bg-white",
-            )}
-          >
-            <Image
-              key={images[active].id}
-              src={images[active].urls.large}
-              alt={alt(images[active], name, active, total)}
-              fill
-              priority={active === 0}
-              sizes={SIZES}
-              className="hc-fade-in object-contain"
-            />
-          </button>
+          {current.kind === "photo" ? (
+            <HoverZoom key={current.image.id} src={current.image.urls.original}>
+              <button
+                type="button"
+                onClick={() => setZoomed(active)}
+                aria-label={`View photo ${active + 1} of ${total} full screen`}
+                className={cx(
+                  "relative block w-full cursor-zoom-in overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep",
+                  // Square, as in the design; the whole photo shows (contained) on white, for a natural look.
+                  "aspect-square bg-white",
+                )}
+              >
+                <Image
+                  key={current.image.id}
+                  src={current.image.urls.large}
+                  alt={alt(current.image, name, active, total)}
+                  fill
+                  priority={active === 0}
+                  sizes={SIZES}
+                  className="hc-fade-in object-contain"
+                />
+              </button>
+            </HoverZoom>
+          ) : (
+            <div className="aspect-square overflow-hidden rounded-xl bg-white">
+              <VideoView key={current.video.id} video={current.video} active name={name} />
+            </div>
+          )}
           {total > 1 ? (
             <>
               <Arrow direction="previous" onClick={() => show(active - 1)} />
@@ -107,12 +195,12 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
         </div>
         <div>
           <ul ref={thumbs} aria-label="Photos" className="grid grid-cols-5 gap-3 p-0.5">
-            {images.map((image, i) => (
-              <li key={image.id} className="shrink-0">
+            {items.map((item, i) => (
+              <li key={itemKey(item)} className="shrink-0">
                 <button
                   type="button"
                   onClick={() => show(i)}
-                  aria-label={`Photo ${i + 1} of ${total}`}
+                  aria-label={itemLabel(item, i, total)}
                   aria-current={i === active || undefined}
                   className={cx(
                     "relative block aspect-square w-full overflow-hidden rounded-xl bg-white p-1.5 shadow-sm ring-2 transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-deep",
@@ -120,12 +208,17 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
                   )}
                 >
                   <Image
-                    src={image.urls.thumbnail}
+                    src={
+                      item.kind === "photo"
+                        ? item.image.urls.thumbnail
+                        : item.video.poster.thumbnail
+                    }
                     alt=""
                     fill
                     sizes="120px"
                     className="object-contain"
                   />
+                  {item.kind === "video" ? <PlayBadge /> : null}
                 </button>
               </li>
             ))}
@@ -145,34 +238,40 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
           // Inside the photo card, rounded (owner, 2026-11-03: the photo fits the card on phones).
           className="relative flex snap-x snap-mandatory overflow-x-auto rounded-xl [&::-webkit-scrollbar]:hidden"
         >
-          {images.map((image, i) => (
-            <li key={image.id} className="w-full shrink-0 snap-start">
-              <button
-                type="button"
-                onClick={() => setZoomed(i)}
-                aria-label={`View photo ${i + 1} of ${total} full screen`}
-                className={cx("relative block w-full", FRAME)}
-              >
-                <Image
-                  src={image.urls.large}
-                  alt={alt(image, name, i, total)}
-                  fill
-                  priority={i === 0}
-                  sizes={SIZES}
-                  className="object-contain"
-                />
-              </button>
+          {items.map((item, i) => (
+            <li key={itemKey(item)} className="w-full shrink-0 snap-start">
+              {item.kind === "photo" ? (
+                <button
+                  type="button"
+                  onClick={() => setZoomed(i)}
+                  aria-label={`View photo ${i + 1} of ${total} full screen`}
+                  className={cx("relative block w-full", FRAME)}
+                >
+                  <Image
+                    src={item.image.urls.large}
+                    alt={alt(item.image, name, i, total)}
+                    fill
+                    priority={i === 0}
+                    sizes={SIZES}
+                    className="object-contain"
+                  />
+                </button>
+              ) : (
+                <div className={cx("relative w-full", FRAME)}>
+                  <VideoView video={item.video} active={i === active} name={name} />
+                </div>
+              )}
             </li>
           ))}
         </ul>
         {total > 1 ? (
           <div className="mt-1 flex justify-center">
-            {images.map((image, i) => (
+            {items.map((item, i) => (
               <button
-                key={image.id}
+                key={itemKey(item)}
                 type="button"
                 onClick={() => scrollTo(i)}
-                aria-label={`Photo ${i + 1} of ${total}`}
+                aria-label={itemLabel(item, i, total)}
                 aria-current={i === active || undefined}
                 // A 24 px target (WCAG 2.2) around the small dot people see.
                 className="group flex h-6 min-w-6 items-center justify-center px-1"
@@ -190,8 +289,13 @@ function PhotoGallery({ images, name }: { images: ProductImage[]; name: string }
         ) : null}
       </div>
 
-      {zoomed !== null ? (
-        <Lightbox images={images} name={name} start={zoomed} onClose={() => setZoomed(null)} />
+      {zoomed !== null && images.length > 0 ? (
+        <Lightbox
+          images={images}
+          name={name}
+          start={Math.min(zoomed, images.length - 1)}
+          onClose={() => setZoomed(null)}
+        />
       ) : null}
     </div>
   );

@@ -9,7 +9,7 @@ import type { PublicProduct, PublicVariant } from "@/lib/api/types";
 import { formatPrice } from "@/lib/format";
 import { defaultVariant } from "@/lib/product/variants";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
-import { registerViaApi } from "./support/shop";
+import { enterWithCode, registerViaApi } from "./support/shop";
 
 const PASSWORD = "Silky2026!";
 const ADMIN = { email: "admin@example.com", password: "HcDev@2026!" };
@@ -236,9 +236,7 @@ test.describe("bag and accounts", () => {
     expect(await cookie(context, "hc_cart")).toBeDefined();
 
     await page.goto(OPEN + "/sign-in");
-    await page.getByLabel("Email").fill(email);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await enterWithCode(page, email);
     await page.waitForURL(OPEN + "/account");
     await expect(bagButton(page)).toHaveAccessibleName("Bag, 2 items");
     expect(await cookie(context, "hc_cart")).toBeUndefined();
@@ -247,9 +245,7 @@ test.describe("bag and accounts", () => {
     const other = await browser.newContext();
     const elsewhere = await other.newPage();
     await elsewhere.goto(OPEN + "/sign-in");
-    await elsewhere.getByLabel("Email").fill(email);
-    await elsewhere.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-    await elsewhere.getByRole("button", { name: "Sign in" }).click();
+    await enterWithCode(elsewhere, email);
     await elsewhere.waitForURL(OPEN + "/account");
     await elsewhere.goto(OPEN + "/cart");
     await expect(elsewhere.locator("main").getByRole("listitem")).toHaveCount(1);

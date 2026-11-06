@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { FlashNote } from "@/components/auth/account-menu";
 import { CartProvider } from "@/components/cart/cart-context";
 import { CartDrawer } from "@/components/cart/cart-ui";
@@ -13,6 +13,7 @@ import { wishlistCount } from "@/lib/wishlist/server";
 import { AnnouncementBar } from "./announcement-bar";
 import { Footer } from "./footer";
 import { Header } from "./header";
+import { NavigationProgress } from "./navigation-progress";
 import { WhatsAppButton } from "./whatsapp-button";
 
 /** Header, main content and footer, with a skip link for keyboard users. */
@@ -30,6 +31,10 @@ export async function ShopChrome({ children }: { children: ReactNode }) {
           >
             Skip to content
           </a>
+          {/* Shows at once that a tapped link is loading (owner, 2026-11-06). */}
+          <Suspense fallback={null}>
+            <NavigationProgress />
+          </Suspense>
           <AnnouncementBar />
           <Header />
           <main id="main" tabIndex={-1} className="flex flex-1 flex-col focus:outline-none">

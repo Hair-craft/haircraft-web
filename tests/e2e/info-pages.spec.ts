@@ -173,10 +173,11 @@ test("the bag, checkout and an order link to the policies", async ({ page, reque
   ).toHaveAttribute("href", "/returns");
 });
 
-test("the product page's Delivery & exchange links to both policies", async ({ page }) => {
+test("the product page links to both policies under the buttons", async ({ page }) => {
   await page.goto(OPEN + "/shop");
   await page.locator('a[href^="/product/"]').first().click();
-  await page.getByText("Delivery & exchange").click();
+  // No Delivery & exchange tab (owner, 2026-11-06).
+  await expect(page.getByText("Delivery & exchange")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Shipping details" })).toHaveAttribute(
     "href",
     "/shipping",

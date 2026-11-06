@@ -162,20 +162,11 @@ function GuestPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Dialog open={open} onClose={onClose} title="Save your favourites">
       <p className="text-muted">
-        Sign in or create an account to keep a wishlist. We&apos;ll save this one for you as soon as
-        you do.
+        Sign in to keep a wishlist. We&apos;ll save this one for you as soon as you do.
       </p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <ButtonLink href={`/sign-in?next=${next}`} className="flex-1" onClick={onClose}>
           Sign in
-        </ButtonLink>
-        <ButtonLink
-          href={`/register?next=${next}`}
-          variant="secondary"
-          className="flex-1"
-          onClick={onClose}
-        >
-          Create an account
         </ButtonLink>
       </div>
     </Dialog>

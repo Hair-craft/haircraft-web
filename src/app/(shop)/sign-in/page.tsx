@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { GoogleOr } from "@/components/auth/google-or";
-import { SignInChoice } from "@/components/auth/sign-in-choice";
+import { SignInForm } from "@/components/auth/auth-forms";
+import { CodeSignIn } from "@/components/auth/code-sign-in";
 import { getSignInMethods, type SignInMethods } from "@/lib/session/api";
 import { safeNext } from "@/lib/session/rules";
 
@@ -19,14 +19,15 @@ async function methods(): Promise<SignInMethods> {
   try {
     return await getSignInMethods();
   } catch {
-    return { password: true, phone: false, googleClientId: null };
+    return { password: true, phone: false, email: false, googleClientId: null };
   }
 }
 
 /**
- * `/sign-in` (owner, 2026-11-04/05): "Continue with Google", or a toggle
- * between the email or phone number with the password, and the phone number
- * with a texted code. A heading and one line, as kept minimal.
+ * `/sign-in` (owner, 2026-11-06, like Gemeria's): "Continue with Google", then
+ * one box for an email or a mobile number and a 6-digit code sent there
+ * ("Use a password instead" for the password). Without email or SMS codes,
+ * the password form alone. A heading and one line, as kept minimal.
  */
 export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
   const query = await searchParams;
@@ -43,23 +44,19 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
         />
         <div className="mb-8 flex flex-col gap-2">
           <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-[1.75rem] sm:leading-10">
-            Welcome back
+            Sign in
           </h1>
-          <p className="text-sm text-muted">Sign in to see your orders and wishlist.</p>
+          <p className="text-sm text-muted">
+            New or returning, sign in with a code to shop and see your orders.
+          </p>
         </div>
 
         <GoogleOr clientId={on.googleClientId} next={next} mode="sign-in" />
-        <SignInChoice next={next} notice={notice} smsOn={on.phone} />
-
-        <p className="mt-8 text-center text-sm text-muted">
-          New to HairCraft?{" "}
-          <Link
-            href={`/register${next ? `?next=${encodeURIComponent(next)}` : ""}`}
-            className="font-semibold text-deep transition-colors hover:text-gold-ink"
-          >
-            Create an account <span aria-hidden>→</span>
-          </Link>
-        </p>
+        {on.email || on.phone ? (
+          <CodeSignIn next={next} notice={notice} emailOn={Boolean(on.email)} smsOn={on.phone} />
+        ) : (
+          <SignInForm next={next} notice={notice} />
+        )}
       </div>
     </div>
   );

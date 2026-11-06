@@ -2,10 +2,10 @@ import { expect, test, type Page } from "@playwright/test";
 import { defaultVariant } from "@/lib/product/variants";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
 import {
+  CLIP_INS,
   adminOrder,
   auth,
   cancelUnpaidOrders,
-  CLIP_INS,
   payByApi,
   placeOrderByApi,
   product,
@@ -13,6 +13,7 @@ import {
   setStock,
   shopper,
   signIn,
+  signInWithoutScript,
 } from "./support/shop";
 
 const PONYTAIL = "wrap-around-ponytail";
@@ -255,7 +256,7 @@ test("without JavaScript, an order can be cancelled", async ({ browser, request 
   const order = await placeOrderByApi(request, token, addressId, { skipAdd: true });
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await signIn(page, email);
+  await signInWithoutScript(page, email);
   await page.goto(`${OPEN}/account/orders/${order.orderNumber}`);
   await page.getByText("Cancel this order").click();
   await page.getByRole("button", { name: "Cancel order" }).click();

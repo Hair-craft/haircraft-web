@@ -36,6 +36,8 @@ export function CartButton() {
       }}
       aria-label={`Bag, ${itemsLabel(count)}`}
       aria-haspopup="dialog"
+      // Opens the bag drawer, not a page: no loading bar.
+      data-no-progress
       className="relative inline-flex rounded-full p-2 transition-colors hover:bg-deep/5 focus-visible:outline-2 focus-visible:outline-deep"
     >
       <BagIcon />

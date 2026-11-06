@@ -59,14 +59,6 @@ export interface RegisterInput {
   phoneToken?: string;
 }
 
-export function registerRequest(input: RegisterInput, client: ShopperClient): Promise<TokenPair> {
-  return apiFetch<TokenPair>("/auth/register", {
-    method: "POST",
-    body: input,
-    headers: clientHeaders(client),
-  });
-}
-
 export function refreshRequest(refreshToken: string, client: ShopperClient): Promise<TokenPair> {
   return apiFetch<TokenPair>("/auth/refresh", {
     method: "POST",
@@ -109,6 +101,8 @@ export function getProfile(accessToken: string): Promise<Profile> {
 export interface SignInMethods {
   password: boolean;
   phone: boolean;
+  /** A code by email (owner, 2026-11-06); missing from an older API. */
+  email?: boolean;
   /** For Google's button; null when Google sign-in isn't set up. */
   googleClientId: string | null;
 }
@@ -135,9 +129,11 @@ export function sendSignInCodeRequest(phone: string, client: ShopperClient): Pro
 }
 
 export interface PhoneSignInResult {
-  /** true: no account has verified this number. */
+  /** true: no account has verified this number (or uses this email). */
   needsProfile: boolean;
   session: TokenPair | null;
+  /** With `needsProfile`: finishes the account (valid for a few minutes). */
+  signupToken?: string | null;
 }
 
 export function verifySignInCodeRequest(
@@ -146,28 +142,6 @@ export function verifySignInCodeRequest(
   client: ShopperClient,
 ): Promise<PhoneSignInResult> {
   return apiFetch<PhoneSignInResult>("/auth/otp/verify", {
-    method: "POST",
-    body: { phone, code },
-    headers: clientHeaders(client),
-  });
-}
-
-/** Create account: text a code to the phone typed on the form. */
-export function sendRegisterCodeRequest(phone: string, client: ShopperClient): Promise<CodeSent> {
-  return apiFetch<CodeSent>("/auth/phone/send", {
-    method: "POST",
-    body: { phone },
-    headers: clientHeaders(client),
-  });
-}
-
-/** Create account: check the code; the token goes with the registration. */
-export function checkRegisterCodeRequest(
-  phone: string,
-  code: string,
-  client: ShopperClient,
-): Promise<{ phoneToken: string; expiresInSeconds: number }> {
-  return apiFetch<{ phoneToken: string; expiresInSeconds: number }>("/auth/phone/check", {
     method: "POST",
     body: { phone, code },
     headers: clientHeaders(client),
@@ -239,5 +213,27 @@ export function verifyPhoneChangeRequest(
     method: "POST",
     token: accessToken,
     body: { phone, code },
+  });
+}
+
+// ── Codes by email (owner, 2026-11-06) ─────────────────────────────────
+
+export function sendEmailCodeRequest(email: string, client: ShopperClient): Promise<CodeSent> {
+  return apiFetch<CodeSent>("/auth/email/send", {
+    method: "POST",
+    body: { email },
+    headers: clientHeaders(client),
+  });
+}
+
+export function verifyEmailCodeRequest(
+  email: string,
+  code: string,
+  client: ShopperClient,
+): Promise<PhoneSignInResult> {
+  return apiFetch<PhoneSignInResult>("/auth/email/verify", {
+    method: "POST",
+    body: { email, code },
+    headers: clientHeaders(client),
   });
 }

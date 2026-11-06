@@ -7,7 +7,7 @@
 import type { ProductImage, PublicVariant } from "@/lib/api/types";
 
 export type Axis = "lengthInches" | "color" | "texture" | "size";
-type Value = number | string;
+export type Value = number | string;
 
 export const AXES: { key: Axis; label: string }[] = [
   { key: "lengthInches", label: "Length" },
@@ -191,4 +191,74 @@ export function detailRows(rows: [string, string | null][]): [string, string][] 
     else if (!seen[1].split(" / ").includes(value)) seen[1] = `${seen[1]} / ${value}`;
   }
   return [...merged.values()];
+}
+
+/**
+ * The photos for the chosen option only (owner, 2026-11-06): its own photos
+ * (and its main variant's, for a sub-variant), then the product's general
+ * ones; other lengths', colours' and textures' photos are hidden until they
+ * are chosen. When the option has no photos of its own, the photos of an
+ * option with the same colour and texture are used (the same look in another
+ * length). If that leaves nothing, every photo is shown, so the gallery is
+ * never empty.
+ */
+export function optionGallery(
+  images: ProductImage[],
+  variant: PublicVariant | undefined | null,
+  variants: PublicVariant[],
+): ProductImage[] {
+  const ordered = galleryFor(images, variant?.id, variant?.parentVariantId);
+  if (!variant) return ordered;
+  const own = (image: ProductImage) =>
+    image.variantId === variant.id ||
+    (variant.parentVariantId !== null && image.variantId === variant.parentVariantId);
+  const general = (image: ProductImage) => image.variantId === null;
+  let shown = ordered.filter((image) => own(image) || general(image));
+  if (!ordered.some(own)) {
+    const sameLook = new Set(
+      variants
+        .filter(
+          (v) => v.id !== variant.id && v.color === variant.color && v.texture === variant.texture,
+        )
+        .map((v) => v.id),
+    );
+    const lookAlike = ordered.filter(
+      (image) => image.variantId !== null && sameLook.has(image.variantId),
+    );
+    shown = [...lookAlike, ...ordered.filter(general)];
+  }
+  return shown.length > 0 ? shown : ordered;
+}
+
+/**
+ * The videos for the chosen option (owner, 2026-11-06), by the same rule as
+ * photos: its own (and its main variant's), then the product's general
+ * ones; another option's videos only when this one has none of its own and
+ * that option has the same colour and texture. No fallback to every video:
+ * a gallery without videos is fine.
+ */
+export function optionVideos<T extends { variantId: string | null; sortOrder: number }>(
+  videos: T[],
+  variant: PublicVariant | undefined | null,
+  variants: PublicVariant[],
+): T[] {
+  const ordered = [...videos].sort((a, b) => a.sortOrder - b.sortOrder);
+  if (!variant) return ordered.filter((video) => video.variantId === null);
+  const own = (video: T) =>
+    video.variantId === variant.id ||
+    (variant.parentVariantId !== null && video.variantId === variant.parentVariantId);
+  const general = ordered.filter((video) => video.variantId === null);
+  const mine = ordered.filter(own);
+  if (mine.length > 0) return [...mine, ...general];
+  const sameLook = new Set(
+    variants
+      .filter(
+        (v) => v.id !== variant.id && v.color === variant.color && v.texture === variant.texture,
+      )
+      .map((v) => v.id),
+  );
+  return [
+    ...ordered.filter((video) => video.variantId !== null && sameLook.has(video.variantId)),
+    ...general,
+  ];
 }

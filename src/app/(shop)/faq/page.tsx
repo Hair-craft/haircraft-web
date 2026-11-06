@@ -3,8 +3,7 @@ import { faqJsonLd } from "@/components/home/content";
 import { FaqList } from "@/components/info/faq-list";
 import { InfoPage } from "@/components/info/info-page";
 import { RichText } from "@/components/info/rich-text";
-import { faqGroups } from "@/content/faq";
-import { getShopPolicies } from "@/lib/api/shop";
+import { getFaqs } from "@/lib/api/faqs";
 
 export const metadata: Metadata = {
   title: "Frequently asked questions",
@@ -13,9 +12,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
-/** `/faq`: every question, grouped, with search engines' FAQ data. */
+/**
+ * `/faq`: every question, grouped, with search engines' FAQ data. The
+ * questions are edited in the admin (owner, 2026-11-05); the shop's own are
+ * shown when the API can't be reached.
+ */
 export default async function FaqPage() {
-  const groups = faqGroups(await getShopPolicies());
+  const { groups } = await getFaqs();
   return (
     <InfoPage slug="faq" eyebrow="Help" title="Frequently asked questions">
       <script

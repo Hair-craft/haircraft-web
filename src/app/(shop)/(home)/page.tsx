@@ -9,10 +9,10 @@ import {
   ConcernSection,
   ConsultSection,
   MostLovedSection,
+  FaqSection,
   SectionSkeleton,
-  StoryFaqSection,
+  StorySection,
   TestimonialsSection,
-  WhySection,
 } from "@/components/home/sections";
 
 export const metadata: Metadata = {
@@ -29,7 +29,8 @@ export const metadata: Metadata = {
 /**
  * The home page, after the owner's design (2026-10-31, updated 2026-11-03):
  * hero, shop by concern, best sellers, categories, customer favourites, a
- * real review, why HairCraft, WhatsApp advice, then our story beside the FAQ. The hero renders first; each data
+ * real review, WhatsApp advice, our story (photo left, words right), then the
+ * FAQ (owner, 2026-11-05: "Why HairCraft" removed). The hero renders first; each data
  * section streams in on its own, so a slow or failing section never holds
  * up (or blanks) the page.
  */
@@ -53,9 +54,11 @@ export default function HomePage() {
         <Suspense fallback={null}>
           <TestimonialsSection />
         </Suspense>
-        <WhySection />
         <ConsultSection />
-        <StoryFaqSection />
+        <StorySection />
+        <Suspense fallback={null}>
+          <FaqSection />
+        </Suspense>
       </HeroShutterPanel>
     </>
   );

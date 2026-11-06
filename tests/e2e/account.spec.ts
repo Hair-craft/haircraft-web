@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
-import { registerViaApi } from "./support/shop";
+import { enterWithCode, registerViaApi, signInWithoutScript } from "./support/shop";
 
 const PASSWORD = "Silky2026!";
 
@@ -17,11 +17,9 @@ async function newCustomer(request: APIRequestContext, firstName = "Meera") {
   return { email, token: (await response.json()).data.accessToken as string };
 }
 
-async function signIn(page: Page, email: string, password = PASSWORD) {
+async function signIn(page: Page, email: string) {
   await page.goto(OPEN + "/sign-in");
-  await page.getByLabel("Email").fill(email);
-  await page.getByRole("textbox", { name: "Password", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await enterWithCode(page, email);
   await page.waitForURL((url) => url.pathname !== "/sign-in");
 }
 
@@ -65,9 +63,7 @@ test.describe("the account area", () => {
       `${OPEN}/sign-in?next=${encodeURIComponent("/account/addresses")}`,
     );
     // Phone sign-in is offered first; these shoppers use email.
-    await page.getByLabel("Email").fill(email);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await enterWithCode(page, email);
     await expect(page).toHaveURL(OPEN + "/account/addresses");
   });
 
@@ -311,7 +307,8 @@ test.describe("password and security", () => {
     // The new password works; the old one doesn't.
     const old = await request.post(`${API}/auth/login`, { data: { email, password: PASSWORD } });
     expect(old.status()).toBe(401);
-    await signIn(elsewhere, email, "Wavy2027!");
+    // Signing in is by code now; the password still changed (checked above through the API).
+    await signIn(elsewhere, email);
     await expect(elsewhere).toHaveURL(OPEN + "/account");
     await other.close();
   });
@@ -331,7 +328,7 @@ test("without JavaScript, the profile and address forms work", async ({ browser,
   const { email } = await newCustomer(request);
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await signIn(page, email);
+  await signInWithoutScript(page, email);
   await page.goto(OPEN + "/account/profile");
   await page.getByLabel("First name").fill("Kavya");
   await page.getByRole("button", { name: "Save changes" }).click();

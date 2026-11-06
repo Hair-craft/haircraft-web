@@ -7,6 +7,7 @@ import {
   detailRows,
   defaultVariant,
   galleryFor,
+  optionGallery,
   pick,
   pickerAxes,
   saving,
@@ -128,6 +129,61 @@ describe("gallery order", () => {
       "brown",
       "black",
     ]);
+  });
+
+  describe("only the chosen option's photos (owner, 2026-11-06)", () => {
+    const v = (id: string, patch: Partial<PublicVariant> = {}) =>
+      ({
+        id,
+        sku: id,
+        color: "Natural Black",
+        texture: "Straight",
+        lengthInches: 20,
+        parentVariantId: null,
+        ...patch,
+      }) as PublicVariant;
+    const variants = [
+      v("20-NB"),
+      v("20-DB", { color: "Dark Brown" }),
+      v("22-NB", { lengthInches: 22 }),
+      v("24-DB", { color: "Dark Brown", lengthInches: 24 }),
+    ];
+    const ids = (list: ProductImage[]) => list.map((i) => i.id);
+
+    it("hides other options' photos", () => {
+      expect(ids(optionGallery(images, variants[0], variants))).toEqual([
+        "black",
+        "primary",
+        "general-2",
+      ]);
+      expect(ids(optionGallery(images, variants[1], variants))).toEqual([
+        "brown",
+        "primary",
+        "general-2",
+      ]);
+    });
+
+    it("borrows the same colour's photos when an option has none of its own", () => {
+      // 22 inch Natural Black has no photos: the 20 inch Natural Black one is shown.
+      expect(ids(optionGallery(images, variants[2], variants))).toEqual([
+        "black",
+        "primary",
+        "general-2",
+      ]);
+      expect(ids(optionGallery(images, variants[3], variants))).toEqual([
+        "brown",
+        "primary",
+        "general-2",
+      ]);
+    });
+
+    it("never leaves the gallery empty", () => {
+      const onlyOthers = [image("brown", { variantId: "20-DB" })];
+      expect(ids(optionGallery(onlyOthers, variants[0], variants))).toEqual(["brown"]);
+      expect(ids(optionGallery(images, null, variants))).toEqual(
+        ids(galleryFor(images, undefined)),
+      );
+    });
   });
 });
 

@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { API, OPEN } from "../../playwright.config";
 import { pngFile } from "./support/png";
-import { adminToken, auth, shopper, signIn } from "./support/shop";
+import { adminToken, auth, shopper, signIn, signInWithoutScript } from "./support/shop";
 
 /*
  * Review photos (S13b): uploaded to the test API's local storage (never
@@ -138,7 +138,7 @@ test("without JavaScript: photos are sent with the form; the API's checks are ex
   const { email, token } = await shopper(request, "photos.nojs");
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await signIn(page, email);
+  await signInWithoutScript(page, email);
   await page.goto(`${OPEN}/product/${TAPES.slug}/review`);
   await page.getByRole("radio", { name: "4 stars: Very good" }).check({ force: true });
   // Claims to be a PNG but isn't one: the API checks the content and refuses it.

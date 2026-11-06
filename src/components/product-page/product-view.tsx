@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  useId,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type MouseEvent,
-  type ReactNode,
-} from "react";
+import Link from "next/link";
+import { useState, type MouseEvent, type ReactNode } from "react";
 import { useCart } from "@/components/cart/cart-context";
 import { AddToBag } from "@/components/cart/cart-ui";
-import { swatchFor } from "@/lib/product/swatch";
 import { business } from "@/content/business";
 import { whatsappChatHref } from "@/lib/info/contact";
 import { RatingStars } from "@/components/product/rating-stars";
@@ -25,7 +18,8 @@ import {
   choiceStatus,
   detailRows,
   defaultVariant,
-  galleryFor,
+  optionGallery,
+  optionVideos,
   pick,
   pickerAxes,
   saving,
@@ -35,9 +29,9 @@ import {
   valueLabel,
   valueOf,
 } from "@/lib/product/variants";
-import { RichText } from "@/components/info/rich-text";
-import { deliveryAndReturns, deliveryPoints, productPromises } from "./content";
+import { deliveryPoints, productPromises } from "./content";
 import { Gallery } from "./gallery";
+import { OptionChoice, RulerIcon } from "./option-choice";
 
 /** `?variant=<SKU>`: the address of one option of this product. */
 const variantHref = (slug: string, variant: PublicVariant) =>
@@ -70,8 +64,9 @@ export function ProductView({
     window.history.replaceState(null, "", variantHref(product.slug, next));
   };
 
-  // A sub-variant's main variant's photos count as its own.
-  const images = galleryFor(product.images, variant?.id, variant?.parentVariantId);
+  // Only the chosen option's photos (and the general ones) are shown (owner, 2026-11-06).
+  const images = optionGallery(product.images, variant, product.variants);
+  const videos = optionVideos(product.videos ?? [], variant, product.variants);
   // The choices are what can be bought: a main variant with sub-variants is
   // left out (only its sub-variants are offered), others are as they are.
   const options = shopVariants(product.variants);
@@ -85,7 +80,12 @@ export function ProductView({
         {/* Photos in a white card, then three promises (the shop's real ones). */}
         <div className="flex flex-col gap-5 lg:col-span-7">
           <div className="rounded-2xl bg-white p-3 shadow-[0_8px_24px_rgba(11,41,26,0.04)] sm:p-4">
-            <Gallery key={variant?.id ?? "none"} images={images} name={product.name} />
+            <Gallery
+              key={variant?.id ?? "none"}
+              images={images}
+              videos={videos}
+              name={product.name}
+            />
           </div>
           {/* Not on phones (owner, 2026-11-03). */}
           <ul className="hidden gap-3 rounded-xl bg-white p-4 shadow-sm sm:grid sm:grid-cols-3">
@@ -189,43 +189,24 @@ export function ProductView({
                   <OptionRow
                     key={key}
                     label={label}
+                    icon={key === "lengthInches" ? <RulerIcon /> : null}
                     current={current === null ? "" : valueLabel(key, current)}
                   >
                     {values.map((value) => {
                       const target = pick(options, variant, key, value);
-                      const status = choiceStatus(options, variant, key, value);
-                      const chosen = value === current;
                       return (
-                        <a
+                        <OptionChoice
                           key={String(value)}
+                          axis={key}
+                          value={value}
                           href={variantHref(product.slug, target)}
                           onClick={(event) => choose(event, target)}
-                          aria-current={chosen || undefined}
-                          className={cx(
-                            "inline-flex h-10 min-w-12 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep",
-                            chosen
-                              ? "border-deep bg-deep text-white shadow-sm"
-                              : status === "elsewhere"
-                                ? "border-dashed border-deep/30 bg-transparent text-muted hover:border-deep/60"
-                                : "border-transparent bg-sand hover:bg-sand-deep",
-                            status === "soldout" && "line-through decoration-1",
-                          )}
-                        >
-                          {key === "color" ? (
-                            <span
-                              aria-hidden
-                              className="size-4 rounded-full ring-1 ring-black/15"
-                              style={{ background: swatchFor(String(value)) }}
-                            />
-                          ) : null}
-                          {valueLabel(key, value)}
-                          {status === "soldout" ? (
-                            <span className="sr-only">, sold out</span>
-                          ) : null}
-                          {status === "elsewhere" ? (
-                            <span className="sr-only">, changes your other choices</span>
-                          ) : null}
-                        </a>
+                          chosen={value === current}
+                          status={choiceStatus(options, variant, key, value)}
+                          swatchImage={
+                            key === "color" ? product.colorSwatches?.[String(value)] : null
+                          }
+                        />
                       );
                     })}
                   </OptionRow>
@@ -258,6 +239,75 @@ export function ProductView({
             />
           ) : null}
 
+          {/* Under the buttons, each opening and closing, in smaller text; no delivery
+              tab (owner, 2026-11-06). */}
+          <InfoSections
+            sections={[
+              ...(descriptionHtml
+                ? [
+                    {
+                      title: "Description",
+                      body: (
+                        <div
+                          className="rich-text"
+                          // Cleaned on the server (description-html.ts): only the editor's formatting.
+                          dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                        />
+                      ),
+                    },
+                  ]
+                : []),
+              // The admin can switch the Details tab off for a product (owner, 2026-11-05).
+              ...(product.showDetails === false
+                ? []
+                : [
+                    {
+                      title: "Details",
+                      body: (
+                        <dl className="grid max-w-2xl grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-[0.8125rem] sm:gap-x-8 sm:gap-y-2 sm:text-base">
+                          {detailRows([
+                            ...Object.entries(product.attributes),
+                            ...(variant
+                              ? ([
+                                  [
+                                    "Length",
+                                    variant.lengthInches === null
+                                      ? null
+                                      : `${variant.lengthInches} inch`,
+                                  ],
+                                  ["Colour", variant.color],
+                                  ["Texture", variant.texture],
+                                  [
+                                    "Size",
+                                    sizeKey(variant) === null ? null : sizeLabel(sizeKey(variant)!),
+                                  ],
+                                  [
+                                    "Weight",
+                                    variant.weightGrams === null
+                                      ? null
+                                      : `${variant.weightGrams} g`,
+                                  ],
+                                  ...Object.entries(variant.attributes),
+                                ] as [string, string | null][])
+                              : []),
+                          ]).map(([name, value]) => (
+                            <div key={name} className="contents">
+                              {/* Name in bold, value light (owner, 2026-11-03). */}
+                              <dt className="rounded-l-lg bg-sand py-2 pl-3 font-bold text-deep sm:py-2.5">
+                                {name}
+                              </dt>
+                              <dd className="rounded-r-lg bg-sand py-2 pr-3 font-light text-muted sm:py-2.5">
+                                {value}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      ),
+                    },
+                  ]),
+            ]}
+          />
+
           <ul className="mt-5 flex flex-col gap-1.5 border-t border-line pt-4 text-sm text-muted">
             {deliveryPoints(freeShippingThreshold).map((point) => (
               <li key={point} className="flex items-center gap-2">
@@ -268,72 +318,24 @@ export function ProductView({
               </li>
             ))}
           </ul>
+          {/* The policies, linked (the Delivery & exchange tab is gone, owner 2026-11-06). */}
+          <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <Link
+              href="/shipping"
+              className="underline decoration-gold underline-offset-4 hover:decoration-deep"
+            >
+              Shipping details
+            </Link>
+            <Link
+              href="/returns"
+              className="underline decoration-gold underline-offset-4 hover:decoration-deep"
+            >
+              Exchange policy
+            </Link>
+          </p>
           {variant ? <p className="mt-3 text-xs text-muted">SKU: {variant.sku}</p> : null}
         </div>
       </div>
-
-      <InfoTabs
-        tabs={[
-          ...(descriptionHtml
-            ? [
-                {
-                  title: "Description",
-                  body: (
-                    <div
-                      className="rich-text"
-                      // Cleaned on the server (description-html.ts): only the editor's formatting.
-                      dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-                    />
-                  ),
-                },
-              ]
-            : []),
-          {
-            title: "Details",
-            body: (
-              <dl className="grid max-w-2xl grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-[0.8125rem] sm:gap-x-8 sm:gap-y-2 sm:text-base">
-                {detailRows([
-                  ...Object.entries(product.attributes),
-                  ...(variant
-                    ? ([
-                        [
-                          "Length",
-                          variant.lengthInches === null ? null : `${variant.lengthInches} inch`,
-                        ],
-                        ["Colour", variant.color],
-                        ["Texture", variant.texture],
-                        ["Size", sizeKey(variant) === null ? null : sizeLabel(sizeKey(variant)!)],
-                        [
-                          "Weight",
-                          variant.weightGrams === null ? null : `${variant.weightGrams} g`,
-                        ],
-                        ...Object.entries(variant.attributes),
-                      ] as [string, string | null][])
-                    : []),
-                ]).map(([name, value]) => (
-                  <div key={name} className="contents">
-                    {/* Name in bold, value light (owner, 2026-11-03). */}
-                    <dt className="rounded-l-lg bg-sand py-2 pl-3 font-bold text-deep sm:py-2.5">
-                      {name}
-                    </dt>
-                    <dd className="rounded-r-lg bg-sand py-2 pr-3 font-light text-muted sm:py-2.5">
-                      {value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            ),
-          },
-          {
-            title: "Delivery & exchange",
-            body: deliveryAndReturns.map((paragraph) => (
-              <p key={paragraph} className="mt-3 first:mt-0">
-                <RichText text={paragraph} />
-              </p>
-            )),
-          },
-        ]}
-      />
     </>
   );
 }
@@ -341,16 +343,21 @@ export function ProductView({
 function OptionRow({
   label,
   current,
+  icon,
   children,
 }: {
   label: string;
   current: string;
+  icon?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div role="group" aria-label={label}>
       <p className="text-sm">
-        <span className="text-xs font-semibold tracking-wide text-muted uppercase">{label}: </span>
+        <span className="text-xs font-semibold tracking-wide text-muted uppercase">
+          {icon ? <>{icon} </> : null}
+          {label}:{" "}
+        </span>
         <span className="font-bold">{current}</span>
       </p>
       <div className="mt-2 flex flex-wrap gap-2">{children}</div>
@@ -359,74 +366,30 @@ function OptionRow({
 }
 
 /**
- * The product's information as tabs (the design's "information suite"): a
- * bar of tab buttons over one panel. Arrow keys, Home and End move between
- * tabs (the WAI tabs pattern). All panels are in the page, the others
- * hidden, so search engines read every one.
+ * The product's information under the buttons (owner, 2026-11-06): each
+ * section a native `<details>`, so it opens with a click or the keyboard,
+ * without JavaScript, and with the browser's find. The first starts open.
+ * Every section's text is in the page, so search engines read it all.
  */
-function InfoTabs({ tabs }: { tabs: { title: string; body: ReactNode }[] }) {
-  const [active, setActive] = useState(0);
-  const base = useId();
-  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
-  const select = (i: number) => {
-    setActive(i);
-    buttons.current[i]?.focus();
-  };
-  const onKeyDown = (event: KeyboardEvent) => {
-    const last = tabs.length - 1;
-    const moves: Record<string, number> = {
-      ArrowRight: active === last ? 0 : active + 1,
-      ArrowLeft: active === 0 ? last : active - 1,
-      Home: 0,
-      End: last,
-    };
-    if (!(event.key in moves)) return;
-    event.preventDefault();
-    select(moves[event.key]);
-  };
+function InfoSections({ sections }: { sections: { title: string; body: ReactNode }[] }) {
+  if (sections.length === 0) return null;
   return (
-    <div className="mt-10 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(11,41,26,0.04)]">
-      <div
-        role="tablist"
-        aria-label="Product information"
-        onKeyDown={onKeyDown}
-        className="flex gap-2 overflow-x-auto bg-sand px-4 sm:px-6"
-      >
-        {tabs.map((tab, i) => (
-          <button
-            key={tab.title}
-            ref={(el) => {
-              buttons.current[i] = el;
-            }}
-            type="button"
-            role="tab"
-            id={`${base}-tab-${i}`}
-            aria-selected={i === active}
-            aria-controls={`${base}-panel-${i}`}
-            tabIndex={i === active ? 0 : -1}
-            onClick={() => setActive(i)}
-            className={cx(
-              "border-b-2 px-4 py-4 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-deep",
-              i === active
-                ? "border-deep font-bold text-deep"
-                : "border-transparent text-muted hover:text-deep",
-            )}
-          >
-            {tab.title}
-          </button>
-        ))}
-      </div>
-      {tabs.map((tab, i) => (
-        <div
-          key={tab.title}
-          role="tabpanel"
-          id={`${base}-panel-${i}`}
-          aria-labelledby={`${base}-tab-${i}`}
-          hidden={i !== active}
-          className="p-6 leading-relaxed text-muted lg:p-8"
-        >
-          {tab.body}
-        </div>
+    <div className="mt-5 divide-y divide-line border-y border-line">
+      {sections.map((section, i) => (
+        <details key={section.title} open={i === 0} className="group">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-bold text-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep [&::-webkit-details-marker]:hidden">
+            {section.title}
+            <span
+              aria-hidden
+              className="text-lg leading-none font-light text-muted transition-transform duration-200 group-open:rotate-45"
+            >
+              +
+            </span>
+          </summary>
+          <div className="pb-4 text-[0.8125rem] leading-relaxed text-muted sm:text-sm">
+            {section.body}
+          </div>
+        </details>
       ))}
     </div>
   );

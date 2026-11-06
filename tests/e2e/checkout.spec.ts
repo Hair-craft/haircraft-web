@@ -3,7 +3,7 @@ import type { PublicProduct } from "@/lib/api/types";
 import { formatPrice } from "@/lib/format";
 import { defaultVariant } from "@/lib/product/variants";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
-import { registerViaApi } from "./support/shop";
+import { enterWithCode, registerViaApi, signInWithoutScript } from "./support/shop";
 
 const PASSWORD = "Silky2026!";
 const ADMIN = { email: "admin@example.com", password: "HcDev@2026!" };
@@ -79,9 +79,7 @@ async function shopper(
 
 async function signIn(page: Page, email: string) {
   await page.goto(OPEN + "/sign-in");
-  await page.getByLabel("Email").fill(email);
-  await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await enterWithCode(page, email);
   await page.waitForURL((url) => url.pathname !== "/sign-in");
 }
 
@@ -140,9 +138,7 @@ test.describe("opening checkout", () => {
     await drawer.getByRole("link", { name: /^Secure checkout/ }).click();
     await expect(page).toHaveURL(`${OPEN}/sign-in?next=${encodeURIComponent("/checkout")}`);
     // Phone sign-in is offered first; these shoppers use email.
-    await page.getByLabel("Email").fill(email);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await enterWithCode(page, email);
     await expect(page).toHaveURL(OPEN + "/checkout");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Checkout");
     await expect(summary(page).getByRole("listitem")).toHaveCount(1);
@@ -409,7 +405,7 @@ test("without JavaScript, the whole checkout works", async ({ browser, request }
   const { email } = await shopper(request);
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await signIn(page, email);
+  await signInWithoutScript(page, email);
   await page.goto(OPEN + "/checkout");
   await page.getByRole("radio", { name: /^Studio/ }).check();
   await page.getByRole("button", { name: "Deliver here" }).click();

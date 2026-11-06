@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { faqJsonLd, faqs, whyCards } from "@/components/home/content";
+import { faqJsonLd } from "@/components/home/content";
+import { homeFaqs as faqs } from "@/content/faq";
 import { plainText } from "@/lib/info/rich-text";
 import { announcementItems } from "@/components/layout/announcement-bar";
 
@@ -25,7 +26,7 @@ describe("home page wording", () => {
   });
 
   it("makes no unverified claims about years or numbers of customers", () => {
-    const text = JSON.stringify({ faqs, whyCards });
+    const text = JSON.stringify({ faqs });
     expect(text).not.toMatch(/\d+\+?\s*(years|yrs)/i);
     expect(text).not.toMatch(/\d[\d,]*\+?\s*(happy\s+)?(customers|clients|women)/i);
   });

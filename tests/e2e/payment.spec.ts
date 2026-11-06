@@ -2,13 +2,14 @@ import { expect, test, type Page } from "@playwright/test";
 import { defaultVariant } from "@/lib/product/variants";
 import { API, OPEN } from "../../playwright.config";
 import {
+  CLIP_INS,
   auth,
   cancelUnpaidOrders,
-  CLIP_INS,
   product,
   setStock,
   shopper,
   signIn,
+  signInWithoutScript,
 } from "./support/shop";
 
 /*
@@ -134,7 +135,7 @@ test("without JavaScript, the order is placed and the page says payment needs it
   const { email } = await shopper(request, "pay");
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await signIn(page, email);
+  await signInWithoutScript(page, email);
   await placeOnline(page);
   await expect(page.getByRole("heading", { name: "Awaiting payment" })).toBeVisible();
   // Playwright's text search skips <noscript>; the message is there and shown.

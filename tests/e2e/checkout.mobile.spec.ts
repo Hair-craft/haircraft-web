@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { PublicProduct } from "@/lib/api/types";
 import { defaultVariant } from "@/lib/product/variants";
 import { API, OPEN } from "../../playwright.config";
-import { registerViaApi } from "./support/shop";
+import { enterWithCode, registerViaApi } from "./support/shop";
 
 test.describe("checkout on a phone", () => {
   test("the summary is folded to its total, and the page fits the screen", async ({
@@ -35,9 +35,7 @@ test.describe("checkout on a phone", () => {
     });
 
     await page.goto(OPEN + "/sign-in");
-    await page.getByLabel("Email").fill(email);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill("Silky2026!");
-    await page.getByRole("button", { name: "Sign in" }).tap();
+    await enterWithCode(page, email, "tap");
     await page.waitForURL((url) => url.pathname !== "/sign-in");
     await page.goto(OPEN + "/checkout");
 

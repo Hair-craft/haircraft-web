@@ -5,8 +5,8 @@ import {
   type BrowserContext,
   type Page,
 } from "@playwright/test";
-import { API, OPEN, TEST_MAX_FAILED_LOGINS } from "../../playwright.config";
-import { registerViaApi, verifyPhoneOnForm } from "./support/shop";
+import { API, OPEN } from "../../playwright.config";
+import { enterWithCode, lastEmailCode, registerViaApi, verifyPhoneOnForm } from "./support/shop";
 
 const PASSWORD = "Silky2026!";
 /** The seeded admin (test database only): the backend's documented development password. */
@@ -28,94 +28,51 @@ async function apiAccount(request: APIRequestContext, firstName = "Priya") {
 }
 
 /**
- * Signs in through the form and waits for the outcome: the next page when it
- * should work (the right password), the form's error message when it shouldn't.
+ * Signs in with a code (owner, 2026-11-06: no password on the sign-in page)
+ * and waits for the outcome: the next page when it should work, or staying on
+ * the sign-in page when it is refused.
  */
-async function signIn(
-  page: Page,
-  email: string,
-  password = PASSWORD,
-  expect_: "works" | "refused" = password === PASSWORD ? "works" : "refused",
-) {
+async function signIn(page: Page, email: string, expect_: "works" | "refused" = "works") {
   await page.goto(OPEN + "/sign-in");
-  await page.getByLabel("Email").fill(email);
-  await page.getByRole("textbox", { name: "Password", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await enterWithCode(page, email);
   if (expect_ === "works") await page.waitForURL((url) => url.pathname !== "/sign-in");
-  else await expect(page.locator("[data-form-error]")).toBeVisible();
+  else await expect(page).toHaveURL(/\/sign-in/);
 }
 
 const cookie = async (context: BrowserContext, name: string) =>
   (await context.cookies(OPEN)).find((c) => c.name === name);
 
-test.describe("register", () => {
-  test("creates the account, signs in and shows the account page", async ({
+test.describe("first sign-in (no separate create account)", () => {
+  test("a new email signs straight in with a code, adds the mobile number, and lands on the account", async ({
     page,
     context,
     request,
   }) => {
     const email = freshEmail();
-    await page.goto(OPEN + "/register");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Create your account");
-    await page.getByLabel("First name").fill("Priya");
-    await page.getByLabel("Last name").fill("Sharma");
-    await page.getByLabel("Email").fill(email);
+    // Old links to the create-account page land on sign-in.
+    await page.goto(OPEN + "/register?next=/account");
+    await expect(page).toHaveURL(`${OPEN}/sign-in?next=${encodeURIComponent("/account")}`);
+    await page.getByLabel("Email or mobile number").fill(email);
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    await expect(page.getByLabel("6-digit code")).toBeVisible();
+    await page.getByLabel("6-digit code").fill(await lastEmailCode(request, email));
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
     const local = await verifyPhoneOnForm(page, request);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-    // The rules tick off while typing.
-    await expect(page.getByText("✓ At least 8 characters")).toBeVisible();
-    await page.getByRole("button", { name: "Create account" }).click();
 
     await expect(page).toHaveURL(OPEN + "/account");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back, Priya");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome to HairCraft");
     await expect(page.locator("main")).toContainText(email);
     await expect(page.locator("main")).toContainText(`${local.slice(0, 5)} ${local.slice(5)}`);
-    await expect(page.getByRole("button", { name: "Account menu for Priya" })).toBeVisible();
 
     // The tokens are in httpOnly cookies: page scripts can't read them.
     for (const name of ["hc_at", "hc_rt", "hc_who"])
       expect((await cookie(context, name))?.httpOnly, `${name} is httpOnly`).toBe(true);
     expect(await page.evaluate(() => document.cookie)).not.toMatch(/hc_at|hc_rt|hc_who/);
   });
-
-  test("explains every problem next to its field, and moves the focus there", async ({
-    page,
-    request,
-  }) => {
-    await page.goto(OPEN + "/register");
-    // Create account waits for the phone (owner, 2026-11-04); the rest is checked on submit.
-    await verifyPhoneOnForm(page, request);
-    await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page.getByText("Please check the details below.")).toBeVisible();
-    await expect(page.getByText("Enter your first name.")).toBeVisible();
-    await expect(page.getByText("Enter a valid email address.")).toBeVisible();
-    await expect(page.getByLabel("First name")).toBeFocused();
-
-    await page.getByLabel("First name").fill("Asha");
-    await page.getByLabel("Email").fill(freshEmail());
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill("password");
-    await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page.getByText("Use at least one letter and one number.")).toBeVisible();
-    // What was typed is kept (never the password field's rules state), and the phone stays verified.
-    await expect(page.getByLabel("First name")).toHaveValue("Asha");
-    await expect(page.getByRole("status").filter({ hasText: "Verified" })).toBeVisible();
-
-    const { email } = await apiAccount(request);
-    await page.getByLabel("Email").fill(email);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-    await page.getByRole("button", { name: "Create account" }).click();
-    await expect(
-      page.getByText("An account with this email already exists.").first(),
-    ).toBeVisible();
-    await expect(page.getByRole("link", { name: "Sign in instead" })).toHaveAttribute(
-      "href",
-      "/sign-in",
-    );
-  });
 });
 
 test.describe("sign in", () => {
-  test("wrong details, then the right ones, returning to where the shopper was going", async ({
+  test("a wrong code, then the right one, returning to where the shopper was going", async ({
     page,
     request,
   }) => {
@@ -124,41 +81,22 @@ test.describe("sign in", () => {
     await expect(page).toHaveURL(
       `${OPEN}/sign-in?next=${encodeURIComponent("/account/orders?page=2")}`,
     );
-    // Phone sign-in is offered first; these shoppers use email.
-
-    await page.getByLabel("Email").fill(email);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill("Wrong-password-1");
-    await page.getByRole("button", { name: "Sign in" }).click();
-    await expect(page.getByText("Incorrect email or password.")).toBeVisible();
-    await expect(page.getByLabel("Email")).toHaveValue(email);
-
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByLabel("Email or mobile number").fill(email);
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    await page.getByLabel("6-digit code").fill("000000");
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    await expect(page.getByText(/code isn.t right/).first()).toBeVisible();
+    await expect(page.getByLabel("6-digit code")).toBeVisible();
+    await page.getByLabel("6-digit code").fill(await lastEmailCode(request, email));
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
     await expect(page).toHaveURL(OPEN + "/account/orders?page=2");
   });
 
-  test("Show reveals the password; links to register and forgot password", async ({ page }) => {
+  test("the sign-in page has no password box (codes only)", async ({ page }) => {
     await page.goto(OPEN + "/sign-in");
-    const password = page.getByRole("textbox", { name: "Password", exact: true });
-    await password.fill("secret1");
-    await expect(password).toHaveAttribute("type", "password");
-    await page.getByRole("button", { name: "Show password" }).click();
-    await expect(password).toHaveAttribute("type", "text");
-    await page.getByRole("link", { name: "Forgot your password?" }).click();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Forgot your password?");
-    // The test API has SMS codes on: the reset starts with the mobile number.
-    await expect(page.getByLabel("Mobile number on your account")).toBeVisible();
-  });
-
-  test("too many wrong passwords lock the account for a while", async ({ page, request }) => {
-    const { email } = await apiAccount(request);
-    for (let i = 0; i < TEST_MAX_FAILED_LOGINS; i++) await signIn(page, email, "Wrong-password-1");
-    // Now even the right password is refused for a while.
-    await signIn(page, email, PASSWORD, "refused");
-    await expect(
-      page.getByText(/^Too many attempts\. Please try again in \d+ minutes?\.$/),
-    ).toBeVisible();
-    await expect(page).toHaveURL(/\/sign-in/);
+    await expect(page.getByLabel("Email or mobile number")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Password", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /password/i })).toHaveCount(0);
   });
 
   test("a suspended account is told so; its session ends at once", async ({ page, request }) => {
@@ -178,7 +116,7 @@ test.describe("sign in", () => {
     await page.reload();
     await expect(page).toHaveURL(/\/sign-in\?.*notice=ended/);
     await expect(page.getByText("Your session has ended. Please sign in again.")).toBeVisible();
-    await signIn(page, email, PASSWORD, "refused");
+    await signIn(page, email, "refused");
     await expect(
       page.getByText("This account has been suspended. Please contact us."),
     ).toBeVisible();
@@ -196,9 +134,7 @@ test.describe("sign in", () => {
   test("next can't send the shopper to another site", async ({ page, request }) => {
     const { email } = await apiAccount(request);
     await page.goto(`${OPEN}/sign-in?next=${encodeURIComponent("//evil.example/steal")}`);
-    await page.getByLabel("Email").fill(email);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await enterWithCode(page, email);
     await expect(page).toHaveURL(OPEN + "/account");
   });
 });
@@ -296,18 +232,4 @@ test.describe("sign out", () => {
     await phone.close();
     await laptop.close();
   });
-});
-
-// Creating an account verifies the phone with a code, which needs the page's
-// script (owner, 2026-11-04); signing in still works without it.
-test("without JavaScript, sign in and out still work", async ({ browser, request }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false });
-  const page = await context.newPage();
-  const { email } = await apiAccount(request, "Lata");
-
-  await signIn(page, email, "Wrong-password-1");
-  await expect(page.getByText("Incorrect email or password.")).toBeVisible();
-  await signIn(page, email);
-  await expect(page).toHaveURL(OPEN + "/account");
-  await context.close();
 });

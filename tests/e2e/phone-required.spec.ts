@@ -1,12 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { API, OPEN } from "../../playwright.config";
-import {
-  freshMobile,
-  lastSmsCode,
-  PASSWORD,
-  registerViaApi,
-  verifyPhoneOnForm,
-} from "./support/shop";
+import { PASSWORD, enterWithCode, freshMobile, lastSmsCode, registerViaApi } from "./support/shop";
 
 /**
  * Every account has an email and a verified mobile number; sign in with
@@ -20,64 +14,33 @@ const freshEmail = (prefix = "phone") =>
 
 const spaced = (local: string) => `${local.slice(0, 5)} ${local.slice(5)}`;
 
-test.describe("create account", () => {
-  test("Create account waits for the verified phone; then signs in with that phone", async ({
+test.describe("first sign-in with a mobile number", () => {
+  test("a new number signs straight in with a code; the account has it verified", async ({
     page,
     request,
   }) => {
-    const email = freshEmail();
-    await page.goto(OPEN + "/register?next=/account");
-    await page.getByLabel("First name").fill("Kavya");
-    await page.getByLabel("Email").fill(email);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-    const create = page.getByRole("button", { name: "Create account" });
-    await expect(create).toBeDisabled();
-    await expect(page.getByText("Verify your mobile number to create your account.")).toBeVisible();
-
-    const local = await verifyPhoneOnForm(page, request);
-    // Verified: the number is locked, and can be changed.
-    await expect(page.getByLabel("Mobile number")).toHaveAttribute("readonly", "");
-    await expect(page.getByRole("button", { name: "Change number" })).toBeVisible();
-    await expect(create).toBeEnabled();
-    await create.click();
+    const local = freshMobile();
+    await page.goto(OPEN + "/sign-in?next=/account");
+    await page.getByLabel("Email or mobile number").fill(spaced(local));
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    await expect(page.getByText(/texted a 6-digit code to/)).toBeVisible();
+    await page.getByLabel("6-digit code").fill(await lastSmsCode(request, `+91${local}`));
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
     await expect(page).toHaveURL(OPEN + "/account");
     await expect(page.locator("main")).toContainText(spaced(local));
-
-    // Sign out, then back in with the phone number and the password.
-    await page.getByRole("button", { name: "Sign out", exact: true }).click();
-    await expect(page).toHaveURL(OPEN + "/");
-    await page.goto(OPEN + "/sign-in");
-    await page.getByLabel("Email or phone number").fill(spaced(local));
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
-    await page.waitForURL((url) => url.pathname !== "/sign-in");
-    await expect(page.getByRole("button", { name: "Account menu for Kavya" })).toBeVisible();
   });
 
   test("a bad number and a wrong code are explained", async ({ page }) => {
-    await page.goto(OPEN + "/register");
-    await page.getByLabel("Mobile number").fill("12345");
-    await page.getByRole("button", { name: "Verify", exact: true }).click();
+    await page.goto(OPEN + "/sign-in");
+    await page.getByLabel("Email or mobile number").fill("12345");
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
     await expect(page.getByText(/10-digit Indian mobile number/)).toBeVisible();
 
-    await page.getByLabel("Mobile number").fill(freshMobile());
-    await page.getByRole("button", { name: "Verify", exact: true }).click();
+    await page.getByLabel("Email or mobile number").fill(freshMobile());
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
     await page.getByLabel("6-digit code").fill("000000");
-    await page.getByRole("button", { name: "Confirm code" }).click();
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
     await expect(page.getByText(/code isn.t right/).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Create account" })).toBeDisabled();
-  });
-
-  test("a number another account verified can't be used again", async ({ page, request }) => {
-    const local = freshMobile();
-    const taken = await registerViaApi(request, {
-      data: { email: freshEmail(), password: PASSWORD, firstName: "Taken", phone: `+91${local}` },
-    });
-    expect(taken.status()).toBe(201);
-    await page.goto(OPEN + "/register");
-    await page.getByLabel("Mobile number").fill(local);
-    await page.getByRole("button", { name: "Verify", exact: true }).click();
-    await expect(page.getByText(/already used by another account/)).toBeVisible();
   });
 });
 
@@ -93,8 +56,8 @@ test.describe("forgot password", () => {
     expect(registered.status()).toBe(201);
     await page.waitForTimeout(31_000);
 
-    await page.goto(OPEN + "/sign-in");
-    await page.getByRole("link", { name: "Forgot your password?" }).click();
+    // No password on the sign-in page any more (owner, 2026-11-06); the page itself stays.
+    await page.goto(OPEN + "/forgot-password");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Forgot your password?");
     await page.getByLabel("Mobile number on your account").fill(local);
     await page.getByRole("button", { name: "Send code" }).click();
@@ -134,9 +97,7 @@ test("the add-your-phone step lets an account that has one go straight on", asyn
   });
   expect(registered.status()).toBe(201);
   await page.goto(OPEN + "/sign-in");
-  await page.getByLabel("Email or phone number").fill(email);
-  await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await enterWithCode(page, email);
   await page.waitForURL((url) => url.pathname !== "/sign-in");
   await page.goto(OPEN + "/add-phone?next=/account/orders");
   await expect(page).toHaveURL(OPEN + "/account/orders");

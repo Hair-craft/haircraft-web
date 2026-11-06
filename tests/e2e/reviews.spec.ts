@@ -1,14 +1,16 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
 import {
+  CLIP_INS,
   adminOrder,
   adminToken,
   auth,
-  CLIP_INS,
+  enterWithCode,
   placeOrderByApi,
   product,
   shopper,
   signIn,
+  signInWithoutScript,
 } from "./support/shop";
 
 /*
@@ -112,9 +114,7 @@ test.describe("writing a review", () => {
     await main(page).getByRole("link", { name: "Write a review" }).click();
     await expect(page).toHaveURL(/\/sign-in\?next=/);
     // Phone sign-in is offered first; this shopper uses email.
-    await page.getByLabel("Email").fill(email);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill("Silky2026!");
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await enterWithCode(page, email);
     await expect(page).toHaveURL(`${OPEN}/product/${CLIP_INS}/review`);
   });
 });
@@ -203,7 +203,7 @@ test("without JavaScript, a review can be written", async ({ browser, request })
   const { email, token } = await shopper(request, "review.nojs");
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await signIn(page, email);
+  await signInWithoutScript(page, email);
   await page.goto(`${OPEN}/product/${CLIP_INS}/review`);
   await page.getByRole("radio", { name: "5 stars: Excellent" }).check({ force: true });
   await page.getByLabel("Title (optional)").fill("Lovely");

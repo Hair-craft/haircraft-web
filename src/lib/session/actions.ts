@@ -6,22 +6,10 @@ import { isApiError } from "@/lib/api/errors";
 import { forgetCart } from "@/lib/cart/server";
 import { forgetWishlist } from "@/lib/wishlist/server";
 import type { FieldError } from "@/lib/api/types";
-import {
-  clientFrom,
-  registerRequest,
-  signInRequest,
-  signOutEverywhereRequest,
-  signOutRequest,
-} from "./api";
+import { clientFrom, signInRequest, signOutEverywhereRequest, signOutRequest } from "./api";
 import { ACCESS_COOKIE, clearedSessionCookies, flashCookie, REFRESH_COOKIE } from "./cookies";
-import { afterSignIn, setCookies, smsCodesOn, startSession } from "./start";
-import {
-  authErrorMessage,
-  DEFAULT_AFTER_SIGN_IN,
-  indianMobile,
-  passwordProblem,
-  safeNext,
-} from "./rules";
+import { afterSignIn, setCookies, startSession } from "./start";
+import { authErrorMessage, DEFAULT_AFTER_SIGN_IN, indianMobile, safeNext } from "./rules";
 
 export interface AuthFormState {
   /** The message at the top of the form. */
@@ -80,62 +68,6 @@ export async function signInAction(
       error: authErrorMessage(error.status, error.code, error.message),
       fields: error.code === "VALIDATION_FAILED" ? fieldMessages(error.fieldErrors) : {},
       values,
-    };
-  }
-  redirect(destination);
-}
-
-export async function registerAction(
-  _previous: AuthFormState,
-  form: FormData,
-): Promise<AuthFormState> {
-  const firstName = text(form, "firstName", 100);
-  const lastName = text(form, "lastName", 100);
-  const email = text(form, "email");
-  const phoneText = text(form, "phone", 30);
-  const phoneToken = text(form, "phoneToken", 2000);
-  const password = String(form.get("password") ?? "").slice(0, 1024);
-  const next = safeNext(text(form, "next", 512)) ?? DEFAULT_AFTER_SIGN_IN;
-  const values = { firstName, lastName, email, phone: phoneText };
-
-  const fields: Record<string, string> = {};
-  if (!firstName) fields.firstName = "Enter your first name.";
-  if (!EMAIL.test(email)) fields.email = "Enter a valid email address.";
-  // Required (owner, 2026-11-04), and verified first while SMS codes are on.
-  const phone = indianMobile(phoneText);
-  if (!phone) fields.phone = "Enter your 10-digit mobile number.";
-  else if (!phoneToken && (await smsCodesOn()))
-    fields.phone = "Verify your mobile number with the code we send you.";
-  const problem = passwordProblem(password);
-  if (problem) fields.password = problem;
-  if (Object.keys(fields).length > 0)
-    return { error: "Please check the details below.", fields, values };
-
-  let destination: string;
-  try {
-    const tokens = await registerRequest(
-      {
-        email,
-        password,
-        firstName,
-        ...(lastName ? { lastName } : {}),
-        phone: phone as string,
-        ...(phoneToken ? { phoneToken } : {}),
-      },
-      clientFrom(await headers()),
-    );
-    await startSession(tokens);
-    destination = await afterSignIn(tokens, next);
-  } catch (error) {
-    if (!isApiError(error)) throw error;
-    const taken = error.code === "EMAIL_ALREADY_REGISTERED";
-    return {
-      error: authErrorMessage(error.status, error.code, error.message),
-      fields: taken
-        ? { email: "An account with this email already exists." }
-        : fieldMessages(error.fieldErrors),
-      values,
-      emailTaken: taken,
     };
   }
   redirect(destination);

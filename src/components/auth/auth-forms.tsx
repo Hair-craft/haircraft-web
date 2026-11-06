@@ -5,8 +5,7 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/fields";
 import { cx } from "@/lib/cx";
-import { RegisterPhoneField } from "./register-phone-field";
-import { registerAction, signInAction, type AuthFormState } from "@/lib/session/actions";
+import { signInAction, type AuthFormState } from "@/lib/session/actions";
 import { PASSWORD_MAX_BYTES, passwordChecks } from "@/lib/session/rules";
 
 export const EMPTY: AuthFormState = { error: null, fields: {}, values: {} };
@@ -198,94 +197,5 @@ export function IndiaFlag() {
       <path d="M0 320h640v160H0z" fill="#128807" />
       <circle cx="320" cy="240" r="40" fill="#008" />
     </svg>
-  );
-}
-
-export function RegisterForm({ next, smsOn }: { next: string | null; smsOn: boolean }) {
-  const [state, action, pending] = useActionState(registerAction, EMPTY);
-  // Create account waits for a verified phone while SMS codes are on (owner, 2026-11-04).
-  const [phoneReady, setPhoneReady] = useState(!smsOn);
-  const form = useFocusFirstProblem(state);
-  const signInHref = `/sign-in${next ? `?next=${encodeURIComponent(next)}` : ""}`;
-  return (
-    <form ref={form} action={action} noValidate className="flex flex-col gap-5">
-      <FormError message={state.error}>
-        {state.emailTaken ? (
-          <>
-            {" "}
-            <Link href={signInHref} className="font-medium underline underline-offset-4">
-              Sign in instead
-            </Link>
-          </>
-        ) : null}
-      </FormError>
-      <input type="hidden" name="next" value={next ?? ""} />
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Input
-          label="First name"
-          name="firstName"
-          autoComplete="given-name"
-          required
-          maxLength={100}
-          defaultValue={state.values.firstName}
-          error={state.fields.firstName}
-        />
-        <Input
-          label="Last name"
-          name="lastName"
-          autoComplete="family-name"
-          maxLength={100}
-          defaultValue={state.values.lastName}
-          error={state.fields.lastName}
-        />
-      </div>
-      <Input
-        label="Email"
-        name="email"
-        type="email"
-        autoComplete="email"
-        required
-        defaultValue={state.values.email}
-        error={state.fields.email}
-      />
-      <RegisterPhoneField
-        smsOn={smsOn}
-        defaultValue={state.values.phone}
-        error={state.fields.phone}
-        onReadyChange={setPhoneReady}
-      />
-      <PasswordField
-        label="Password"
-        autoComplete="new-password"
-        error={state.fields.password}
-        showRules
-      />
-      <p className="text-sm leading-relaxed text-muted">
-        By creating an account you agree to our{" "}
-        <Link href="/terms" className="font-semibold text-deep underline underline-offset-2">
-          Terms of use
-        </Link>{" "}
-        and{" "}
-        <Link href="/privacy" className="font-semibold text-deep underline underline-offset-2">
-          Privacy policy
-        </Link>
-        .
-      </p>
-      <Button
-        type="submit"
-        size="lg"
-        loading={pending}
-        disabled={!phoneReady}
-        aria-describedby={phoneReady ? undefined : "verify-first"}
-        className="h-14 w-full text-sm tracking-wider uppercase shadow-lg hover:shadow-xl"
-      >
-        Create account <span aria-hidden>→</span>
-      </Button>
-      {phoneReady ? null : (
-        <p id="verify-first" className="-mt-2 text-center text-sm text-muted">
-          Verify your mobile number to create your account.
-        </p>
-      )}
-    </form>
   );
 }

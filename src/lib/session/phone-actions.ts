@@ -5,13 +5,11 @@ import { redirect } from "next/navigation";
 import { isApiError } from "@/lib/api/errors";
 import { updateProfile } from "@/lib/account/api";
 import {
-  checkRegisterCodeRequest,
   clientFrom,
   forgotPasswordRequest,
   googleSignInRequest,
   resetPasswordRequest,
   sendPhoneChangeCodeRequest,
-  sendRegisterCodeRequest,
   sendSignInCodeRequest,
   verifyPhoneChangeRequest,
   verifySignInCodeRequest,
@@ -121,35 +119,6 @@ export async function verifySignInCodeAction(
     return failure(error, "code");
   }
   redirect(destination);
-}
-
-// ── Create account: verify the phone ──────────────────────────────────
-
-export async function sendRegisterCodeAction(rawPhone: string): Promise<CodeStep> {
-  const phone = readPhone(rawPhone);
-  if (!phone) return BAD_PHONE;
-  try {
-    return codeSent(phone, await sendRegisterCodeRequest(phone, clientFrom(await headers())));
-  } catch (error) {
-    return failure(error, "phone");
-  }
-}
-
-/** The token that proves the number goes with the registration form. */
-export async function checkRegisterCodeAction(
-  rawPhone: string,
-  rawCode: string,
-): Promise<StepResult<{ phone: string; phoneToken: string }>> {
-  const phone = readPhone(rawPhone);
-  if (!phone) return BAD_PHONE;
-  const code = smsCode(clip(rawCode, 20));
-  if (!code) return BAD_CODE;
-  try {
-    const { phoneToken } = await checkRegisterCodeRequest(phone, code, clientFrom(await headers()));
-    return { ok: true, phone, phoneToken };
-  } catch (error) {
-    return failure(error, "code");
-  }
 }
 
 // ── Forgotten password ────────────────────────────────────────────────

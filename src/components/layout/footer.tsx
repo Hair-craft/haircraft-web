@@ -34,7 +34,22 @@ async function categoryLinks(): Promise<{ label: string; href: string }[]> {
   }
 }
 
-const payments = ["UPI", "GPay", "PhonePe", "Visa", "Mastercard", "Net banking"];
+/**
+ * The ways Razorpay takes payment, with each brand's own logo (owner,
+ * 2026-11-06). The SVG files are the brands' published logos (from Wikimedia
+ * Commons) in `public/images/payments/`; `width` keeps each one's shape at
+ * the chips' height.
+ */
+const payments: { name: string; src: string; width: number }[] = [
+  { name: "UPI", src: "/images/payments/upi.svg", width: 46 },
+  { name: "Google Pay", src: "/images/payments/google-pay.svg", width: 40 },
+  { name: "PhonePe", src: "/images/payments/phonepe.svg", width: 58 },
+  { name: "Paytm", src: "/images/payments/paytm.svg", width: 44 },
+  { name: "Visa", src: "/images/payments/visa.svg", width: 40 },
+  { name: "Mastercard", src: "/images/payments/mastercard.svg", width: 30 },
+  { name: "RuPay", src: "/images/payments/rupay.svg", width: 48 },
+  { name: "American Express", src: "/images/payments/amex.svg", width: 22 },
+];
 
 export async function Footer() {
   const categories = await categoryLinks();
@@ -68,11 +83,17 @@ export async function Footer() {
               <span className="font-semibold text-deep">{business.legalName}</span>
             ) : null}
             {business.cin ? <span>CIN: {business.cin}</span> : null}
-            <a href={`mailto:${business.email}`} className="inline-flex min-h-6 w-fit items-center hover:text-deep hover:underline">
+            <a
+              href={`mailto:${business.email}`}
+              className="inline-flex min-h-6 w-fit items-center hover:text-deep hover:underline"
+            >
               {business.email}
             </a>
             {business.phone ? (
-              <a href={`tel:${business.phone}`} className="inline-flex min-h-6 w-fit items-center hover:text-deep hover:underline">
+              <a
+                href={`tel:${business.phone}`}
+                className="inline-flex min-h-6 w-fit items-center hover:text-deep hover:underline"
+              >
                 {displayPhone(business.phone)}
               </a>
             ) : null}
@@ -139,12 +160,36 @@ export async function Footer() {
             <ul className="mt-2 flex flex-wrap gap-2">
               {payments.map((method) => (
                 <li
-                  key={method}
-                  className="rounded border border-line bg-white px-2 py-1 text-xs font-semibold"
+                  key={method.name}
+                  className="flex h-8 items-center rounded border border-line bg-white px-2"
                 >
-                  {method}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- tiny local SVGs, nothing to resize */}
+                  <img
+                    src={method.src}
+                    alt={method.name}
+                    width={method.width}
+                    height={18}
+                    loading="lazy"
+                    className="h-[18px] w-auto"
+                  />
                 </li>
               ))}
+              <li className="flex h-8 items-center gap-1 rounded border border-line bg-white px-2 text-xs font-semibold">
+                <svg
+                  viewBox="0 0 24 24"
+                  width={14}
+                  height={14}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M3 10h18M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18M12 3l9 5H3z" />
+                </svg>
+                Net banking
+              </li>
             </ul>
           </div>
         </div>

@@ -2,8 +2,9 @@ import { returnRules as r } from "@/content/returns-rules";
 import { formatPrice } from "@/lib/format";
 
 /**
- * The "Delivery & exchange" note on every product page: short, and linked to
- * the full policies. The numbers come from the same rules as the Exchange
+ * The delivery and exchange note, short and linked to the full policies. No
+ * longer a tab on the product page (owner, 2026-11-06); kept for the tests
+ * that check its wording matches the policies. The numbers come from the same rules as the Exchange
  * policy page (`src/content/returns-rules.ts`).
  */
 export const deliveryAndReturns: string[] = [

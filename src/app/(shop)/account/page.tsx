@@ -112,7 +112,7 @@ export default async function AccountPage() {
             </span>
             <div>
               <h1 className="font-display text-2xl leading-tight font-medium sm:text-[1.75rem] sm:leading-10">
-                Welcome back, {profile.firstName}
+                {profile.firstName ? `Welcome back, ${profile.firstName}` : "Welcome to HairCraft"}
               </h1>
               <p className="mt-1 text-sm text-muted">
                 {name}

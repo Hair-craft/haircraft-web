@@ -121,6 +121,16 @@ export interface SearchSuggestions {
   didYouMean: string | null;
 }
 
+/** A product video (owner, 2026-11-06): an MP4 with its still frame; `variantId` set when it shows one option. */
+export interface ProductVideo {
+  id: string;
+  url: string;
+  poster: ImageUrls;
+  durationSeconds: number;
+  variantId: string | null;
+  sortOrder: number;
+}
+
 /** A product photo (`GET /products/:slug`); `variantId` set when it shows one option. */
 export interface ProductImage {
   id: string;
@@ -166,6 +176,15 @@ export interface PublicProduct {
   /** One line shown in bold above the short description (optional). */
   description: string | null;
   attributes: Record<string, string>;
+  /**
+   * False: switched off in the admin, so the page has no Details tab (owner,
+   * 2026-11-05). Missing (an older API) counts as shown.
+   */
+  showDetails?: boolean;
+  /** Short videos, shown after the photos (owner, 2026-11-06); missing from an older API. */
+  videos?: ProductVideo[];
+  /** Swatch photos uploaded in the admin, by colour name (owner, 2026-11-06). */
+  colorSwatches?: Record<string, string>;
   categories: { id: string; name: string; slug: string }[];
   images: ProductImage[];
   variants: PublicVariant[];

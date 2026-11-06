@@ -35,7 +35,9 @@ const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 
  * It loops: the cards repeat on both sides, and once a slide settles the row
  * jumps by one whole set, which looks the same, so it never runs out. Only
  * the middle set is real for screen readers and the keyboard; the repeats are
- * hidden and inert. Auto-sliding stops while the row is hovered, focused or
+ * hidden from them but can still be tapped and clicked. (They were inert
+ * until 2026-11-05: after the last card the repeats are what's on screen,
+ * so the "second round" of cards didn't open when tapped.) Auto-sliding stops while the row is hovered, focused or
  * touched, and while it is off screen or the tab is hidden. With reduced
  * motion there is no preview and no auto-slide: the arrows are there at once.
  */
@@ -124,6 +126,13 @@ export function ConcernCarousel({
       window.removeEventListener("resize", onResize);
     };
   }, [loops, measure, recentre]);
+
+  // The repeats' links and buttons stay clickable but out of the Tab order.
+  useEffect(() => {
+    list.current
+      ?.querySelectorAll<HTMLElement>("li[data-repeat] a, li[data-repeat] button")
+      .forEach((el) => el.setAttribute("tabindex", "-1"));
+  }, [items, copies]);
 
   // Motion only for people who haven't asked for less.
   useEffect(() => {
@@ -251,7 +260,7 @@ export function ConcernCarousel({
                 <li
                   key={`${copy}-${item.key}`}
                   aria-hidden={real ? undefined : true}
-                  inert={!real}
+                  data-repeat={real ? undefined : true}
                   className="w-[78%] shrink-0 snap-start sm:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-3rem)/3)]"
                 >
                   {item.node}

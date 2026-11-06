@@ -242,6 +242,17 @@ input[type="search"]::-webkit-search-cancel-button {
   appearance: none;
 }
 
+/* The bar at the top while the next page loads (navigation-progress.tsx): it grows
+   quickly, then ever more slowly, never reaching the end until the page arrives. */
+@keyframes hc-nav-progress {
+  from {
+    transform: scaleX(0.05);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 /* A photo swapped in (product gallery): a quick fade instead of a jump. */
 @keyframes hc-fade-in {
   from {

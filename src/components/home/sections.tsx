@@ -20,7 +20,8 @@ import { isApiError } from "@/lib/api/errors";
 import type { ProductCard as ProductCardData } from "@/lib/api/types";
 import { ConsultBanner } from "@/components/layout/consult-banner";
 import { story } from "@/content/about";
-import { faqJsonLd, faqs, whyCards } from "./content";
+import { getFaqs } from "@/lib/api/faqs";
+import { faqJsonLd } from "./content";
 import { FaqAccordion } from "./faq-accordion";
 import { storyImage } from "./home-images";
 import { ProductTabs } from "./product-tabs";
@@ -122,23 +123,17 @@ export async function ConcernSection() {
                       />
                     ) : null}
                   </span>
-                  <span className="flex flex-1 flex-col gap-1.5 p-4 sm:p-5">
-                    <h3 className="text-base leading-snug font-semibold transition-colors group-hover:text-gold-ink sm:text-lg">
+                  {/* A slim white strip under the photo: a bigger title, no "Shop now" (the
+                      whole card is the link) (owner, 2026-11-05). */}
+                  <span className="flex flex-1 flex-col gap-0.5 px-4 py-2.5 sm:px-5 sm:py-3">
+                    <h3 className="text-lg leading-snug font-semibold transition-colors group-hover:text-gold-ink sm:text-[1.375rem]">
                       {concern.title}
                     </h3>
                     {concern.line ? (
-                      <span className="text-sm text-muted">{concern.line}</span>
+                      <span className="line-clamp-1 text-sm text-muted">{concern.line}</span>
                     ) : null}
-                    <span className="mt-auto inline-flex items-center gap-1 pt-2 font-accent text-xs font-semibold text-gold-ink">
-                      Shop now
-                      <span className="sr-only">
-                        : {concern.categories.map((c) => c.name).join(", ")}
-                      </span>
-                      <ChevronRightIcon
-                        width={14}
-                        height={14}
-                        className="transition-transform duration-300 motion-safe:group-hover:translate-x-1"
-                      />
+                    <span className="sr-only">
+                      Shop {concern.categories.map((c) => c.name).join(", ")}
                     </span>
                   </span>
                 </Link>
@@ -370,61 +365,6 @@ export async function TestimonialsSection() {
   );
 }
 
-// ── Why HairCraft ───────────────────────────────────────────────────────
-
-/** One icon per "Why HairCraft" card, in the cards' order (src/components/home/content.ts). */
-const whyIcons = [
-  // Real hair: a sparkle.
-  "M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z",
-  // Comfort: a heart.
-  "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z",
-  // Shade and style: a palette.
-  "M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-1.3-1.2-1.6-1.2-2.8 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-3.9-4-7-9-7ZM7.5 11.5h.01M10 7.5h.01M15 7.5h.01",
-  // Payments and delivery: a van.
-  "M3 7h11v9H3zM14 10h4l3 3v3h-7M7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm10 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z",
-];
-
-export function WhySection() {
-  return (
-    <section aria-labelledby="why-heading" className={`${shell} py-10`}>
-      <SectionHeader
-        id="why-heading"
-        eyebrow="The HairCraft promise"
-        title="Why women choose HairCraft"
-      />
-      <ul className="mx-auto mt-6 grid max-w-4xl grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        {whyCards.map((card, i) => (
-          <li key={card.title}>
-            <Reveal
-              delay={i * 0.06}
-              className="flex h-full flex-col items-center gap-2 rounded-xl bg-white px-3 py-4 text-center shadow-sm transition-shadow hover:shadow-md"
-            >
-              <span className="flex size-9 items-center justify-center rounded-full bg-sage text-deep">
-                <svg
-                  viewBox="0 0 24 24"
-                  width={18}
-                  height={18}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.6}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <path d={whyIcons[i % whyIcons.length]} />
-                </svg>
-              </span>
-              <h3 className="font-display text-sm leading-snug font-semibold sm:text-base">
-                {card.title}
-              </h3>
-            </Reveal>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 // ── WhatsApp advice ─────────────────────────────────────────────────────
 
 export function ConsultSection() {
@@ -435,32 +375,30 @@ export function ConsultSection() {
   );
 }
 
-// ── Our story and FAQ ───────────────────────────────────────────────────
-
-/** The questions shown on the home page (the rest are on /faq). */
-const homeFaqCount = 4;
+// ── Our story ───────────────────────────────────────────────────────────
 
 /**
- * The story's photo (uncropped) with a heading and a three-line excerpt,
- * beside a few common questions (owner, 2026-11-04: full-length photo, about
- * three lines of text, then "Read our story"; the full story is on /about and
- * every question on /faq).
+ * The story's photo on the left (whole, uncropped) and its words on the
+ * right (owner, 2026-11-05); on phones the photo comes first. The words are
+ * the story's opening, cut off after three lines; the rest is on /about.
  */
-export function StoryFaqSection() {
-  const shown = faqs.slice(0, homeFaqCount);
+export function StorySection() {
   return (
-    <div className={`${shell} grid items-start gap-12 py-10 pb-20 lg:grid-cols-12`}>
-      <section aria-labelledby="story-heading" className="flex flex-col gap-4 lg:col-span-5">
-        {/* The photo's own 3:4 shape, so the whole picture shows uncropped. */}
-        <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-sand shadow-sm">
-          <Image
-            src={storyImage.src}
-            alt={storyImage.alt}
-            fill
-            sizes="(min-width: 1024px) 30rem, 92vw"
-            className="object-cover"
-          />
-        </div>
+    <section
+      aria-labelledby="story-heading"
+      className={`${shell} grid items-center gap-8 py-10 sm:grid-cols-[minmax(0,22rem)_1fr] sm:gap-10 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-16`}
+    >
+      {/* The photo's own 3:4 shape, so the whole picture shows uncropped. */}
+      <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-sand shadow-sm">
+        <Image
+          src={storyImage.src}
+          alt={storyImage.alt}
+          fill
+          sizes="(min-width: 1024px) 26rem, (min-width: 640px) 22rem, 92vw"
+          className="object-cover"
+        />
+      </div>
+      <div className="flex flex-col gap-4">
         <p className="text-[0.65rem] font-bold tracking-[0.2em] text-gold-ink uppercase">
           Our story
         </p>
@@ -471,35 +409,52 @@ export function StoryFaqSection() {
           Crafted for the way <em className="text-gold-ink">you</em> wear your hair.
         </h2>
         {/* The story's opening, cut off after three lines; the rest is on /about. */}
-        <p className="line-clamp-3 leading-relaxed text-muted">{story.paragraphs[0]}</p>
+        <p className="line-clamp-3 max-w-xl leading-relaxed text-muted">{story.paragraphs[0]}</p>
         <Link
           href="/about"
           className="w-fit font-semibold underline decoration-gold underline-offset-4 hover:decoration-deep"
         >
           Read our story
         </Link>
-      </section>
-      <section aria-labelledby="faq-heading" className="lg:col-span-7">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(faqJsonLd(shown)).replace(/</g, "\\u003c"),
-          }}
-        />
-        <h2 id="faq-heading" className="font-display text-2xl font-semibold sm:text-3xl">
-          Frequently asked questions
-        </h2>
-        <FaqAccordion faqs={shown} />
-        <p className="mt-6">
-          <Link
-            href="/faq"
-            className="font-semibold underline decoration-gold underline-offset-4 hover:decoration-deep"
-          >
-            See all questions
-          </Link>
-        </p>
-      </section>
-    </div>
+      </div>
+    </section>
+  );
+}
+
+// ── FAQ ─────────────────────────────────────────────────────────────────
+
+/**
+ * Under the story (owner, 2026-11-05): the questions ticked for the home
+ * page in the admin (Catalog → FAQs), with "See all questions" for /faq.
+ * The shop's own questions are shown when the API can't be reached.
+ */
+export async function FaqSection() {
+  const shown = (await getFaqs()).home;
+  if (shown.length === 0) return null;
+  return (
+    <section
+      aria-labelledby="faq-heading"
+      className="mx-auto w-full max-w-3xl px-4 py-10 pb-20 sm:px-6"
+    >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqJsonLd(shown)).replace(/</g, "\\u003c"),
+        }}
+      />
+      <h2 id="faq-heading" className="text-center font-display text-2xl font-semibold sm:text-3xl">
+        Frequently asked questions
+      </h2>
+      <FaqAccordion faqs={shown} />
+      <p className="mt-6 text-center">
+        <Link
+          href="/faq"
+          className="font-semibold underline decoration-gold underline-offset-4 hover:decoration-deep"
+        >
+          See all questions
+        </Link>
+      </p>
+    </section>
   );
 }
 

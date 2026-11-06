@@ -29,7 +29,6 @@ test.describe("accessibility: guests", () => {
       "/search?q=zzzzqqq",
       "/cart",
       "/sign-in",
-      "/register",
       "/forgot-password",
       "/shipping",
       "/returns",
@@ -98,7 +97,9 @@ test.describe("accessibility: guests", () => {
     await expectAccessible(page, "bag drawer");
 
     await page.goto(OPEN + "/sign-in");
-    await page.getByRole("button", { name: "Sign in" }).click();
+    // Codes only (owner, 2026-11-06): the box, then its error when empty.
+    await expectAccessible(page, "sign in with a code");
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
     await settle(page);
     await expectAccessible(page, "sign-in with errors");
   });

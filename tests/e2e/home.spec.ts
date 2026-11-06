@@ -130,9 +130,56 @@ test.describe("home page", () => {
       const card = section.getByRole("link", { name: new RegExp(`^${concern}`) });
       await expect(card).toHaveAttribute("href", `/concern/${slug}`);
       await expect(card.locator("img")).toHaveCount(1);
-      await expect(card).toContainText("Shop now");
+      // No "Shop now": the whole card is the link (owner, 2026-11-05).
+      await expect(card).not.toContainText("Shop now");
     }
     await expect(section.getByRole("link")).toHaveCount(3);
+  });
+
+  test("shop by concern: the cards keep opening on the second round of the slider", async ({
+    page,
+  }) => {
+    await page.goto(OPEN + "/");
+    const row = page.locator("#concerns ul");
+    await row.scrollIntoViewIfNeeded();
+    // Slide on until a repeated card (the "second round") is fully in view.
+    const next = page.getByRole("button", { name: "Next concerns" });
+    await expect(next).toBeVisible({ timeout: 10_000 });
+    const repeatInView = () =>
+      row.evaluate((ul) => {
+        const box = ul.getBoundingClientRect();
+        const li = [...ul.querySelectorAll("li[data-repeat]")].find((el) => {
+          const b = el.getBoundingClientRect();
+          return b.left >= box.left - 2 && b.right <= box.right + 2;
+        });
+        return li?.querySelector("a")?.getAttribute("href") ?? null;
+      });
+    let href: string | null = null;
+    await expect(async () => {
+      href = await repeatInView();
+      if (!href) await next.click();
+      expect(href).not.toBeNull();
+    }).toPass({ timeout: 40_000, intervals: [1200] });
+    // A repeat is still a working link (it was inert before), but not in the Tab order.
+    const repeat = row.locator(`li[data-repeat] a[href="${href}"]`).first();
+    await expect(repeat).toHaveAttribute("tabindex", "-1");
+    expect(href).toMatch(/^\/concern\//);
+    // Clicked where it is on screen, as a shopper would.
+    const spot = await row.evaluate((ul, target) => {
+      const box = ul.getBoundingClientRect();
+      const li = [...ul.querySelectorAll("li[data-repeat]")].find((el) => {
+        const b = el.getBoundingClientRect();
+        return (
+          el.querySelector("a")?.getAttribute("href") === target &&
+          b.left >= box.left - 2 &&
+          b.right <= box.right + 2
+        );
+      })!;
+      const b = li.getBoundingClientRect();
+      return { x: b.left + b.width / 2, y: b.top + b.height / 3 };
+    }, href);
+    await page.mouse.click(spot.x, spot.y);
+    await expect(page).toHaveURL(OPEN + href!);
   });
 
   test("a concern page lists the products of all its categories, with filters", async ({
@@ -385,12 +432,13 @@ test.describe("home page", () => {
     }).toPass({ timeout: 90_000 });
   });
 
-  test("why HairCraft: four short cards, WhatsApp advice, and our story", async ({ page }) => {
+  test("no Why HairCraft; WhatsApp advice, our story (photo left, words right), then the FAQ", async ({
+    page,
+  }) => {
     await page.goto(OPEN + "/");
-    const why = page.getByRole("region", { name: "Why women choose HairCraft" });
-    await expect(why.getByRole("heading", { level: 3 })).toHaveCount(4);
-    // Titles only (owner, 2026-11-04: minimal).
-    await expect(why.locator("li p")).toHaveCount(0);
+    // Removed (owner, 2026-11-05).
+    await expect(page.getByRole("region", { name: "Why women choose HairCraft" })).toHaveCount(0);
+    await expect(page.getByText("The HairCraft promise")).toHaveCount(0);
     const consult = page.getByRole("region", { name: "Unsure about your shade or length?" });
     await expect(consult.getByRole("link", { name: /Chat on WhatsApp/ })).toHaveAttribute(
       "href",
@@ -404,6 +452,17 @@ test.describe("home page", () => {
       "href",
       "/about",
     );
+    // On a wide screen the photo is on the left and the words on the right.
+    const photo = (await story.locator("img").boundingBox())!;
+    const heading = (await story.getByRole("heading", { level: 2 }).boundingBox())!;
+    if ((page.viewportSize()?.width ?? 0) >= 640) {
+      expect(photo.x + photo.width).toBeLessThanOrEqual(heading.x);
+    }
+    // The FAQ comes after (under) the story.
+    const faq = (await page
+      .getByRole("region", { name: "Frequently asked questions" })
+      .boundingBox())!;
+    expect(faq.y).toBeGreaterThan(photo.y + photo.height - 1);
   });
 
   test("review spotlight: one real review, or nothing", async ({ page, request }) => {

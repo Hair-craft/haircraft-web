@@ -131,7 +131,7 @@ test("sub-variants are the choices (not their main variant, no Option row); the 
     await size.getByRole("link", { name: "15 × 16 cm" }).click();
     await expect(page).toHaveURL(new RegExp(`variant=${topper.sku("L")}$`));
     await expect(page.getByText("₹5,999").first()).toBeVisible();
-    await page.getByRole("tab", { name: "Details" }).click();
+    await page.locator("summary", { hasText: "Details" }).click();
     await expect(page.locator("dd", { hasText: "15 × 16 cm" })).toBeVisible();
     await expect(page.getByRole("group", { name: "Option" })).toHaveCount(0);
     await expectAccessible(page, "product with sub-variants");

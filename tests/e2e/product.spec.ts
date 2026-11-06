@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import type { PublicProduct, PublicVariant } from "@/lib/api/types";
 import { formatPrice } from "@/lib/format";
-import { defaultVariant, pick } from "@/lib/product/variants";
+import { defaultVariant, optionGallery, pick, shopVariants } from "@/lib/product/variants";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
 
 /**
@@ -121,7 +121,7 @@ test.describe("product page", () => {
     expect(await page.evaluate(() => (window as unknown as { marker?: number }).marker)).toBe(1);
 
     // The details follow the chosen option.
-    await page.getByRole("tab", { name: "Details" }).click();
+    await page.locator("summary", { hasText: "Details" }).click();
     await expect(page.locator("dl")).toContainText(`${next.lengthInches} inch`);
   });
 
@@ -182,7 +182,9 @@ test.describe("product page", () => {
     request,
   }) => {
     const product = await richProduct(request);
-    const total = product.images.length;
+    // Only the chosen option's photos and the general ones (owner, 2026-11-06).
+    const chosen = defaultVariant(shopVariants(product.variants));
+    const total = optionGallery(product.images, chosen, product.variants).length;
     expect(total).toBeGreaterThan(1);
     await page.goto(`${OPEN}/product/${product.slug}`);
     const thumbs = page.getByRole("list", { name: "Photos" }).first().getByRole("button");

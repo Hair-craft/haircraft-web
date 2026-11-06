@@ -169,9 +169,7 @@ export async function setProductStatus(
 
 export async function signIn(page: Page, email: string) {
   await page.goto(OPEN + "/sign-in");
-  await page.getByLabel("Email").fill(email);
-  await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await enterWithCode(page, email);
   await page.waitForURL((url) => url.pathname !== "/sign-in");
 }
 
@@ -212,21 +210,60 @@ export async function registerViaApi(
   });
 }
 
-/**
- * On the create-account form: types a fresh number, presses Verify and enters
- * the code the test API "sent" (the live shop never shows it). Returns the
- * 10-digit number.
- */
+/** Adds a verified mobile number on the shop's "add your mobile number" step. */
 export async function verifyPhoneOnForm(
   page: Page,
   request: APIRequestContext,
   local = freshMobile(),
 ): Promise<string> {
+  // The "add your mobile number" step after a first sign-in by email (owner, 2026-11-06).
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Add your mobile number");
   await page.getByLabel("Mobile number").fill(local);
-  await page.getByRole("button", { name: "Verify", exact: true }).click();
+  await page.getByRole("button", { name: "Send code" }).click();
   await expect(page.getByLabel("6-digit code")).toBeVisible();
   await page.getByLabel("6-digit code").fill(await lastSmsCode(request, `+91${local}`));
-  await page.getByRole("button", { name: "Confirm code" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Verified" })).toBeVisible();
+  await page.getByRole("button", { name: "Verify and continue" }).click();
   return local;
+}
+
+/** The code the test API's console mail driver "sent" to an email address (owner, 2026-11-06). */
+export async function lastEmailCode(request: APIRequestContext, email: string): Promise<string> {
+  const response = await request.get(`${API}/dev/mail/last-code`, { params: { email } });
+  expect(response.status(), "the console mail driver kept the code").toBe(200);
+  return (await response.json()).data.code;
+}
+
+/**
+ * Signs in on the sign-in page with a code emailed to the address (owner,
+ * 2026-11-06: sign in with a code only). The test API sends no email; its
+ * console driver keeps the code.
+ */
+export async function enterWithCode(page: Page, email: string, how: "click" | "tap" = "click") {
+  const press = (name: string) => page.getByRole("button", { name, exact: true })[how]();
+  await page.getByLabel("Email or mobile number").fill(email);
+  // The same address may have had a code a moment ago: ask again until it's sent.
+  await expect(async () => {
+    if (!(await page.getByLabel("6-digit code").isVisible())) await press("Continue");
+    await expect(page.getByLabel("6-digit code")).toBeVisible({ timeout: 2000 });
+  }).toPass({ timeout: 15_000 });
+  await page.getByLabel("6-digit code").fill(await lastEmailCode(page.request, email));
+  await press("Continue");
+}
+
+/**
+ * Signs in a browser that runs without JavaScript (owner, 2026-11-06: signing
+ * in takes a code, which needs the page's script): signs in in a browser with
+ * it, then gives this one the same cookies.
+ */
+export async function signInWithoutScript(page: Page, email: string) {
+  const context = page.context();
+  const helper = await context.browser()!.newContext();
+  await helper.addCookies(await context.cookies(OPEN));
+  const signingIn = await helper.newPage();
+  await signingIn.goto(OPEN + "/sign-in");
+  await enterWithCode(signingIn, email);
+  await signingIn.waitForURL((url) => url.pathname !== "/sign-in");
+  await context.clearCookies();
+  await context.addCookies(await helper.cookies(OPEN));
+  await helper.close();
 }

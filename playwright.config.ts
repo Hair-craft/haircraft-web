@@ -106,6 +106,11 @@ export default defineConfig({
         PHONE_OTP_ENABLED: "true",
         SMS_DRIVER: "console",
         OTP_PER_IP_PER_HOUR: "100000",
+        // Shoppers sign in with a code in many tests, some twice in a row.
+        OTP_RESEND_SECONDS: "1",
+        // Codes by email too, kept for the dev endpoint (owner, 2026-11-06).
+        EMAIL_OTP_ENABLED: "true",
+        MAIL_DRIVER: "console",
         // Live courier tracking with the stand-in Shiprocket (owner, 2026-11-05).
         SHIPROCKET_ENABLED: "true",
         COURIER_FAKE: "true",

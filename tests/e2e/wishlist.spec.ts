@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import type { PublicProduct } from "@/lib/api/types";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
-import { registerViaApi } from "./support/shop";
+import { enterWithCode, registerViaApi } from "./support/shop";
 
 const PASSWORD = "Silky2026!";
 const ADMIN = { email: "admin@example.com", password: "HcDev@2026!" };
@@ -29,9 +29,7 @@ async function signIn(page: Page, email: string, next?: string) {
 }
 
 async function signInHere(page: Page, email: string) {
-  await page.getByLabel("Email").fill(email);
-  await page.getByRole("textbox", { name: "Password", exact: true }).fill(PASSWORD);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await enterWithCode(page, email);
   await page.waitForURL((url) => url.pathname !== "/sign-in");
 }
 
@@ -240,7 +238,16 @@ test.describe("wishlist without JavaScript", () => {
     await expect(page).toHaveURL(
       `${OPEN}/sign-in?next=${encodeURIComponent(`/product/${ONE_OPTION.slug}`)}`,
     );
-    await signInHere(page, email);
+    // Signing in takes a code, which needs the page's script (owner, 2026-11-06):
+    // sign in with it, then carry the cookies back.
+    const withScript = await browser.newContext();
+    await withScript.addCookies(await context.cookies(OPEN));
+    const signingIn = await withScript.newPage();
+    await signingIn.goto(page.url());
+    await signInHere(signingIn, email);
+    await context.clearCookies();
+    await context.addCookies(await withScript.cookies(OPEN));
+    await withScript.close();
     // Saved on the way in.
     await page.goto(OPEN + "/wishlist");
     await expect(page.locator("main").getByRole("listitem")).toHaveCount(1);
