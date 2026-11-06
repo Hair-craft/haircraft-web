@@ -41,7 +41,12 @@ export const business: Business = {
   tradingName: "HairCraft",
   // Owner, 2026-11-03.
   legalName: "House of Jana Private Limited",
-  address: null,
+  // Owner, 2026-11-06.
+  address: [
+    "7th Floor, Auto Mall, Unit 709",
+    "Action Area IID, New Town",
+    "Kolkata, West Bengal 700161",
+  ],
   mapUrl:
     "https://maps.google.com/maps?vet=10CAAQoqAOahcKEwjIsO-mnuuXAxUAAAAAHQAAAAAQBQ..i&udm&fvr=1&pvq=Cg0vZy8xMXlxcm54ajBfIhMKDWhvdXNlIG9mIGphbmEQAhgDiQH_mhf0DOltnQ&lqi=Cg1ob3VzZSBvZiBqYW5hSJ-AufravYCACFolEAAQARACGAAYARgCIg1ob3VzZSBvZiBqYW5hKggIAhAAEAEQApIBGGhhaXJfZXh0ZW5zaW9uc19zdXBwbGllcg&cs=1&um=1&ie=UTF-8&fb=1&gl=in&sa=X&ftid=0x39f89fded047d143:0x9d6de90cf4179aff",
   cin: "U32904WB2024PTC273691",

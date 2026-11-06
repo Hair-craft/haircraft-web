@@ -49,6 +49,17 @@ export default function ContactPage() {
                     </span>
                   ))}
                 </address>
+                {business.mapUrl ? (
+                  <a
+                    href={business.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-block font-semibold underline underline-offset-4 hover:text-gold-ink"
+                  >
+                    Find us on Google Maps
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                ) : null}
               </dd>
             </>
           ) : null}

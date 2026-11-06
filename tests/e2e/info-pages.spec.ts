@@ -124,8 +124,10 @@ test("Contact: one tap to email; the grievance officer is listed", async ({ page
     "href",
     "tel:+919903411497",
   );
-  // The company and its map (no written address yet).
+  // The company, its address (owner, 2026-11-06) and its map.
   await expect(page.locator("main").getByText("U32904WB2024PTC273691")).toBeVisible();
+  await expect(page.locator("main address")).toContainText("Kolkata, West Bengal 700161");
+  await expect(page.locator("footer address")).toContainText("7th Floor, Auto Mall, Unit 709");
   await expect(
     page.locator("main").getByRole("link", { name: /Find us on Google Maps/ }),
   ).toHaveAttribute("href", /^https:\/\/maps\.google\.com\//);
