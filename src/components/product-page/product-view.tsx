@@ -264,7 +264,9 @@ export function ProductView({
                     {
                       title: "Details",
                       body: (
-                        <dl className="grid max-w-2xl grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-[0.8125rem] sm:gap-x-8 sm:gap-y-2 sm:text-base">
+                        /* A tidy two-column table: one name column for every row, thin lines between rows,
+                           light alternate shading, small text (owner, 2026-11-07). */
+                        <dl className="overflow-hidden rounded-lg border border-line text-xs leading-snug sm:text-[0.8125rem]">
                           {detailRows([
                             ...Object.entries(product.attributes),
                             ...(variant
@@ -291,14 +293,15 @@ export function ProductView({
                                 ] as [string, string | null][])
                               : []),
                           ]).map(([name, value]) => (
-                            <div key={name} className="contents">
+                            <div
+                              key={name}
+                              className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] border-b border-line last:border-b-0 odd:bg-sand/60"
+                            >
                               {/* Name in bold, value light (owner, 2026-11-03). */}
-                              <dt className="rounded-l-lg bg-sand py-2 pl-3 font-bold text-deep sm:py-2.5">
+                              <dt className="border-r border-line px-3 py-2 font-semibold break-words text-deep">
                                 {name}
                               </dt>
-                              <dd className="rounded-r-lg bg-sand py-2 pr-3 font-light text-muted sm:py-2.5">
-                                {value}
-                              </dd>
+                              <dd className="px-3 py-2 break-words text-muted">{value}</dd>
                             </div>
                           ))}
                         </dl>
