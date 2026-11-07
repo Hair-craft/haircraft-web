@@ -12,7 +12,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "cross-env ALLOW_LOCAL_IMAGES=true API_BASE_URL=http://localhost:3100/api/v1 next build && node scripts/clear-image-cache.mjs && playwright test",
+    "test:e2e": "cross-env NEXT_DIST_DIR=.next-e2e ALLOW_LOCAL_IMAGES=true API_BASE_URL=http://localhost:3100/api/v1 next build && cross-env NEXT_DIST_DIR=.next-e2e node scripts/clear-image-cache.mjs && cross-env NEXT_DIST_DIR=.next-e2e playwright test",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
   },
   "dependencies": {

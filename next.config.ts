@@ -12,6 +12,10 @@ const mediaOrigin = process.env.MEDIA_BASE_URL ? new URL(process.env.MEDIA_BASE_
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // The end-to-end tests build into their own folder (NEXT_DIST_DIR=.next-e2e), so a
+  // test build never rewrites the files a running `next dev` is using (2026-11-07:
+  // "Failed to load chunk" and "Jest worker encountered 2 child process exceptions").
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // `next dev` only: other devices on the LAN (phones, teammates' laptops)
   // that may load dev assets and hot reload. Comma-separated hosts or IPs.
   allowedDevOrigins: (process.env.DEV_ALLOWED_ORIGINS ?? "")

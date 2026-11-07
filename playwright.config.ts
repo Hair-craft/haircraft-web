@@ -33,6 +33,8 @@ const server = (port: number, env: Record<string, string>) => ({
   timeout: 60_000,
   env: {
     NODE_ENV: "production",
+    // The tests' own build folder (see next.config.ts), never the dev server's .next.
+    NEXT_DIST_DIR: process.env.NEXT_DIST_DIR || ".next-e2e",
     SITE_URL: `http://localhost:${port}`,
     // The photos come from the local API; Next reads this when the server starts, not only at build.
     ALLOW_LOCAL_IMAGES: "true",
