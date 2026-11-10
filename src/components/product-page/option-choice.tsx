@@ -76,6 +76,7 @@ export function OptionChoice({
   chosen,
   status,
   swatchImage,
+  swatchHidden = false,
   onClick,
 }: {
   axis: Axis;
@@ -85,6 +86,8 @@ export function OptionChoice({
   status: ChoiceStatus;
   /** The colour's swatch photo, when one was uploaded in the admin. */
   swatchImage?: string | null;
+  /** Hidden in the admin: no round swatch; the colour is a text button like the others. */
+  swatchHidden?: boolean;
   onClick: (event: MouseEvent) => void;
 }) {
   const label = valueLabel(axis, value);
@@ -92,7 +95,7 @@ export function OptionChoice({
     "relative inline-flex items-center justify-center transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep";
   const hidden: ReactNode = <span className="sr-only">{label + statusText(status)}</span>;
 
-  if (axis === "color")
+  if (axis === "color" && !swatchHidden)
     return (
       <a
         href={href}

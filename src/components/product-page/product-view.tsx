@@ -206,6 +206,10 @@ export function ProductView({
                           swatchImage={
                             key === "color" ? product.colorSwatches?.[String(value)] : null
                           }
+                          swatchHidden={
+                            key === "color" &&
+                            (product.hiddenSwatchColors ?? []).includes(String(value))
+                          }
                         />
                       );
                     })}

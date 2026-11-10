@@ -185,6 +185,8 @@ export interface PublicProduct {
   videos?: ProductVideo[];
   /** Swatch photos uploaded in the admin, by colour name (owner, 2026-11-06). */
   colorSwatches?: Record<string, string>;
+  /** Colours whose round swatch is hidden in the admin: shown as text buttons (owner, 2026-11-10). */
+  hiddenSwatchColors?: string[];
   categories: { id: string; name: string; slug: string }[];
   images: ProductImage[];
   variants: PublicVariant[];
