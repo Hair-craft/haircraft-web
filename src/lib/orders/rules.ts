@@ -120,12 +120,18 @@ export function progressSteps(order: {
   placedAt: string;
   timeline: TimelineEntry[];
 }): ProgressStep[] {
-  const reached = (status: string) => order.timeline.find((t) => t.status === status)?.at ?? null;
+  // The latest time each status was reached: an order put back (e.g. delivered,
+  // then back to shipped) shows when it last got there.
+  const reached = (status: string) =>
+    order.timeline.findLast((t) => t.status === status)?.at ?? null;
   const order_ = ["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"];
   const current = order_.indexOf(order.status);
   const step = (label: string, status: string, index: number): ProgressStep => {
+    // Nothing past the order's status is done, even if its history once got there
+    // (owner, 2026-11-13: an order back to shipped must not still show Delivered).
+    if (current >= 0 && index > current) return { label, at: null, done: false };
     const at = reached(status);
-    return { label, at, done: at !== null || (current >= 0 && index <= current) };
+    return { label, at, done: at !== null || current >= 0 };
   };
   return [
     { label: "Placed", at: order.placedAt, done: true },

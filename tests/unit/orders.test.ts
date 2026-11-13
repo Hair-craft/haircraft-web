@@ -76,6 +76,32 @@ describe("the progress line", () => {
     expect(steps[3].at).toBeNull();
   });
 
+  it("does not show Delivered once the order is back to shipped (owner, 2026-11-13)", () => {
+    const steps = progressSteps({
+      status: "SHIPPED",
+      placedAt: "2026-10-07T04:00:00Z",
+      timeline: [
+        ...timeline,
+        { status: "SHIPPED", at: "2026-10-08T04:00:00Z", note: null },
+        {
+          status: "DELIVERED",
+          at: "2026-10-09T04:00:00Z",
+          note: "Delivered (reported by Delhivery)",
+        },
+        { status: "SHIPPED", at: "2026-10-10T04:00:00Z", note: "Delivered status removed" },
+      ],
+    });
+    expect(steps.map((s) => [s.label, s.done])).toEqual([
+      ["Placed", true],
+      ["Confirmed", true],
+      ["Packed", true],
+      ["Shipped", true],
+      ["Delivered", false],
+    ]);
+    expect(steps[3].at).toBe("2026-10-10T04:00:00Z");
+    expect(steps[4].at).toBeNull();
+  });
+
   it("shows only Placed for an unpaid order", () => {
     const steps = progressSteps({
       status: "PENDING_PAYMENT",
