@@ -68,6 +68,11 @@ export interface ProductCard {
   reviewCount: number;
   /** Ticked "Best seller" in the admin (older API answers leave it out). */
   bestSeller?: boolean;
+  /**
+   * The only variant on sale: nothing to choose, so the card adds it to the
+   * bag (owner, 2026-11-13). Null with several (older API answers leave it out).
+   */
+  onlyVariantId?: string | null;
 }
 
 /** A "Shop by concern" card (owner, 2026-11-03), managed in the admin. */

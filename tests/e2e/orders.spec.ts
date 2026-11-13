@@ -138,6 +138,22 @@ test.describe("an order's page", () => {
     await expect(orderCards(page).first()).toContainText("Refund pending");
   });
 
+  test("while being packed it can still be cancelled (owner, 2026-11-13)", async ({ page, request }) => {
+    const { email, token, addressId } = await shopper(request, "orders");
+    const order = await placeOrderByApi(request, token, addressId, { skipAdd: true });
+    await adminOrder(request, order.id, { status: "PROCESSING" });
+    await signIn(page, email);
+    await page.goto(`${OPEN}/account/orders/${order.orderNumber}`);
+    await expect(page.getByRole("list", { name: "Order progress" })).toContainText(
+      "Packed (done)",
+    );
+    await page.getByText("Cancel this order").click();
+    await page.getByRole("radio", { name: "Other" }).check();
+    await page.getByLabel("Anything to add? (needed for Other)").fill("Ordered twice");
+    await page.getByRole("button", { name: "Cancel order" }).click();
+    await expect(page.getByText("Your order is cancelled.")).toBeVisible();
+  });
+
   test("once shipped: tracking, and no cancelling", async ({ page, request }) => {
     const { email, token, addressId } = await shopper(request, "orders");
     const order = await placeOrderByApi(request, token, addressId, { skipAdd: true });
@@ -157,9 +173,11 @@ test.describe("an order's page", () => {
     await expect(progress).toContainText("Shipped (done)");
     await expect(progress).toContainText("Delivered (not yet)");
     await expect(main(page)).toContainText("Sent with Delhivery, tracking number 1234567890123");
+    // A Delhivery page typed by staff follows Delhivery's own tracking page once
+    // Delhivery reports on the parcel (owner, 2026-11-12).
     await expect(main(page).getByRole("link", { name: /Track parcel/ })).toHaveAttribute(
       "href",
-      "https://www.delhivery.com/track/package/1234567890123",
+      "https://www.delhivery.com/track-v2/package/1234567890123",
     );
     await expect(page.getByText("Cancel this order")).toHaveCount(0);
     // Delhivery is tracked live, directly (the test API's stand-in):

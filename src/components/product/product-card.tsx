@@ -6,6 +6,7 @@ import { HeartButton } from "@/components/wishlist/wishlist-ui";
 import type { ProductCard as ProductCardData } from "@/lib/api/types";
 import { cx } from "@/lib/cx";
 import { BagIcon } from "@/components/ui/icons";
+import { CardAddToBag } from "./card-add-to-bag";
 import { ratingLabel } from "./rating-stars";
 
 /** Where a product's page lives (the page itself is phase S5). */
@@ -48,16 +49,18 @@ export function ProductCard({
   const badges = cardBadges(product);
   // A second photo to show on hover (a sold-out card keeps its one faded photo).
   const hover = product.image && product.inStock ? (product.hoverImage ?? null) : null;
+  // Nothing to choose (one variant): the card adds it to the bag itself (owner, 2026-11-13).
+  const onlyVariant = product.onlyVariantId ?? null;
   return (
     <div
       className={cx(
-        "hc-card group relative h-full rounded-2xl bg-white p-3 shadow-sm sm:p-4",
+        "hc-card group relative flex h-full flex-col rounded-2xl bg-white p-3 shadow-sm sm:p-4",
         className,
       )}
     >
       <Link
         href={productHref(product.slug)}
-        className="flex h-full flex-col gap-3 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep"
+        className="flex flex-1 flex-col gap-3 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep"
       >
         <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-sand">
           {product.image ? (
@@ -125,21 +128,32 @@ export function ProductCard({
               max={product.priceRange.max}
               className="text-lg font-bold tracking-tight"
             />
-            {/* The options (length, shade…) are chosen on the product page. */}
-            <span
-              aria-hidden
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-deep px-4 py-2.5 text-xs font-semibold tracking-wide text-white transition-colors group-hover:bg-deep-hover"
-            >
-              <BagIcon
-                width={16}
-                height={16}
-                className="transition-transform duration-300 motion-safe:group-hover:-rotate-6"
-              />
-              Choose options
-            </span>
+            {onlyVariant ? null : (
+              // The options (length, shade…) are chosen on the product page.
+              <span
+                aria-hidden
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-deep px-4 py-2.5 text-xs font-semibold tracking-wide text-white transition-colors group-hover:bg-deep-hover"
+              >
+                <BagIcon
+                  width={16}
+                  height={16}
+                  className="transition-transform duration-300 motion-safe:group-hover:-rotate-6"
+                />
+                Choose options
+              </span>
+            )}
           </div>
         </div>
       </Link>
+      {onlyVariant ? (
+        // A real button can't sit inside the card's link: it follows it.
+        <CardAddToBag
+          variantId={onlyVariant}
+          price={product.priceRange.min}
+          inStock={product.inStock}
+          name={product.name}
+        />
+      ) : null}
       {heart ? (
         <HeartButton
           productId={product.id}

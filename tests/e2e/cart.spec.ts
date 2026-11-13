@@ -298,3 +298,41 @@ test("the cart page shows only the shop's own problem messages", async ({ page }
   await page.goto(OPEN + "/cart?problem=constructor");
   await expect(page.getByRole("heading", { name: "Your bag" })).toBeVisible();
 });
+
+test.describe("product cards (owner, 2026-11-13)", () => {
+  test("nothing to choose: the card adds it to the bag; several options: Choose options", async ({
+    page,
+    request,
+  }) => {
+    const tapeIns = await product(request, "deep-wave-tape-ins");
+    const keep = defaultVariant(tapeIns.variants)!;
+    const others = tapeIns.variants.filter((v) => v.id !== keep.id);
+    const token = await adminToken(request);
+    const setStatus = async (variantId: string, status: string) => {
+      const r = await request.patch(`${API}/admin/products/${tapeIns.id}/variants/${variantId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { status },
+      });
+      expect(r.ok(), `variant set to ${status}`).toBe(true);
+    };
+    for (const v of others) await setStatus(v.id, "INACTIVE");
+    try {
+      await setStock(request, keep.id, 5);
+      // Its category's page (the test shop shows two products per page).
+      await page.goto(`${OPEN}/shop`);
+      await page.getByRole("link", { name: /^Tape-in Extensions \(/ }).click();
+      const add = page.getByRole("button", { name: `Add ${tapeIns.name} to bag` });
+      await expect(add).toBeVisible();
+      // Several options: the card still sends shoppers to the product page.
+      const silky = page.getByRole("link", { name: /Silky Straight Tape-ins/ }).first();
+      await expect(silky).toContainText("Choose options");
+
+      await add.click();
+      await expect(drawer(page)).toBeVisible();
+      await expect(drawer(page)).toHaveAccessibleName("Your bag (1)");
+      await expect(drawer(page).getByRole("listitem")).toContainText(tapeIns.name);
+    } finally {
+      for (const v of others) await setStatus(v.id, "ACTIVE");
+    }
+  });
+});
