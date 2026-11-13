@@ -50,6 +50,13 @@ describe("description HTML for the product page", () => {
     );
   });
 
+  it("keeps lists, headings, quotes and line breaks (sanitize-html 2.18.2)", () => {
+    const html =
+      "<h2>Care</h2><ul><li><em>Wash</em> gently</li><li><u>Air</u> dry</li></ul><ol><li>One</li></ol><blockquote>Soft<br>and light</blockquote><h3>Tip</h3><p><s>old</s> <b>new</b> <i>look</i></p>";
+    // A line break comes back self-closed; browsers read both the same.
+    expect(descriptionHtml(html)).toBe(html.replace("<br>", "<br />"));
+  });
+
   it("turns older plain text into escaped paragraphs", () => {
     expect(descriptionHtml("Line one\nLine two & three")).toBe(
       "<p>Line one</p><p>Line two &amp; three</p>",

@@ -22,7 +22,7 @@
     "next": "16.4.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "sanitize-html": "2.13.1",
+    "sanitize-html": "2.18.2",
     "server-only": "^0.0.1",
     "three": "^0.186.1"
   },
