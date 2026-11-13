@@ -158,11 +158,13 @@ test.describe("an order's page", () => {
     const { email, token, addressId } = await shopper(request, "orders");
     const order = await placeOrderByApi(request, token, addressId, { skipAdd: true });
     await adminOrder(request, order.id, { status: "PROCESSING" });
+    // One AWB per order (owner, 2026-11-13): a new one each run.
+    const awb = String(Date.now());
     await adminOrder(request, order.id, {
       shipping: {
         carrier: "Delhivery",
-        trackingNumber: "1234567890123",
-        trackingUrl: "https://www.delhivery.com/track/package/1234567890123",
+        trackingNumber: awb,
+        trackingUrl: `https://www.delhivery.com/track/package/${awb}`,
       },
       status: "SHIPPED",
     });
@@ -172,12 +174,12 @@ test.describe("an order's page", () => {
     await expect(progress).toContainText("Packed (done)");
     await expect(progress).toContainText("Shipped (done)");
     await expect(progress).toContainText("Delivered (not yet)");
-    await expect(main(page)).toContainText("Sent with Delhivery, tracking number 1234567890123");
+    await expect(main(page)).toContainText(`Sent with Delhivery, tracking number ${awb}`);
     // A Delhivery page typed by staff follows Delhivery's own tracking page once
     // Delhivery reports on the parcel (owner, 2026-11-12).
     await expect(main(page).getByRole("link", { name: /Track parcel/ })).toHaveAttribute(
       "href",
-      "https://www.delhivery.com/track-v2/package/1234567890123",
+      `https://www.delhivery.com/track-v2/package/${awb}`,
     );
     await expect(page.getByText("Cancel this order")).toHaveCount(0);
     // Delhivery is tracked live, directly (the test API's stand-in):

@@ -92,7 +92,8 @@ test.describe("writing a review", () => {
     const order = await placeOrderByApi(request, token, addressId, { skipAdd: true });
     await adminOrder(request, order.id, { status: "PROCESSING" });
     await adminOrder(request, order.id, {
-      shipping: { carrier: "Delhivery", trackingNumber: "9876543210" },
+      // One AWB per order (owner, 2026-11-13): a new one each run.
+      shipping: { carrier: "Delhivery", trackingNumber: `R${Date.now()}` },
       status: "SHIPPED",
     });
     await adminOrder(request, order.id, { status: "DELIVERED" });
