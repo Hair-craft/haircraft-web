@@ -42,6 +42,17 @@ export function listOrders(
   });
 }
 
+/**
+ * The payment window was closed without paying (owner, 2026-11-20): the API
+ * cancels the unpaid order, unless Razorpay says it was paid.
+ */
+export function abandonPayment(token: string, orderNumber: string): Promise<OrderDetail> {
+  return apiFetch<OrderDetail>(
+    `/orders/${encodeURIComponent(orderNumber)}/payments/razorpay/abandon`,
+    { method: "POST", token, body: {} },
+  );
+}
+
 export function getOrderDetail(token: string, orderNumber: string): Promise<OrderDetail> {
   return apiFetch<OrderDetail>(`/orders/${encodeURIComponent(orderNumber)}`, { token });
 }

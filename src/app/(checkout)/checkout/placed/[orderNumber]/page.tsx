@@ -77,7 +77,6 @@ export default async function OrderPlacedPage({
             orderNumber={order.orderNumber}
             amount={order.grandTotal}
             state={payment}
-            expiresAt={order.expiresAt}
             lastFailureMessage={order.payment.lastFailureMessage}
             autoStart={autoStart}
             scriptUrl={settings().razorpayScriptUrl}

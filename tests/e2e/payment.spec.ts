@@ -61,20 +61,28 @@ test("Place order opens the payment window; paying confirms the order", async ({
   await expect(page.getByRole("button", { name: /^Pay ₹/ })).toHaveCount(0);
 });
 
-test("closing the window keeps the order payable; Pay now tries again", async ({
+test("closing the window cancels the order and puts its items back in the bag (owner, 2026-11-20)", async ({
   page,
   request,
 }) => {
-  const { email } = await shopper(request, "pay");
+  const { email, token } = await shopper(request, "pay");
   await signIn(page, email);
   await placeOnline(page);
+  const orderNumber = orderNumberOf(page);
+  // No time limit is shown while paying.
+  await expect(panel(page)).not.toContainText(/minute|Pay within/);
   await paymentWindow(page).getByRole("button", { name: "Close" }).click();
-  await expect(page.getByText("Payment not completed. You can try again.")).toBeVisible();
-  await expect(panel(page)).toContainText(/Pay within \d+ minutes or the order is cancelled\./);
 
-  await page.getByRole("button", { name: /^Pay ₹[\d,]+ now$/ }).click();
-  await paymentWindow(page).getByRole("button", { name: "Pay", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Payment received" })).toBeVisible();
+  await expect(page).toHaveURL(/\/cart\?notice=payment-cancelled$/);
+  await expect(page.getByRole("status").filter({ hasText: "Payment not completed" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Clip-in/ }).first()).toBeVisible();
+  const order = (
+    await (await request.get(`${API}/orders/${orderNumber}`, { headers: auth(token) })).json()
+  ).data;
+  expect(order).toMatchObject({
+    status: "CANCELLED",
+    cancellationReason: "Payment window closed without paying",
+  });
 });
 
 test("a declined payment is explained, and a retry succeeds", async ({ page, request }) => {
@@ -83,20 +91,20 @@ test("a declined payment is explained, and a retry succeeds", async ({ page, req
   await placeOnline(page);
   await paymentWindow(page).getByRole("button", { name: "Fail" }).click();
   await expect(panel(page).getByRole("alert")).toContainText("the bank declined it");
-  // Like Razorpay's window, it stays open after a failure; closing it keeps the reason.
-  await paymentWindow(page).getByRole("button", { name: "Close" }).click();
-  await expect(panel(page).getByRole("alert")).toContainText("the bank declined it");
-  await page.getByRole("button", { name: /^Pay ₹[\d,]+ now$/ }).click();
+  // Like Razorpay's window, it stays open after a failure: paying again there works.
   await paymentWindow(page).getByRole("button", { name: "Pay", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Payment received" })).toBeVisible();
 });
 
-test("pay later: the order's page offers payment until it's paid", async ({ page, request }) => {
+test("pay later: leaving without closing the window keeps the order payable", async ({
+  page,
+  request,
+}) => {
   const { email } = await shopper(request, "pay");
   await signIn(page, email);
   await placeOnline(page);
   const url = page.url().replace(/\?.*$/, "");
-  await paymentWindow(page).getByRole("button", { name: "Close" }).click();
+  await expect(paymentWindow(page).getByRole("button", { name: "Close" })).toBeVisible();
   await page.goto(OPEN + "/shop");
 
   await page.goto(url);
@@ -117,7 +125,7 @@ test("a cancelled unpaid order says so, with Shop again", async ({ page, request
   const { email, token } = await shopper(request, "pay");
   await signIn(page, email);
   await placeOnline(page);
-  await paymentWindow(page).getByRole("button", { name: "Close" }).click();
+  await expect(paymentWindow(page).getByRole("button", { name: "Close" })).toBeVisible();
   const cancelled = await request.post(`${API}/orders/${orderNumberOf(page)}/cancel`, {
     headers: auth(token),
     data: { reason: "Changed my mind" },

@@ -69,7 +69,7 @@ export function faqGroups(policies: ShopPolicies | null): FaqGroup[] {
         },
         {
           question: "My payment failed. Was I charged?",
-          answer: `${paymentWindowLine(policies)} If money left your account for an order that was cancelled, it's returned automatically by your bank or Razorpay, usually within ${r.refundWorkingDays} working days. You can try paying again from the order in [My orders](/account/orders) while it's still waiting.`,
+          answer: `${paymentWindowLine()} If money left your account for an order that was cancelled, it's returned automatically by your bank or Razorpay, usually within ${r.refundWorkingDays} working days.`,
         },
         {
           question: "Do I need an account to order?",

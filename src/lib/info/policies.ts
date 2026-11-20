@@ -43,16 +43,12 @@ export function cashOnDeliveryLine(policies: ShopPolicies | null): string | null
     : "Cash on delivery is available.";
 }
 
-/** How long an online order waits for payment. */
-export function paymentWindowLine(policies: ShopPolicies | null): string {
-  if (!policies)
-    return "If an online payment isn't completed, the order is cancelled after a short while and nothing is charged.";
-  const minutes = policies.paymentWindowMinutes;
-  const time =
-    minutes % 60 === 0 && minutes >= 60
-      ? `${minutes / 60} hour${minutes === 60 ? "" : "s"}`
-      : `${minutes} minutes`;
-  return `If an online payment isn't completed within ${time}, the order is cancelled and nothing is charged.`;
+/**
+ * What happens to an unpaid online order (owner, 2026-11-20: no time limit;
+ * closing the payment window cancels it).
+ */
+export function paymentWindowLine(): string {
+  return "If you close the payment window without paying, the order is cancelled straight away, nothing is charged and the items go back in your bag, so you can try again.";
 }
 
 /** "Prices include GST." with the rate when known. */

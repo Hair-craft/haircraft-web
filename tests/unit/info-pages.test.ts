@@ -55,7 +55,6 @@ describe("policy wording from the API's settings", () => {
   it("leaves numbers out when the API can't be reached", () => {
     expect(deliveryLine(null)).not.toMatch(/₹/);
     expect(deliveryShort(null)).toBe("Delivery charge shown at checkout");
-    expect(paymentWindowLine(null)).not.toMatch(/\d/);
   });
 
   it("mentions cash on delivery only when it's on", () => {
@@ -68,10 +67,9 @@ describe("policy wording from the API's settings", () => {
     ).toBe("Cash on delivery is available for orders up to ₹10,000.");
   });
 
-  it("states the time to pay in minutes or hours", () => {
-    expect(paymentWindowLine(policies())).toMatch(/within 30 minutes/);
-    expect(paymentWindowLine(policies({ paymentWindowMinutes: 60 }))).toMatch(/within 1 hour,/);
-    expect(paymentWindowLine(policies({ paymentWindowMinutes: 120 }))).toMatch(/within 2 hours/);
+  it("sets no time to pay: closing the payment window cancels (owner, 2026-11-20)", () => {
+    expect(paymentWindowLine()).toMatch(/close the payment window without paying/);
+    expect(paymentWindowLine()).not.toMatch(/\d|minute|hour/);
   });
 
   it("Shipping follows the settings, and shows cash on delivery only when it's on", () => {

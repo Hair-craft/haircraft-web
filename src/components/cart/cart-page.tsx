@@ -11,7 +11,16 @@ import { CartLines, CheckoutButton, EmptyBag, FreeShippingLine } from "./cart-ui
  * The cart page's contents. The server sends the bag as it is; from then on
  * the shared cart (also used by the drawer) keeps it up to date.
  */
-export function CartPageView({ initial, problem }: { initial: Cart; problem: string | null }) {
+export function CartPageView({
+  initial,
+  problem,
+  notice = null,
+}: {
+  initial: Cart;
+  problem: string | null;
+  /** A note that isn't a problem (a cancelled payment). */
+  notice?: string | null;
+}) {
   const { cart: shared, adopt, error, pending } = useCart();
   useEffect(() => adopt(initial), [initial, adopt]);
   const cart = shared ?? initial;
@@ -22,6 +31,10 @@ export function CartPageView({ initial, problem }: { initial: Cart; problem: str
       {message ? (
         <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-800">
           {message}
+        </p>
+      ) : notice ? (
+        <p role="status" className="rounded-2xl bg-mint px-4 py-3 text-sm">
+          {notice}
         </p>
       ) : null}
       {cart.lines.length === 0 ? (

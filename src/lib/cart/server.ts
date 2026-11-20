@@ -196,6 +196,17 @@ export async function mergeGuestCartInto(token: string): Promise<number> {
   }
 }
 
+/**
+ * A cancelled payment: the order's lines go back in the signed-in customer's
+ * bag, next to anything added since. Returns how many couldn't be added.
+ */
+export async function addBackToBag(token: string, lines: GuestLine[]): Promise<number> {
+  if (lines.length === 0) return 0;
+  const { cart, skipped } = await mergeCart(token, lines);
+  await rememberCount(cart);
+  return skipped.length;
+}
+
 /** After an order: the account's bag was emptied by the API (server actions only). */
 export async function rememberEmptyBag() {
   (await cookies()).set(

@@ -6,8 +6,12 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { LockIcon } from "@/components/ui/icons";
 import { cx } from "@/lib/cx";
 import { formatPrice } from "@/lib/format";
-import { deadlineText, failedMessage, minutesLeft, type PanelState } from "@/lib/checkout/payment";
-import { startPaymentAction, verifyPaymentAction } from "@/lib/checkout/payment-actions";
+import { failedMessage, type PanelState } from "@/lib/checkout/payment";
+import {
+  abandonPaymentAction,
+  startPaymentAction,
+  verifyPaymentAction,
+} from "@/lib/checkout/payment-actions";
 
 /** Razorpay Checkout's browser API (the parts used here). */
 interface RazorpayInstance {
@@ -49,15 +53,16 @@ const RECHECK_MS = 5000;
 const RECHECKS = 12;
 
 /**
- * The order's payment: Pay now (Razorpay's window), the time left, and what
- * happened last. The page is re-read from the API after each step, so the
- * panel always shows the order's real state. Reused by My orders (S12).
+ * The order's payment: Pay now (Razorpay's window) and what happened last.
+ * No time limit (owner, 2026-11-20): closing the window without paying
+ * cancels the order and puts its items back in the bag. The page is re-read
+ * from the API after each step, so the panel always shows the order's real
+ * state. Reused by My orders (S12).
  */
 export function PaymentPanel({
   orderNumber,
   amount,
   state,
-  expiresAt,
   lastFailureMessage,
   autoStart,
   scriptUrl,
@@ -65,7 +70,6 @@ export function PaymentPanel({
   orderNumber: string;
   amount: string;
   state: PanelState;
-  expiresAt: string | null;
   lastFailureMessage: string | null;
   /** Open the payment window straight away (just after Place order). */
   autoStart: boolean;
@@ -78,14 +82,7 @@ export function PaymentPanel({
     lastFailureMessage ? { tone: "error", text: lastFailureMessage } : null,
   );
   const [rechecking, setRechecking] = useState(state === "waiting");
-  const [now, setNow] = useState(() => Date.now());
   const started = useRef(false);
-
-  // The time left, kept roughly current.
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   // A payment the bank is still confirming: look again for a minute.
   useEffect(() => {
@@ -101,6 +98,29 @@ export function PaymentPanel({
     }, RECHECK_MS);
     return () => window.clearInterval(timer);
   }, [rechecking, state, router]);
+
+  // Closed without paying: cancel the order and go back to the bag, where its items are.
+  const closed = useCallback(async () => {
+    setNote({ tone: "info", text: "Payment not completed. Cancelling the order…" });
+    const result = await abandonPaymentAction(orderNumber);
+    if (result.kind === "cancelled") {
+      router.push("/cart?notice=payment-cancelled");
+      return;
+    }
+    if (result.kind === "session") {
+      // A full page load: the route handler clears the session cookies (not a page).
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign(`/bff/session/end?next=${encodeURIComponent(pathname)}`);
+      return;
+    }
+    setBusy(false);
+    if (result.kind === "kept") {
+      setNote(null);
+      router.refresh();
+      return;
+    }
+    setNote({ tone: "info", text: "Payment not completed. You can try again." });
+  }, [orderNumber, pathname, router]);
 
   const pay = useCallback(async () => {
     setBusy(true);
@@ -146,14 +166,7 @@ export function PaymentPanel({
       timeout: c.timeoutSeconds,
       theme: { color: "#0b291a" },
       modal: {
-        ondismiss: () => {
-          setBusy(false);
-          setNote((current) =>
-            current?.tone === "error"
-              ? current
-              : { tone: "info", text: "Payment not completed. You can try again." },
-          );
-        },
+        ondismiss: () => void closed(),
       },
       handler: async (response: unknown) => {
         setNote({ tone: "info", text: "Confirming your payment…" });
@@ -182,7 +195,7 @@ export function PaymentPanel({
       setNote({ tone: "error", text: failedMessage(response.error?.description) }),
     );
     checkout.open();
-  }, [orderNumber, pathname, router, scriptUrl]);
+  }, [orderNumber, pathname, router, scriptUrl, closed]);
 
   // Just after Place order: open the window once, and drop ?pay=1 so a reload doesn't reopen it.
   useEffect(() => {
@@ -224,8 +237,7 @@ export function PaymentPanel({
           Not paid
         </h2>
         <p className="mt-2 text-sm text-muted">
-          This order was cancelled because it wasn&apos;t paid in time. Nothing was charged, and the
-          items were put back on sale.
+          This order was cancelled because the payment wasn&apos;t completed. Nothing was charged.
         </p>
         <ButtonLink href="/shop" className="mt-4">
           Shop again
@@ -233,7 +245,6 @@ export function PaymentPanel({
       </section>
     );
 
-  const deadline = deadlineText(minutesLeft(expiresAt, now));
   return (
     <section
       aria-labelledby="payment-title"
@@ -245,7 +256,7 @@ export function PaymentPanel({
       <p className="mt-2 text-sm text-muted">
         {state === "waiting"
           ? "Your payment is being confirmed. This page updates by itself; there's no need to pay again."
-          : deadline}
+          : "Pay securely in Razorpay's window. If you close it without paying, the order is cancelled and the items go back in your bag."}
       </p>
       {note ? (
         <p

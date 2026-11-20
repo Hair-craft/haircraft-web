@@ -2,6 +2,8 @@
 
 import { cookies } from "next/headers";
 import { isApiError } from "@/lib/api/errors";
+import { addBackToBag } from "@/lib/cart/server";
+import { abandonPayment, type OrderDetail } from "@/lib/orders/api";
 import { ACCESS_COOKIE } from "@/lib/session/cookies";
 import { startPayment, verifyPayment, type RazorpayCheckout } from "./api";
 import { checkoutResult, paymentOutcome, type PaymentOutcome } from "./payment";
@@ -64,4 +66,43 @@ export async function verifyPaymentAction(
   } catch (error) {
     return failure(error);
   }
+}
+
+/** What closing the payment window led to. */
+export type AbandonResult =
+  /** Cancelled; its items are back in the bag. */
+  | { kind: "cancelled" }
+  /** Paid after all (or no longer waiting): nothing was cancelled. */
+  | { kind: "kept" }
+  /** Still waiting: Razorpay couldn't be asked, so it stays open. */
+  | { kind: "open" }
+  | { kind: "session" };
+
+/**
+ * The customer closed Razorpay's window without paying (owner, 2026-11-20):
+ * the unpaid order is cancelled at once and its items go back in the bag.
+ */
+export async function abandonPaymentAction(orderNumber: string): Promise<AbandonResult> {
+  const accessToken = await token();
+  if (!ORDER_NUMBER.test(String(orderNumber)) || !accessToken) return { kind: "session" };
+  let order: OrderDetail;
+  try {
+    order = await abandonPayment(accessToken, String(orderNumber));
+  } catch (error) {
+    if (!isApiError(error)) throw error;
+    if (error.status === 401 || error.code === "ACCOUNT_SUSPENDED") return { kind: "session" };
+    return { kind: "open" };
+  }
+  if (order.status === "PENDING_PAYMENT") return { kind: "open" };
+  if (order.status !== "CANCELLED") return { kind: "kept" };
+  const lines = order.items
+    .filter((item): item is typeof item & { variantId: string } => item.variantId !== null)
+    .map((item) => ({ variantId: item.variantId, quantity: item.quantity }));
+  try {
+    await addBackToBag(accessToken, lines);
+  } catch (error) {
+    // The order is cancelled either way; the bag may just stay as it was.
+    if (!isApiError(error)) throw error;
+  }
+  return { kind: "cancelled" };
 }

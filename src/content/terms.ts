@@ -41,7 +41,7 @@ export function termsContent(policies: ShopPolicies | null): InfoContent {
         heading: "Orders and payment",
         blocks: [
           "Your order is accepted when we confirm it by showing its order number. We reserve the stock for you at that moment.",
-          `Online payments are handled securely by Razorpay. ${paymentWindowLine(policies)}`,
+          `Online payments are handled securely by Razorpay. ${paymentWindowLine()}`,
           "We may cancel an order, with a full refund, if an item turns out to be out of stock, a price was wrong, we can't deliver to the address, or we suspect fraud. We'll tell you why.",
         ],
       },

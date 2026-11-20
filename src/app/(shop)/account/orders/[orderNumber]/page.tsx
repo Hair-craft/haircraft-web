@@ -107,7 +107,6 @@ export default async function OrderPage({ params }: PageProps<"/account/orders/[
             orderNumber={order.orderNumber}
             amount={order.grandTotal}
             state={payment}
-            expiresAt={order.expiresAt}
             lastFailureMessage={order.payment.lastFailureMessage}
             autoStart={false}
             scriptUrl={settings().razorpayScriptUrl}

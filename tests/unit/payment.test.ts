@@ -1,30 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  checkoutResult,
-  deadlineText,
-  failedMessage,
-  minutesLeft,
-  panelState,
-  paymentOutcome,
-} from "@/lib/checkout/payment";
-
-const NOW = Date.parse("2026-10-07T10:00:00Z");
-
-describe("the time left to pay", () => {
-  it("counts whole minutes, never below zero", () => {
-    expect(minutesLeft("2026-10-07T10:24:30Z", NOW)).toBe(24);
-    expect(minutesLeft("2026-10-07T09:59:00Z", NOW)).toBe(0);
-    expect(minutesLeft(null, NOW)).toBeNull();
-    expect(minutesLeft("not a date", NOW)).toBeNull();
-  });
-
-  it("is said plainly", () => {
-    expect(deadlineText(24)).toBe("Pay within 24 minutes or the order is cancelled.");
-    expect(deadlineText(1)).toBe("Pay within 1 minute or the order is cancelled.");
-    expect(deadlineText(0)).toBe("Pay within a minute or the order is cancelled.");
-    expect(deadlineText(null)).toBeNull();
-  });
-});
+import { checkoutResult, failedMessage, panelState, paymentOutcome } from "@/lib/checkout/payment";
 
 describe("what the payment panel shows", () => {
   const order = (overrides: Partial<Parameters<typeof panelState>[0]> = {}) => ({

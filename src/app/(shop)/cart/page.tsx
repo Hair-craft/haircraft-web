@@ -21,6 +21,12 @@ export default async function CartPage({ searchParams }: PageProps<"/cart">) {
     ? CART_PROBLEMS[code as CartProblemCode]
     : null;
 
+  // Closed the payment window without paying (owner, 2026-11-20).
+  const notice =
+    query.notice === "payment-cancelled"
+      ? "Payment not completed, so that order was cancelled and nothing was charged. Its items are back in your bag, ready when you are."
+      : null;
+
   let cart: Cart | null = null;
   try {
     cart = await readCart();
@@ -36,7 +42,7 @@ export default async function CartPage({ searchParams }: PageProps<"/cart">) {
       </p>
       <h1 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Your bag</h1>
       {cart ? (
-        <CartPageView initial={cart} problem={problem} />
+        <CartPageView initial={cart} problem={problem} notice={notice} />
       ) : (
         <ApiUnavailable retryHref="/cart" />
       )}

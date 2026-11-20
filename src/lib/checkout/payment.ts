@@ -4,21 +4,6 @@
  * shop's words.
  */
 
-/** Whole minutes left to pay (never negative); null when there is no deadline. */
-export function minutesLeft(expiresAt: string | null, now: number): number | null {
-  if (!expiresAt) return null;
-  const ms = Date.parse(expiresAt) - now;
-  if (Number.isNaN(ms)) return null;
-  return Math.max(0, Math.floor(ms / 60_000));
-}
-
-/** "Pay within 24 minutes or the order is cancelled." */
-export function deadlineText(minutes: number | null): string | null {
-  if (minutes === null) return null;
-  if (minutes < 1) return "Pay within a minute or the order is cancelled.";
-  return `Pay within ${minutes} ${minutes === 1 ? "minute" : "minutes"} or the order is cancelled.`;
-}
-
 /** What the payment panel shows for an order. */
 export type PanelState = "paid" | "payable" | "cancelled" | "waiting" | "none";
 
