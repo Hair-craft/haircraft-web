@@ -12,12 +12,19 @@ import {
 import { refreshSession } from "@/lib/session/refresh";
 import { DEFAULT_AFTER_SIGN_IN, safeNext } from "@/lib/session/rules";
 
-const needsSession = (path: string) =>
+/**
+ * Shopping needs no account (owner, 2026-11-20): with Razorpay Magic Checkout
+ * a guest buys in Razorpay's window and sees their order by its private link
+ * (`/checkout/placed/HC-…?t=…`). `/checkout` itself decides: the bag with
+ * Magic Checkout on, sign-in for the shop's own checkout.
+ */
+export const needsSession = (path: string, search: URLSearchParams) =>
   path === "/account" ||
   path.startsWith("/account/") ||
   path === "/wishlist" ||
-  path === "/checkout" ||
-  path.startsWith("/checkout/");
+  (path.startsWith("/checkout/") && !isGuestReceipt(path, search));
+const isGuestReceipt = (path: string, search: URLSearchParams) =>
+  /^\/checkout\/placed\/HC-\d{4,10}$/i.test(path) && /^[0-9a-f]{48}$/.test(search.get("t") ?? "");
 const isSignInPage = (path: string) => path === "/sign-in" || path === "/register";
 
 /**
@@ -59,7 +66,7 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const signedIn = Boolean(request.cookies.get(ACCESS_COOKIE)?.value);
   let response: NextResponse;
-  if (needsSession(path) && !signedIn) {
+  if (needsSession(path, request.nextUrl.searchParams) && !signedIn) {
     const signIn = new URL("/sign-in", request.url);
     signIn.searchParams.set("next", `${path}${request.nextUrl.search}`);
     response = NextResponse.redirect(signIn);
