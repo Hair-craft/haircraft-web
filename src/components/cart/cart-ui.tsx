@@ -21,6 +21,7 @@ import { cx } from "@/lib/cx";
 import { formatPrice } from "@/lib/format";
 import { returnRules } from "@/content/returns-rules";
 import { useCart, useSeenPrices } from "./cart-context";
+import { useMagicCheckout } from "@/components/checkout/magic-checkout";
 
 const itemsLabel = (count: number) => `${count} ${count === 1 ? "item" : "items"}`;
 
@@ -307,6 +308,8 @@ export function FreeShippingLine({ cart }: { cart: Cart }) {
 /** Checkout (signing in first, for guests): held while an item needs attention. */
 export function CheckoutButton({ cart }: { cart: Cart }) {
   const { closeDrawer } = useCart();
+  const magic = useMagicCheckout();
+  const [problem, setProblem] = useState<string | null>(null);
   if (!cart.readyForCheckout || cart.lines.length === 0)
     return (
       <div>
@@ -317,6 +320,36 @@ export function CheckoutButton({ cart }: { cart: Cart }) {
         <p id="checkout-note" className="mt-2 text-center text-xs text-muted">
           Fix the items marked above to continue.
         </p>
+      </div>
+    );
+  // Magic Checkout (owner, 2026-11-20): the whole bag in Razorpay's window, no checkout page.
+  if (magic.enabled)
+    return (
+      <div>
+        <Button
+          size="lg"
+          className="w-full text-sm"
+          loading={magic.busy}
+          onClick={async () => {
+            setProblem(
+              await magic.open(
+                cart.lines.map((line) => ({ variantId: line.variantId, quantity: line.quantity })),
+                true,
+              ),
+            );
+          }}
+        >
+          <LockIcon width={18} height={18} />
+          Secure checkout · {formatPrice(cart.subtotal)}
+        </Button>
+        {problem || magic.note ? (
+          <p
+            role={problem ? "alert" : "status"}
+            className={`mt-2 text-center text-xs ${problem ? "text-red-800" : "text-muted"}`}
+          >
+            {problem ?? magic.note}
+          </p>
+        ) : null}
       </div>
     );
   return (
@@ -468,6 +501,7 @@ export function AddToBag({
   onAdded?: () => void;
 }) {
   const { add, pending } = useCart();
+  const magic = useMagicCheckout();
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [problem, setProblem] = useState<string | null>(null);
@@ -494,6 +528,11 @@ export function AddToBag({
         // "Buy now" adds it and goes straight to checkout (guests sign in first).
         const buyNow =
           (event.nativeEvent as SubmitEvent).submitter?.getAttribute("value") === "checkout";
+        // Magic Checkout (owner, 2026-11-20): Buy now opens Razorpay's window here, for this item.
+        if (buyNow && magic.enabled) {
+          setProblem(await magic.open([{ variantId, quantity }], false));
+          return;
+        }
         const result = await add(variantId, quantity, price, { quiet: buyNow });
         setProblem(result);
         if (result !== null) return;
@@ -562,6 +601,7 @@ export function AddToBag({
         size="lg"
         variant="secondary"
         disabled={pending}
+        loading={magic.busy}
         className="h-12 w-full border-deep text-sm tracking-wider uppercase"
       >
         Buy now
@@ -569,6 +609,10 @@ export function AddToBag({
       {problem ? (
         <p role="alert" className="text-sm font-medium text-red-800">
           {problem}
+        </p>
+      ) : magic.note ? (
+        <p role="status" className="text-sm text-muted">
+          {magic.note}
         </p>
       ) : null}
     </form>

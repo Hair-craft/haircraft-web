@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getShopPolicies } from "@/lib/api/shop";
 import type { ReactNode } from "react";
 import { AddressForm } from "@/components/account/account-forms";
 import { AddressText } from "@/components/account/account-parts";
@@ -88,6 +89,8 @@ const radio = "mt-1 size-4 shrink-0 accent-deep";
 
 /** `/checkout`: address, payment and the order summary on one page. */
 export default async function CheckoutPage({ searchParams }: PageProps<"/checkout">) {
+  // Razorpay Magic Checkout (owner, 2026-11-20): no checkout page; the bag opens Razorpay's window.
+  if ((await getShopPolicies())?.magicCheckout) redirect("/cart");
   const params = await searchParams;
   const state = readCheckoutState(params);
   const here = checkoutHref(state);

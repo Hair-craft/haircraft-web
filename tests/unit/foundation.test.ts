@@ -18,6 +18,7 @@ describe("settings", () => {
       freeShippingThreshold: null,
       productsPerPage: 24,
       razorpayScriptUrl: "https://checkout.razorpay.com/v1/checkout.js",
+      magicCheckoutScriptUrl: "https://checkout.razorpay.com/v1/magic-checkout.js",
       reviewsCacheSeconds: 120,
       allowIndexing: false,
       googleSiteVerification: null,
@@ -43,6 +44,19 @@ describe("settings", () => {
     ).toBe(stand);
     expect(
       parseSettings({ NODE_ENV: "development", RAZORPAY_SCRIPT_URL: stand }).razorpayScriptUrl,
+    ).toBe(stand);
+  });
+
+  it("loads Razorpay's own Magic Checkout script in production (owner, 2026-11-20)", () => {
+    const stand = "http://localhost:3100/api/v1/dev/razorpay/magic-checkout.js";
+    expect(() =>
+      parseSettings({ NODE_ENV: "production", MAGIC_CHECKOUT_SCRIPT_URL: stand }),
+    ).toThrow(
+      "MAGIC_CHECKOUT_SCRIPT_URL must be https://checkout.razorpay.com/v1/magic-checkout.js",
+    );
+    expect(
+      parseSettings({ NODE_ENV: "development", MAGIC_CHECKOUT_SCRIPT_URL: stand })
+        .magicCheckoutScriptUrl,
     ).toBe(stand);
   });
 

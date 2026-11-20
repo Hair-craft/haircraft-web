@@ -8,6 +8,8 @@ export interface ShopPolicies {
   gstRatePercent: number;
   paymentWindowMinutes: number;
   cashOnDelivery: { enabled: boolean; maxOrderAmount: string | null };
+  /** Razorpay Magic Checkout is on: Buy now and the bag open Razorpay's window (owner, 2026-11-20). */
+  magicCheckout?: boolean;
 }
 
 const isZero = (amount: string) => /^0+(\.0+)?$/.test(amount.trim());

@@ -6,6 +6,7 @@ import { PaymentPanel } from "@/components/checkout/payment-panel";
 import { ButtonLink } from "@/components/ui/button";
 import { isApiError } from "@/lib/api/errors";
 import { getOrder, type PlacedOrder } from "@/lib/checkout/api";
+import { getMagicReceipt } from "@/lib/checkout/magic-api";
 import { panelState } from "@/lib/checkout/payment";
 import { nextSteps } from "@/lib/checkout/rules";
 import { settings } from "@/lib/env";
@@ -19,22 +20,33 @@ export const metadata: Metadata = {
 
 const ORDER_NUMBER = /^HC-\d{4,10}$/i;
 
-/** `/checkout/placed/HC-100001`: the order just placed (only its own customer sees it). */
+/**
+ * `/checkout/placed/HC-100001`: the order just placed (only its own customer
+ * sees it). `?t=…`: the private link Razorpay Magic Checkout gives a shopper
+ * who isn't signed in (owner, 2026-11-20).
+ */
 export default async function OrderPlacedPage({
   params,
   searchParams,
 }: PageProps<"/checkout/placed/[orderNumber]">) {
   const { orderNumber } = await params;
+  const query = await searchParams;
   // ?pay=1: just placed with Pay online, so the payment window opens straight away.
-  const autoStart = (await searchParams).pay === "1";
+  const autoStart = query.pay === "1";
+  const receiptToken =
+    typeof query.t === "string" && /^[0-9a-f]{48}$/.test(query.t) ? query.t : null;
   if (!ORDER_NUMBER.test(orderNumber)) notFound();
   const here = `/checkout/placed/${encodeURIComponent(orderNumber)}`;
   const session = await getSession();
-  if (!session.accessToken) redirect(`/sign-in?next=${encodeURIComponent(here)}`);
+  if (!session.accessToken && !receiptToken) redirect(`/sign-in?next=${encodeURIComponent(here)}`);
 
   let order: PlacedOrder | null = null;
   try {
-    order = await getOrder(session.accessToken, orderNumber);
+    order =
+      receiptToken && !session.accessToken
+        ? await getMagicReceipt(receiptToken)
+        : await getOrder(session.accessToken as string, orderNumber);
+    if (order.orderNumber.toUpperCase() !== orderNumber.toUpperCase()) notFound();
   } catch (error) {
     if (!isApiError(error)) throw error;
     if (error.status === 401 || error.code === "ACCOUNT_SUSPENDED")
@@ -138,9 +150,15 @@ export default async function OrderPlacedPage({
 
       <div className="mt-8 flex flex-wrap gap-3">
         <ButtonLink href="/shop">Continue shopping</ButtonLink>
-        <ButtonLink href={`/account/orders/${order.orderNumber}`} variant="secondary">
-          View your order
-        </ButtonLink>
+        {session.accessToken ? (
+          <ButtonLink href={`/account/orders/${order.orderNumber}`} variant="secondary">
+            View your order
+          </ButtonLink>
+        ) : (
+          <ButtonLink href="/sign-in" variant="secondary">
+            Sign in to follow your order
+          </ButtonLink>
+        )}
       </div>
     </div>
   );

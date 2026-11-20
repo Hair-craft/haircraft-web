@@ -28,6 +28,8 @@ export interface StoreSettings {
    * point it at the API's stand-in (with ALLOW_TEST_PAYMENT_SCRIPT=true).
    */
   razorpayScriptUrl: string;
+  /** Razorpay Magic Checkout's script (owner, 2026-11-20); Razorpay's own in production. */
+  magicCheckoutScriptUrl: string;
   /**
    * How long approved reviews may be cached (seconds, default 120): a newly
    * approved review appears within this time. 0 = always fresh (tests).
@@ -46,6 +48,7 @@ export interface StoreSettings {
 
 /** Razorpay Checkout's script, as Razorpay publishes it. */
 export const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
+export const MAGIC_CHECKOUT_SCRIPT_URL = "https://checkout.razorpay.com/v1/magic-checkout.js";
 
 type Env = Record<string, string | undefined>;
 
@@ -142,6 +145,20 @@ export function parseSettings(env: Env): StoreSettings {
       `RAZORPAY_SCRIPT_URL must be ${RAZORPAY_SCRIPT_URL} in production (a stand-in needs ALLOW_TEST_PAYMENT_SCRIPT=true, for tests only)`,
     );
   }
+  const magicCheckoutScriptUrl = parseUrl(
+    "MAGIC_CHECKOUT_SCRIPT_URL",
+    env.MAGIC_CHECKOUT_SCRIPT_URL?.trim() || MAGIC_CHECKOUT_SCRIPT_URL,
+    problems,
+  );
+  if (
+    production &&
+    magicCheckoutScriptUrl !== MAGIC_CHECKOUT_SCRIPT_URL &&
+    !parseBoolean("ALLOW_TEST_PAYMENT_SCRIPT", env.ALLOW_TEST_PAYMENT_SCRIPT, false, problems)
+  ) {
+    problems.push(
+      `MAGIC_CHECKOUT_SCRIPT_URL must be ${MAGIC_CHECKOUT_SCRIPT_URL} in production (a stand-in needs ALLOW_TEST_PAYMENT_SCRIPT=true, for tests only)`,
+    );
+  }
   const reviewsCacheRaw = env.REVIEWS_CACHE_SECONDS?.trim();
   let reviewsCacheSeconds = 120;
   if (reviewsCacheRaw) {
@@ -172,6 +189,7 @@ export function parseSettings(env: Env): StoreSettings {
     freeShippingThreshold,
     productsPerPage,
     razorpayScriptUrl,
+    magicCheckoutScriptUrl,
     reviewsCacheSeconds,
     allowIndexing,
     googleSiteVerification,
