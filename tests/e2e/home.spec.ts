@@ -48,8 +48,9 @@ test.describe("home page", () => {
     // The owner's banner words (2026-11-20), without the logo.
     await expect(heading).toHaveText("Fuller Hair, A More Confident You");
     await expect(page.getByText("100% Real Human Hair", { exact: true })).toBeVisible();
-    // No button in the hero (owner, 2026-11-03).
-    await expect(page.locator("section.hc-shutter a")).toHaveCount(0);
+    // No button in the hero (owner, 2026-11-03); the whole banner opens Shop all (2026-11-20).
+    await expect(page.locator("section.hc-shutter button")).toHaveCount(0);
+    await expect(page.locator("section.hc-shutter a")).toHaveAttribute("href", "/shop");
     // "Confident You" in the older elegant italic.
     const italic = heading.locator("em");
     await expect(italic).toHaveText("Confident You");

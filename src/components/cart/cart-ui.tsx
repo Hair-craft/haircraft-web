@@ -335,6 +335,8 @@ export function CheckoutButton({ cart }: { cart: Cart }) {
               await magic.open(
                 cart.lines.map((line) => ({ variantId: line.variantId, quantity: line.quantity })),
                 true,
+                // The drawer would cover Razorpay's window (owner, 2026-11-20).
+                { beforeOpen: closeDrawer },
               ),
             );
           }}

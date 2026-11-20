@@ -1,4 +1,6 @@
 import Image from "next/image";
+import Link from "next/link";
+import { routes } from "@/components/layout/nav";
 import { Cormorant_Garamond } from "next/font/google";
 import { type ReactNode } from "react";
 import { type BrandPromise } from "./copy";
@@ -71,6 +73,12 @@ export function PromiseIcon({
 export function Hero() {
   return (
     <section className="hc-shutter sticky top-0 z-0 w-full overflow-hidden bg-[#fbf6f2] md:flex md:h-[24rem] md:items-center lg:h-[30rem] xl:h-[38rem] 2xl:h-[42rem]">
+      {/* The whole banner opens Shop all (owner, 2026-11-20); still no button. */}
+      <Link
+        href={routes.shop}
+        aria-label="Shop all human hair"
+        className="absolute inset-0 z-20 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-deep"
+      />
       <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pt-6 sm:px-6 sm:pt-8 md:pt-6 md:pb-16 lg:pb-24 xl:pt-10 xl:pb-32">
         <div className="flex max-w-xl flex-col items-start gap-3 sm:gap-4 md:w-[40%] md:gap-3 lg:w-[42%] lg:gap-5 xl:w-[46%] xl:max-w-2xl">
           {/* The badge a little higher than the headline (owner, 2026-11-20). */}

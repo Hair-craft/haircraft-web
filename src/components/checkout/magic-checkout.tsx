@@ -45,13 +45,21 @@ function loadScript(src: string): Promise<void> {
 
 type Items = { variantId: string; quantity: number }[];
 
+interface OpenOptions {
+  /**
+   * Just before Razorpay's window appears, e.g. closing the bag drawer, which
+   * sits in the browser's top layer and would cover it (owner, 2026-11-20).
+   */
+  beforeOpen?: () => void;
+}
+
 interface MagicCheckout {
   /** Magic Checkout is on (Razorpay activated it for the shop). */
   enabled: boolean;
   /** A window is opening or a result is being confirmed. */
   busy: boolean;
   /** Opens the window; resolves with a problem to show, or null. */
-  open(items: Items, fromBag: boolean): Promise<string | null>;
+  open(items: Items, fromBag: boolean, options?: OpenOptions): Promise<string | null>;
   /** The last note after the window (e.g. closed without paying). */
   note: string | null;
 }
@@ -83,7 +91,7 @@ export function MagicCheckoutProvider({
   const [note, setNote] = useState<string | null>(null);
 
   const open = useCallback(
-    async (items: Items, fromBag: boolean): Promise<string | null> => {
+    async (items: Items, fromBag: boolean, options: OpenOptions = {}): Promise<string | null> => {
       setNote(null);
       setBusy(true);
       const opened = await openMagicCheckoutAction(items, fromBag);
@@ -108,7 +116,7 @@ export function MagicCheckoutProvider({
       // A full page load afterwards, so the bag count and the order are fresh.
       const finish = (orderNumber: string, receiptToken: string | null) =>
         window.location.assign(placedUrl(orderNumber, receiptToken));
-      new Razorpay({
+      const checkout = new Razorpay({
         key: s.keyId,
         order_id: s.razorpayOrderId,
         one_click_checkout: true,
@@ -149,7 +157,9 @@ export function MagicCheckoutProvider({
             setNote("Payment not completed, so nothing was charged. You can try again.");
           },
         },
-      }).open();
+      });
+      options.beforeOpen?.();
+      checkout.open();
       return null;
     },
     [scriptUrl],
