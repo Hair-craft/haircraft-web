@@ -299,7 +299,7 @@ test("the home page photos are fixed", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(OPEN + "/");
   await expect(
-    page.locator('main img[src*="%2Fimages%2Fhome%2Fhero-banner-2.webp"]'),
+    page.locator('main img[src*="%2Fimages%2Fhome%2Fhero-banner-6.jpg"]'),
   ).toBeVisible();
   await expect(page.locator('img[src*="%2Fimages%2Fhome%2Fstory.webp"]')).toHaveCount(1);
 });

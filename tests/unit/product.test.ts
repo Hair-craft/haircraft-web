@@ -177,6 +177,18 @@ describe("gallery order", () => {
       ]);
     });
 
+    it("shows a photo for each option it is linked to (owner, 2026-11-20)", () => {
+      const shared = [
+        image("both", { variantIds: ["20-NB", "22-NB"], variantId: "20-NB" }),
+        image("brown", { variantIds: ["20-DB"], variantId: "20-DB" }),
+        image("general", { variantIds: [], variantId: null }),
+      ];
+      expect(ids(optionGallery(shared, variants[0], variants))).toEqual(["both", "general"]);
+      expect(ids(optionGallery(shared, variants[2], variants))).toEqual(["both", "general"]);
+      expect(ids(optionGallery(shared, variants[1], variants))).toEqual(["brown", "general"]);
+      expect(ids(galleryFor(shared, "22-NB"))).toEqual(["both", "general", "brown"]);
+    });
+
     it("never leaves the gallery empty", () => {
       const onlyOthers = [image("brown", { variantId: "20-DB" })];
       expect(ids(optionGallery(onlyOthers, variants[0], variants))).toEqual(["brown"]);

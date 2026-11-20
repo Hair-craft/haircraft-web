@@ -45,23 +45,19 @@ test.describe("home page", () => {
     await page.goto(OPEN + "/");
     await expect(page).toHaveTitle("HairCraft — Human Hair Extensions, Toppers & Wigs in India");
     const heading = page.getByRole("heading", { level: 1 });
-    await expect(heading).toHaveText("Crafted for Pure Confidence.");
-    await expect(page.getByText("The Art of Bespoke Hair")).toBeVisible();
+    // The owner's banner words (2026-11-20), without the logo.
+    await expect(heading).toHaveText("Fuller Hair, A More Confident You");
+    await expect(page.getByText("100% Real Human Hair", { exact: true })).toBeVisible();
     // No button in the hero (owner, 2026-11-03).
     await expect(page.locator("section.hc-shutter a")).toHaveCount(0);
-    // "Pure Confidence." in the older elegant italic; the words under it in the older sans.
+    // "Confident You" in the older elegant italic.
     const italic = heading.locator("em");
-    await expect(italic).toHaveText("Pure Confidence.");
+    await expect(italic).toHaveText("Confident You");
     expect(await italic.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(
       /Cormorant.?Garamond/,
     );
-    expect(
-      await page
-        .getByText(/^100% ethically sourced Indian Remy hair extensions/)
-        .evaluate((el) => getComputedStyle(el).fontFamily),
-    ).toMatch(/Geist/);
-    // The owner's photo (2026-11-04), to the right edge, with the words on its white left side.
-    const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner-2.webp"]');
+    // The owner's photo (2026-11-20), to the right edge, with the words on its cream left side.
+    const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner-6.jpg"]');
     await expect(photo).toHaveCount(1);
     const box = await photo.boundingBox();
     expect(box!.x + box!.width).toBeGreaterThanOrEqual((page.viewportSize()?.width ?? 0) - 1);
@@ -92,7 +88,7 @@ test.describe("home page", () => {
     ]) {
       await page.setViewportSize(viewport);
       await page.goto(OPEN + "/");
-      const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner-2.webp"]');
+      const photo = page.locator('img[src*="%2Fimages%2Fhome%2Fhero-banner-6.jpg"]');
       const hero = (await page.locator("section.hc-shutter").boundingBox())!;
       // The photo's frame (the photo itself zooms in gently as the page opens).
       const box = (await photo.locator("..").boundingBox())!;

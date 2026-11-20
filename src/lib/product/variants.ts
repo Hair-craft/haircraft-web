@@ -136,6 +136,21 @@ export function choiceStatus(
   return exact.inStock ? "available" : "soldout";
 }
 
+/** The options a photo shows (none: the whole product). */
+export function photoVariantIds(image: Pick<ProductImage, "variantId" | "variantIds">): string[] {
+  return image.variantIds ?? (image.variantId ? [image.variantId] : []);
+}
+
+/** The photo shows one of these options. */
+function showsAny(image: ProductImage, ids: (string | null | undefined)[]): boolean {
+  return photoVariantIds(image).some((id) => ids.includes(id));
+}
+
+/** A photo of the whole product, not of particular options. */
+function isGeneral(image: ProductImage): boolean {
+  return photoVariantIds(image).length === 0;
+}
+
 /**
  * Photos in the order to show for an option: its own photos first, then the
  * product's general photos, then other options' photos (each group keeping
@@ -151,11 +166,7 @@ export function galleryFor(
     (a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.sortOrder - b.sortOrder,
   );
   const rank = (image: ProductImage) =>
-    image.variantId === null
-      ? 1
-      : image.variantId === variantId || (mainId && image.variantId === mainId)
-        ? 0
-        : 2;
+    isGeneral(image) ? 1 : variantId && showsAny(image, [variantId, mainId]) ? 0 : 2;
   return ordered
     .map((image, i) => ({ image, i }))
     .sort((a, b) => rank(a.image) - rank(b.image) || a.i - b.i)
@@ -209,11 +220,8 @@ export function optionGallery(
 ): ProductImage[] {
   const ordered = galleryFor(images, variant?.id, variant?.parentVariantId);
   if (!variant) return ordered;
-  const own = (image: ProductImage) =>
-    image.variantId === variant.id ||
-    (variant.parentVariantId !== null && image.variantId === variant.parentVariantId);
-  const general = (image: ProductImage) => image.variantId === null;
-  let shown = ordered.filter((image) => own(image) || general(image));
+  const own = (image: ProductImage) => showsAny(image, [variant.id, variant.parentVariantId]);
+  let shown = ordered.filter((image) => own(image) || isGeneral(image));
   if (!ordered.some(own)) {
     const sameLook = new Set(
       variants
@@ -222,10 +230,10 @@ export function optionGallery(
         )
         .map((v) => v.id),
     );
-    const lookAlike = ordered.filter(
-      (image) => image.variantId !== null && sameLook.has(image.variantId),
+    const lookAlike = ordered.filter((image) =>
+      photoVariantIds(image).some((id) => sameLook.has(id)),
     );
-    shown = [...lookAlike, ...ordered.filter(general)];
+    shown = [...lookAlike, ...ordered.filter(isGeneral)];
   }
   return shown.length > 0 ? shown : ordered;
 }

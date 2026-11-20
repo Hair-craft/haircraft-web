@@ -136,11 +136,16 @@ export interface ProductVideo {
   sortOrder: number;
 }
 
-/** A product photo (`GET /products/:slug`); `variantId` set when it shows one option. */
+/**
+ * A product photo (`GET /products/:slug`). `variantIds`: the options it shows,
+ * empty for the whole product (owner, 2026-11-20: one photo, several options);
+ * an older API sends only `variantId`.
+ */
 export interface ProductImage {
   id: string;
   urls: ImageUrls;
   altText: string | null;
+  variantIds?: string[];
   variantId: string | null;
   isPrimary: boolean;
   sortOrder: number;
