@@ -1,6 +1,7 @@
 import type { PublicProduct } from "@/lib/api/types";
 import { descriptionText } from "@/lib/product/description";
 import { formatPrice } from "@/lib/format";
+import { lengthKeyCm, parseLengthKey } from "@/lib/product/length";
 import { alwaysFree, type ShopPolicies } from "@/lib/info/policies";
 
 /**
@@ -28,13 +29,22 @@ export function clip(text: string, max: number): string {
   return `${(space > max * 0.5 ? cut.slice(0, space) : cut).replace(/[\s,.;:—-]+$/, "")}…`;
 }
 
-/** "18 inch", "14–22 inch", or null without lengths. */
-export function lengthRange(lengths: number[]): string | null {
-  const sorted = [...new Set(lengths)].filter((n) => n > 0).sort((a, b) => a - b);
-  if (sorted.length === 0) return null;
-  const first = sorted[0];
-  const last = sorted[sorted.length - 1];
-  return first === last ? `${first} inch` : `${first}–${last} inch`;
+/**
+ * "18 inch", "14–22 inch", "45–60 cm", "45 cm–1.2 m", or null without lengths.
+ * Lengths are keys (`18`, `45~cm`, `1.2~m`; owner, 2026-11-21) or inches.
+ */
+export function lengthRange(lengths: (string | number)[]): string | null {
+  const parsed = [...new Set(lengths.map(String))]
+    .map((key) => parseLengthKey(key))
+    .filter((l) => l !== null && l.value > 0)
+    .sort((a, b) => lengthKeyCm(`${a!.value}~${a!.unit}`) - lengthKeyCm(`${b!.value}~${b!.unit}`));
+  if (parsed.length === 0) return null;
+  const first = parsed[0]!;
+  const last = parsed[parsed.length - 1]!;
+  if (first.value === last.value && first.unit === last.unit) return `${first.value} ${first.unit}`;
+  return first.unit === last.unit
+    ? `${first.value}–${last.value} ${first.unit}`
+    : `${first.value} ${first.unit}–${last.value} ${last.unit}`;
 }
 
 const mentionsHumanHair = (name: string) => /human\s*hair/i.test(name);

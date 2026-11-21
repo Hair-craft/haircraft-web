@@ -52,7 +52,7 @@ const product: PublicProduct = {
   images: [],
   variants: [variant("ST-18", "1499.00"), variant("ST-22", "2499.00", false)],
   options: {
-    lengths: [18, 22],
+    lengths: ["18", "22"],
     colors: ["Natural Black"],
     textures: ["Straight"],
     weights: [],

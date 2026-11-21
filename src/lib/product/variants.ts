@@ -19,15 +19,18 @@ export const AXES: { key: Axis; label: string }[] = [
 /** The size as the address and filters write it (size.ts). */
 export { sizeKey, sizeLabel } from "./size";
 import { sizeKey, sizeLabel } from "./size";
+import { lengthKey, lengthKeyCm, lengthLabel } from "./length";
 
-/** A variant's value on an axis (its size as `13x15`). */
+/** A variant's value on an axis (its size as `13x15`, its length as `18` or `45~cm`). */
 export function valueOf(variant: PublicVariant, axis: Axis): Value | null {
-  return axis === "size" ? sizeKey(variant) : variant[axis];
+  if (axis === "size") return sizeKey(variant);
+  if (axis === "lengthInches") return lengthKey(variant);
+  return variant[axis];
 }
 
 export const valueLabel = (axis: Axis, value: Value) =>
   axis === "lengthInches"
-    ? `${value} inch`
+    ? lengthLabel(value)
     : axis === "size"
       ? sizeLabel(String(value))
       : String(value);
@@ -73,7 +76,8 @@ export function axisValues(variants: PublicVariant[], axis: Axis): Value[] {
   const values = [
     ...new Set(variants.map((v) => valueOf(v, axis)).filter((v) => v !== null)),
   ] as Value[];
-  if (axis === "lengthInches") return (values as number[]).sort((a, b) => a - b);
+  if (axis === "lengthInches")
+    return (values as string[]).sort((a, b) => lengthKeyCm(String(a)) - lengthKeyCm(String(b)));
   if (axis === "size") {
     const dims = (key: string) => key.split("x").map(Number);
     return (values as string[]).sort((a, b) => {

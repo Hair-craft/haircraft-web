@@ -10,7 +10,9 @@ export const MAX_JSON_LD_REVIEWS = 5;
 /** "18 in, Natural Black, Straight" for an option's offer. */
 function optionName(variant: PublicVariant): string {
   return [
-    variant.lengthInches === null ? null : `${variant.lengthInches} in`,
+    variant.lengthInches === null
+      ? null
+      : `${variant.lengthInches} ${variant.lengthUnit === "cm" ? "cm" : variant.lengthUnit === "m" ? "m" : "in"}`,
     variant.color,
     variant.texture,
     sizeText(variant),

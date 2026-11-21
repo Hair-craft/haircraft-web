@@ -17,7 +17,7 @@ import {
 import { highlight } from "@/lib/search/highlight";
 
 const options: FilterOptions = {
-  lengths: [18, 20],
+  lengths: ["18", "20"],
   colors: ["Natural Black"],
   textures: ["Body Wave"],
   sizes: [],
@@ -35,7 +35,7 @@ describe("search words in the address", () => {
 
   it("reads the search whole (commas included) and defaults to relevance", () => {
     const parsed = parseListing({ q: "wig, body wave", length: "18" }, options);
-    expect(parsed).toMatchObject({ q: "wig, body wave", lengths: [18], sort: "relevance" });
+    expect(parsed).toMatchObject({ q: "wig, body wave", lengths: ["18"], sort: "relevance" });
     expect(parseListing({ q: ["first", "second"] }, options).q).toBe("first");
   });
 
@@ -52,7 +52,7 @@ describe("search words in the address", () => {
     expect(listingHref("/search", state({ q: "body wave", sort: "relevance" }))).toBe(
       "/search?q=body%20wave",
     );
-    expect(listingHref("/search", state({ q: "wig, lace", lengths: [18], sort: "newest" }))).toBe(
+    expect(listingHref("/search", state({ q: "wig, lace", lengths: ["18"], sort: "newest" }))).toBe(
       "/search?q=wig%2C%20lace&length=18&sort=newest",
     );
   });
@@ -81,7 +81,7 @@ describe("search words in the address", () => {
       sort: "relevance:desc",
     });
     expect(toApiQuery(EMPTY_STATE, 24).search).toBeUndefined();
-    const filtered = state({ q: "wig", lengths: [18], sort: "rating" });
+    const filtered = state({ q: "wig", lengths: ["18"], sort: "rating" });
     expect(clearFilters(filtered)).toEqual(state({ q: "wig", sort: "rating" }));
     // The search itself isn't a removable filter chip (it has its own box).
     expect(activeFilters(filtered).map((c) => c.label)).toEqual(["Length: 18 inch"]);

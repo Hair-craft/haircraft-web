@@ -2,6 +2,7 @@ import type { MouseEvent, ReactNode } from "react";
 import type { Axis, Value } from "@/lib/product/variants";
 import { valueLabel } from "@/lib/product/variants";
 import { swatchFor } from "@/lib/product/swatch";
+import { lengthShort } from "@/lib/product/length";
 import { cx } from "@/lib/cx";
 
 export type ChoiceStatus = "available" | "soldout" | "elsewhere";
@@ -169,7 +170,7 @@ export function OptionChoice({
       ) : null}
       {axis === "lengthInches" ? (
         <>
-          <span aria-hidden>{value}″</span>
+          <span aria-hidden>{lengthShort(value)}</span>
           {hidden}
         </>
       ) : (

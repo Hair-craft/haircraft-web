@@ -1,6 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import type { PublicProduct, PublicVariant } from "@/lib/api/types";
 import { formatPrice } from "@/lib/format";
+import { lengthKey } from "@/lib/product/length";
 import { defaultVariant, optionGallery, pick, shopVariants } from "@/lib/product/variants";
 import { API, API_DOWN, OPEN } from "../../playwright.config";
 
@@ -80,7 +81,7 @@ test.describe("product page", () => {
     await page.evaluate(() => ((window as unknown as { marker: number }).marker = 1));
 
     const lengths = page.getByRole("group", { name: "Length" });
-    const otherLength = product.options.lengths.find((l) => l !== start.lengthInches)!;
+    const otherLength = product.options.lengths.find((l) => l !== lengthKey(start))!;
     const expected = pick(product.variants, start, "lengthInches", otherLength);
     await lengths.getByRole("link", { name: new RegExp(`^${otherLength} inch`) }).click();
     await expect(page).toHaveURL(`${OPEN}/product/${product.slug}?variant=${expected.sku}`);
@@ -304,7 +305,7 @@ test.describe("product page", () => {
   }) => {
     const product = await richProduct(request);
     const start = defaultVariant(product.variants)!;
-    const otherLength = product.options.lengths.find((l) => l !== start.lengthInches)!;
+    const otherLength = product.options.lengths.find((l) => l !== lengthKey(start))!;
     const expected = pick(product.variants, start, "lengthInches", otherLength);
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();

@@ -58,7 +58,7 @@ describe("choosing an option", () => {
   });
 
   it("offers a row only for properties with more than one value, in order", () => {
-    expect(axisValues(variants, "lengthInches")).toEqual([18, 20]);
+    expect(axisValues(variants, "lengthInches")).toEqual(["18", "20"]);
     expect(axisValues(variants, "color")).toEqual(["Dark Brown", "Natural Black"]);
     expect(pickerAxes(variants)).toEqual(["lengthInches", "color"]);
     expect(valueLabel("lengthInches", 20.5)).toBe("20.5 inch");
@@ -66,7 +66,7 @@ describe("choosing an option", () => {
 
   it("keeps the other choices when the combination exists, else moves to the nearest", () => {
     const black20 = variants[1];
-    expect(pick(variants, black20, "lengthInches", 18).sku).toBe("18-NB");
+    expect(pick(variants, black20, "lengthInches", "18").sku).toBe("18-NB");
     expect(pick(variants, black20, "color", "Dark Brown").sku).toBe("20-DB");
     // From 18 black, brown exists only at 20 inch: the length follows.
     expect(pick(variants, variants[0], "color", "Dark Brown").sku).toBe("20-DB");
@@ -83,8 +83,8 @@ describe("choosing an option", () => {
 
   it("marks each button: available, sold out, or only with other choices", () => {
     const black20 = variants[1];
-    expect(choiceStatus(variants, black20, "lengthInches", 20)).toBe("available");
-    expect(choiceStatus(variants, black20, "lengthInches", 18)).toBe("soldout");
+    expect(choiceStatus(variants, black20, "lengthInches", "20")).toBe("available");
+    expect(choiceStatus(variants, black20, "lengthInches", "18")).toBe("soldout");
     expect(choiceStatus(variants, variants[0], "color", "Dark Brown")).toBe("elsewhere");
   });
 });
@@ -209,7 +209,7 @@ describe("structured data", () => {
     categories: [{ id: "c", name: "Tape-in Extensions", slug: "tape-in-extensions" }],
     images: [],
     variants,
-    options: { lengths: [18, 20], colors: [], textures: [], weights: [], sizes: [] },
+    options: { lengths: ["18", "20"], colors: [], textures: [], weights: [], sizes: [] },
     priceRange: { min: "5000.00", max: "5000.00" },
     inStock: true,
     rating: 4.5,
@@ -359,6 +359,27 @@ describe("sub-variants and size", () => {
       "TOP-NB-S",
       "TOP-NB-L",
       "TOP-BR",
+    ]);
+  });
+});
+
+describe("lengths in inches, cm or m (owner, 2026-11-21)", () => {
+  it("keys, labels, short labels and sorts lengths of any unit", async () => {
+    const { lengthKey, lengthLabel, lengthShort, lengthKeyCm } =
+      await import("@/lib/product/length");
+    expect(lengthKey({ lengthInches: 18 })).toBe("18");
+    expect(lengthKey({ lengthInches: 18, lengthUnit: "inch" })).toBe("18");
+    expect(lengthKey({ lengthInches: 45, lengthUnit: "cm" })).toBe("45~cm");
+    expect(lengthKey({ lengthInches: 1.2, lengthUnit: "m" })).toBe("1.2~m");
+    expect(lengthKey({ lengthInches: null })).toBeNull();
+    expect(lengthLabel("18")).toBe("18 inch");
+    expect(lengthLabel("45~cm")).toBe("45 cm");
+    expect(lengthShort("18")).toBe("18″");
+    expect(lengthShort("1.2~m")).toBe("1.2 m");
+    expect(["1.2~m", "18", "45~cm"].sort((a, b) => lengthKeyCm(a) - lengthKeyCm(b))).toEqual([
+      "45~cm",
+      "18",
+      "1.2~m",
     ]);
   });
 });

@@ -31,6 +31,7 @@ import {
 } from "@/lib/product/variants";
 import { deliveryPoints, productPromises } from "./content";
 import { Gallery } from "./gallery";
+import { lengthKey, lengthLabel } from "@/lib/product/length";
 import { OptionChoice, RulerIcon } from "./option-choice";
 
 /** `?variant=<SKU>`: the address of one option of this product. */
@@ -279,7 +280,7 @@ export function ProductView({
                                     "Length",
                                     variant.lengthInches === null
                                       ? null
-                                      : `${variant.lengthInches} inch`,
+                                      : lengthLabel(lengthKey(variant) ?? ""),
                                   ],
                                   ["Colour", variant.color],
                                   ["Texture", variant.texture],

@@ -35,7 +35,7 @@ const policies: ShopPolicies = {
 type ProductBits = Pick<PublicProduct, "name" | "options" | "description" | "priceRange">;
 const product = (over: Partial<ProductBits> = {}): ProductBits => ({
   name: "Wrap-around Ponytail",
-  options: { lengths: [22], colors: [], textures: [], weights: [], sizes: [] },
+  options: { lengths: ["22"], colors: [], textures: [], weights: [], sizes: [] },
   description:
     "<p>A full, <strong>sleek</strong> ponytail in seconds. It clips on in one step.</p>",
   priceRange: { min: "4999.00", max: "6999.00" },
@@ -48,7 +48,13 @@ describe("titles", () => {
     expect(
       productTitle(
         product({
-          options: { lengths: [14, 22, 18], colors: [], textures: [], weights: [], sizes: [] },
+          options: {
+            lengths: ["14", "22", "18"],
+            colors: [],
+            textures: [],
+            weights: [],
+            sizes: [],
+          },
         }),
       ),
     ).toBe("Wrap-around Ponytail — Human Hair, 14–22 inch");

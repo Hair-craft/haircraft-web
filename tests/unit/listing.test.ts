@@ -22,7 +22,7 @@ import {
 } from "@/lib/listing/query";
 
 const options: FilterOptions = {
-  lengths: [14, 16, 18, 20.5],
+  lengths: ["14", "16", "18", "20.5"],
   colors: ["Dark Brown", "Natural Black"],
   textures: ["Body Wave", "Straight"],
   sizes: ["13x15", "15x16"],
@@ -50,7 +50,7 @@ describe("reading the address", () => {
       ),
     ).toEqual({
       q: null,
-      lengths: [14, 18],
+      lengths: ["14", "18"],
       colors: ["Natural Black"],
       textures: ["Body Wave", "Straight"],
       // Only sizes the filters offer.
@@ -90,9 +90,9 @@ describe("reading the address", () => {
         },
         options,
       ),
-    ).toEqual(state({ lengths: [18] }));
+    ).toEqual(state({ lengths: ["18"] }));
     expect(parseListing({ page: "99999" }, options).page).toBe(1);
-    expect(parseListing({ length: "20.5" }, options).lengths).toEqual([20.5]);
+    expect(parseListing({ length: "20.5" }, options).lengths).toEqual(["20.5"]);
   });
 
   it("swaps a price range given back to front, and treats a minimum of 0 as none", () => {
@@ -111,7 +111,7 @@ describe("building the address", () => {
   it("uses a fixed order and leaves defaults out, so one view has one address", () => {
     const view = state({
       textures: ["Body Wave"],
-      lengths: [18, 20.5],
+      lengths: ["18", "20.5"],
       colors: ["Natural Black"],
       min: 4000,
       inStock: true,
@@ -125,20 +125,26 @@ describe("building the address", () => {
   });
 
   it("round-trips: reading a built address gives the same state", () => {
-    const view = state({ lengths: [14], colors: ["Dark Brown"], max: 8000, sort: "name", page: 2 });
+    const view = state({
+      lengths: ["14"],
+      colors: ["Dark Brown"],
+      max: 8000,
+      sort: "name",
+      page: 2,
+    });
     const href = listingHref("/shop", view);
     const params = Object.fromEntries(new URLSearchParams(href.split("?")[1]));
     expect(parseListing(params, options)).toEqual(view);
   });
 
   it("spells the requested address the same way, to spot untidy ones", () => {
-    const tidy = state({ lengths: [18, 20.5], colors: ["Natural Black"] });
+    const tidy = state({ lengths: ["18", "20.5"], colors: ["Natural Black"] });
     expect(addressOf("/shop", { length: "18,20.5", color: "natural-black" })).toBe(
       listingHref("/shop", tidy),
     );
     // The plain form's repeated keys and empty boxes are untidy.
     expect(addressOf("/shop", { length: ["18", "20.5"], min: "" })).not.toBe(
-      listingHref("/shop", state({ lengths: [18, 20.5] })),
+      listingHref("/shop", state({ lengths: ["18", "20.5"] })),
     );
     expect(addressOf("/shop", { page: "1" })).not.toBe("/shop");
     expect(addressOf("/shop", {})).toBe("/shop");
@@ -204,7 +210,7 @@ describe("price bands", () => {
 describe("active filters", () => {
   it("gives one chip per filter, each removing only itself", () => {
     const view = state({
-      lengths: [18, 20.5],
+      lengths: ["18", "20.5"],
       colors: ["Natural Black"],
       min: 4000,
       inStock: true,
@@ -218,12 +224,12 @@ describe("active filters", () => {
       "Price: From ₹4,000",
       "In stock only",
     ]);
-    expect(chips[0].without).toEqual({ ...view, lengths: [20.5], page: 1 });
+    expect(chips[0].without).toEqual({ ...view, lengths: ["20.5"], page: 1 });
     expect(chips[3].without).toMatchObject({ min: null, max: null });
   });
 
   it("clears every filter but keeps the sort", () => {
-    const view = state({ lengths: [18], sort: "rating", page: 2 });
+    const view = state({ lengths: ["18"], sort: "rating", page: 2 });
     expect(clearFilters(view)).toEqual(state({ sort: "rating" }));
     expect(hasFilters(clearFilters(view))).toBe(false);
   });

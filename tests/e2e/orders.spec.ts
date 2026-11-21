@@ -138,15 +138,16 @@ test.describe("an order's page", () => {
     await expect(orderCards(page).first()).toContainText("Refund pending");
   });
 
-  test("while being packed it can still be cancelled (owner, 2026-11-13)", async ({ page, request }) => {
+  test("while being packed it can still be cancelled (owner, 2026-11-13)", async ({
+    page,
+    request,
+  }) => {
     const { email, token, addressId } = await shopper(request, "orders");
     const order = await placeOrderByApi(request, token, addressId, { skipAdd: true });
     await adminOrder(request, order.id, { status: "PROCESSING" });
     await signIn(page, email);
     await page.goto(`${OPEN}/account/orders/${order.orderNumber}`);
-    await expect(page.getByRole("list", { name: "Order progress" })).toContainText(
-      "Packed (done)",
-    );
+    await expect(page.getByRole("list", { name: "Order progress" })).toContainText("Packed (done)");
     await page.getByText("Cancel this order").click();
     await page.getByRole("radio", { name: "Other" }).check();
     await page.getByLabel("Anything to add? (needed for Other)").fill("Ordered twice");

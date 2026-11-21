@@ -161,7 +161,10 @@ export interface PublicVariant {
   /** The price paid: the sale price when on sale (null without a price). */
   effectivePrice: Money | null;
   onSale: boolean;
+  /** The length, in `lengthUnit` (the name is historic). */
   lengthInches: number | null;
+  /** inch, cm or m (owner, 2026-11-21); inch from an older API. */
+  lengthUnit?: "inch" | "cm" | "m";
   color: string | null;
   texture: string | null;
   weightGrams: number | null;
@@ -201,7 +204,8 @@ export interface PublicProduct {
   images: ProductImage[];
   variants: PublicVariant[];
   options: {
-    lengths: number[];
+    /** Length keys: `18` (inches), `45~cm`, `1.2~m`; shortest first. */
+    lengths: string[];
     colors: string[];
     textures: string[];
     weights: number[];

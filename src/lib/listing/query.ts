@@ -46,7 +46,8 @@ export function cleanSearch(text: string | undefined): string | null {
 
 /** What the filters can offer (from `GET /products/filters`). */
 export interface FilterOptions {
-  lengths: number[];
+  /** Length keys: `18` (inches), `45~cm`, `1.2~m`. */
+  lengths: string[];
   colors: string[];
   textures: string[];
   /** Sizes in cm as height x width, e.g. `13x15` (smallest first). */
@@ -57,7 +58,8 @@ export interface FilterOptions {
 export interface ListingState {
   /** The search words on `/search` (null on the shop's lists). */
   q: string | null;
-  lengths: number[];
+  /** Length keys: `18` (inches), `45~cm`, `1.2~m`. */
+  lengths: string[];
   /** Colour and texture names exactly as the API spells them. */
   colors: string[];
   textures: string[];
@@ -257,7 +259,9 @@ export function priceLabel(min: number | null, max: number | null): string {
   return `From ${rupeeLabel(min ?? 0)}`;
 }
 
-export const lengthLabel = (inches: number) => `${inches} inch`;
+/** `18` → "18 inch", `45~cm` → "45 cm" (owner, 2026-11-21: inches, cm or m). */
+export { lengthLabel } from "@/lib/product/length";
+import { lengthLabel } from "@/lib/product/length";
 
 /** `13x15` → "13 × 15 cm". */
 export { sizeLabel as sizeFilterLabel } from "@/lib/product/size";
