@@ -56,9 +56,8 @@ export function PromiseIcon({
  * The hero banner, after the owner's design and photo (2026-11-04: the words
  * on the LEFT; 2026-11-20: the stylist with a hair piece, two mannequins and
  * the HairCraft box, on a cream ground the section matches). The photo at the
- * full width, the banner a little taller than before (owner, 2026-11-20: 24,
- * 30, 38 and 42rem from tablets up); the photo sits low, so the table stays in
- * view. From tablets up the words sit over the photo's open cream space on
+ * full width; from tablets up the banner is 44% of the screen's width (at
+ * least 24rem; owner, 2026-11-21), so the whole photo fits on wide screens too. From tablets up the words sit over the photo's open cream space on
  * the left, a little above the middle (owner, 2026-11-20). No button (owner).
  *
  * Phones (owner, 2026-11-04, kept 2026-11-20): the words on top, over the
@@ -72,7 +71,7 @@ export function PromiseIcon({
  */
 export function Hero() {
   return (
-    <section className="hc-shutter sticky top-0 z-0 w-full overflow-hidden bg-[#fbf6f2] md:flex md:h-[24rem] md:items-center lg:h-[30rem] xl:h-[38rem] 2xl:h-[42rem]">
+    <section className="hc-shutter sticky top-0 z-0 w-full overflow-hidden bg-[#fbf6f2] md:flex md:h-[44vw] md:min-h-[24rem] md:items-center">
       {/* The whole banner opens Shop all (owner, 2026-11-20); still no button. */}
       <Link
         href={routes.shop}
@@ -99,17 +98,26 @@ export function Hero() {
           </h1>
         </div>
       </div>
-      <div className="relative -mt-8 aspect-[6/5] w-full sm:-mt-24 sm:aspect-[16/8] md:absolute md:inset-0 md:mt-0 md:aspect-auto">
-        <Image
-          src={heroImage.src}
-          alt={heroImage.alt}
-          fill
-          priority
-          sizes="100vw"
-          // Sharp, not soft (owner, 2026-11-20): the higher of the allowed qualities.
-          quality={90}
-          className="hc-settle object-cover object-[80%_20%] md:object-[100%_65%]"
-        />
+      <div className="relative -mt-8 aspect-[6/5] w-full overflow-hidden sm:-mt-24 sm:aspect-[16/9] md:absolute md:inset-0 md:mt-0 md:aspect-auto">
+        {/*
+          The photo's table stand ends in a flat cut just below the tabletop (owner,
+          2026-11-21). From tablets up the banner's height follows the screen's width (44vw),
+          so wide screens no longer cut the hair piece at the top, and the photo sits so the
+          cut is under the panel that slides over the banner. On phones the photo is a little
+          taller than its frame, for the same reason: the table reads as going on behind it.
+        */}
+        <div className="absolute inset-x-0 top-0 h-[105%] sm:h-[104%] md:inset-0 md:h-full">
+          <Image
+            src={heroImage.src}
+            alt={heroImage.alt}
+            fill
+            priority
+            sizes="100vw"
+            // Sharp, not soft (owner, 2026-11-20): the higher of the allowed qualities.
+            quality={90}
+            className="hc-settle object-cover object-[80%_0%] md:object-[100%_62%]"
+          />
+        </div>
         {/* Phones: a cream fade over the photo's top, behind the words (owner, 2026-11-04). */}
         <div
           aria-hidden
