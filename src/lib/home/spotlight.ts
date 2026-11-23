@@ -15,7 +15,7 @@ export function spotSlot(index: number, active: number, count: number): SpotSlot
   if (ahead === count - 1 && count > 2) return "under";
   if (ahead === 1) return "q1";
   if (ahead === 2) return "q2";
-  if (ahead === 3) return "q3";
+  // Two small cards at a time (owner, 2026-11-23); the rest wait out of sight.
   return "out";
 }
 
@@ -25,10 +25,10 @@ export function spotStep(active: number, by: number, count: number): number {
   return (((active + by) % count) + count) % count;
 }
 
-/** How many small cards wait on the right for `count` concerns (at most 3). */
+/** How many small cards wait on the right for `count` concerns (at most 2). */
 export function waitingCards(count: number): number {
   if (count <= 1) return 0;
   if (count === 2) return 1;
   // The rest, less the one in the spotlight and the one underneath.
-  return Math.min(3, count - 2);
+  return Math.min(2, count - 2);
 }

@@ -144,3 +144,8 @@ They cross-fade over 0.9s as a card grows or shrinks (instantly with "reduce mot
 browser fetches the photo once (same URL and size). Checked on the local site: the whole girl
 shows in the middle of the big card, with soft blurred sides, the title on the left and the
 small cards on the right.
+
+## Revision: two small cards at a time (owner, same day)
+
+- `spotSlot` no longer has a third waiting place: the concern 3 ahead now waits out of sight (`out`). `waitingCards` is at most 2, so the second card still hangs half past the box's edge.
+- Unit tests updated (layouts for 6 concerns; `waitingCards` matches the shown cards for 1–8).

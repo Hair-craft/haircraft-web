@@ -5,13 +5,13 @@ const layout = (active: number, count: number) =>
   Array.from({ length: count }, (_, i) => spotSlot(i, active, count));
 
 describe("Shop by concern spotlight (owner, 2026-11-23)", () => {
-  it("puts the active concern in the spotlight, the one before underneath, the next 3 waiting", () => {
-    expect(layout(0, 6)).toEqual(["main", "q1", "q2", "q3", "out", "under"]);
-    expect(layout(2, 6)).toEqual(["out", "under", "main", "q1", "q2", "q3"]);
+  it("puts the active concern in the spotlight, the one before underneath, the next 2 waiting", () => {
+    expect(layout(0, 6)).toEqual(["main", "q1", "q2", "out", "out", "under"]);
+    expect(layout(2, 6)).toEqual(["out", "under", "main", "q1", "q2", "out"]);
   });
 
   it("goes round: after the last comes the first", () => {
-    expect(layout(5, 6)).toEqual(["q1", "q2", "q3", "out", "under", "main"]);
+    expect(layout(5, 6)).toEqual(["q1", "q2", "out", "out", "under", "main"]);
     expect(spotStep(5, 1, 6)).toBe(0);
     expect(spotStep(0, -1, 6)).toBe(5);
     expect(spotStep(3, 1, 6)).toBe(4);
