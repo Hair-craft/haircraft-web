@@ -47,11 +47,18 @@ export function ProductView({
   product,
   initialSku,
   descriptionHtml,
+  quickView,
 }: {
   product: PublicProduct;
   initialSku: string;
   /** The description as safe HTML (null: none). */
   descriptionHtml: string | null;
+  /**
+   * Shown in the home page's quick view (owner, 2026-11-23): the address bar is
+   * left alone, the name is an h2 with this id (the dialog's label), and the
+   * rating doesn't link to reviews that aren't there.
+   */
+  quickView?: { titleId: string };
 }) {
   const { addedToBag } = useWishlist();
   const { freeShippingThreshold } = useCart();
@@ -62,7 +69,7 @@ export function ProductView({
     // Without JavaScript these are plain links; with it, no reload.
     event.preventDefault();
     setVariant(next);
-    window.history.replaceState(null, "", variantHref(product.slug, next));
+    if (!quickView) window.history.replaceState(null, "", variantHref(product.slug, next));
   };
 
   // Only the chosen option's photos (and the general ones) are shown (owner, 2026-11-06).
@@ -137,9 +144,18 @@ export function ProductView({
             ) : null}
           </div>
           <div className="mt-2 flex items-start justify-between gap-4">
-            <h1 className="font-display text-3xl leading-tight font-semibold sm:text-[1.75rem]">
-              {product.name}
-            </h1>
+            {quickView ? (
+              <h2
+                id={quickView.titleId}
+                className="font-display text-3xl leading-tight font-semibold sm:text-[1.75rem]"
+              >
+                {product.name}
+              </h2>
+            ) : (
+              <h1 className="font-display text-3xl leading-tight font-semibold sm:text-[1.75rem]">
+                {product.name}
+              </h1>
+            )}
             <HeartButton
               productId={product.id}
               name={product.name}
@@ -147,7 +163,11 @@ export function ProductView({
               className="shrink-0"
             />
           </div>
-          {product.reviewCount > 0 ? (
+          {product.reviewCount > 0 && quickView ? (
+            <span className="mt-3 inline-flex">
+              <RatingStars rating={product.rating} reviewCount={product.reviewCount} />
+            </span>
+          ) : product.reviewCount > 0 ? (
             <a
               href="#reviews"
               className="mt-3 inline-flex rounded-full hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"

@@ -338,3 +338,714 @@ summary,
 label {
   -webkit-tap-highlight-color: transparent;
 }
+
+/*
+ * The home page's 3D product ring, after the owner's GSAP sample (2026-11-23;
+ * product-ring.tsx), on the page background: photo panels stand on the OUTSIDE
+ * of the ring (convex; owner, 2026-11-23), so the panel in front is the nearest
+ * and the ones beside it turn away (perspective 2000px). Panels facing
+ * away are hidden (backface-visibility). The radius is worked out from the
+ * panel width and the number of panels; the script only turns the ring (--rot)
+ * and shifts each photo for the parallax (--px). With "reduce motion" it is a
+ * plain sideways row.
+ */
+.hc-ring-wrap {
+  /* A little bigger than the sample's 300 × 400 px (owner, 2026-11-23). */
+  --card: clamp(10.5rem, 46vw, 21.5rem);
+}
+
+.hc-ring-stage {
+  perspective: 2000px;
+  overflow-x: clip;
+  padding-block: 2rem;
+  touch-action: pan-y;
+  cursor: grab;
+  /*
+   * One soft fade across the whole ring (owner, 2026-11-23): fully clear in the
+   * middle, the cards growing lighter (more see-through) towards both ends until
+   * they melt into the page, with no hard edge.
+   */
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgb(0 0 0 / 0.2) 7%,
+    rgb(0 0 0 / 0.5) 16%,
+    rgb(0 0 0 / 0.8) 26%,
+    #000 36%,
+    #000 64%,
+    rgb(0 0 0 / 0.8) 74%,
+    rgb(0 0 0 / 0.5) 84%,
+    rgb(0 0 0 / 0.2) 93%,
+    transparent 100%
+  );
+  user-select: none;
+}
+
+.hc-ring-stage[data-dragging] {
+  cursor: grabbing;
+}
+
+.hc-ring-stage a,
+.hc-ring-stage img {
+  -webkit-user-drag: none;
+}
+
+.hc-ring {
+  --r: calc(var(--card) / 2 / tan(180deg / var(--n)) + 2rem);
+  position: relative;
+  display: grid;
+  width: var(--card);
+  margin-inline: auto;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(-1 * var(--r))) rotateY(var(--rot, 0deg));
+  /* The ring box itself would catch the mouse: let it through to the panels. */
+  pointer-events: none;
+}
+
+.hc-ring-face {
+  grid-area: 1 / 1;
+  transform: rotateY(calc(var(--i) * 360deg / var(--n))) translateZ(var(--r));
+  backface-visibility: hidden;
+  pointer-events: auto;
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hc-ring-face[data-back] {
+  pointer-events: none;
+}
+
+/* The parallax: the photo, a little wider than its panel, slides as the ring turns. */
+.hc-ring-face img {
+  transform: translateX(var(--px, 0px)) scale(1.3);
+}
+
+/* As in the sample: hovering a panel dims the others to half. */
+@media (hover: hover) {
+  .hc-ring:has(.hc-ring-face:hover) .hc-ring-face:not(:hover) {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-ring-stage {
+    perspective: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 1rem;
+    padding-inline: 1rem;
+    touch-action: auto;
+    cursor: auto;
+  }
+
+  .hc-ring {
+    pointer-events: auto;
+    display: flex;
+    gap: 1rem;
+    width: max-content;
+    margin-inline: 0;
+    transform: none;
+  }
+
+  .hc-ring-face {
+    flex: 0 0 var(--card);
+    transform: none;
+    scroll-snap-align: start;
+  }
+
+  .hc-ring-face[data-back] {
+    pointer-events: auto;
+  }
+
+  /* The repeats that fill a ring of few products: a row shows each product once. */
+  .hc-ring-face[data-copy] {
+    display: none;
+  }
+
+  .hc-ring-face img {
+    transform: none;
+  }
+
+  .hc-ring-stage {
+    mask-image: none;
+  }
+
+  .hc-ring-controls {
+    display: none;
+  }
+}
+
+/*
+ * Best sellers as expanding photo columns (owner, 2026-11-23), after Nikolay
+ * Talanov's "Satellite" sample: the columns rise one by one, hovering one
+ * brightens it and raises its number, and the chosen one grows to fill the
+ * box (0.6 s move, then 0.7 s widen) while the others shrink and fade; the
+ * quick view then fades in. best-seller-columns.tsx sets the states.
+ */
+.hc-cols {
+  --gap: 0.75rem;
+  --w: calc((100% - (var(--n) - 1) * var(--gap)) / var(--n));
+  position: relative;
+  height: clamp(26rem, 72vh, 42rem);
+  overflow: hidden;
+  border-radius: 1.5rem;
+}
+
+.hc-col {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--w);
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: var(--deep);
+  transform: translateX(calc(var(--i) * (100% + var(--gap))));
+  /* Closing: narrow first, then slide back and fade in. */
+  transition:
+    transform 0.6s 0.7s,
+    width 0.7s,
+    opacity 0.6s 0.7s,
+    border-radius 0.7s;
+}
+
+.hc-col[data-active] {
+  z-index: 3;
+  width: 100%;
+  transform: translateX(0);
+  border-radius: 1.5rem;
+  /* Opening: slide to the left edge, then widen. */
+  transition:
+    transform 0.6s,
+    width 0.7s 0.7s,
+    border-radius 0.7s 0.7s;
+}
+
+.hc-cols[data-open] .hc-col:not([data-active]) {
+  transform: translateX(calc(var(--i) * (100% + var(--gap)))) scale(0.5);
+  opacity: 0;
+  transition:
+    transform 0.95s,
+    opacity 0.95s;
+}
+
+.hc-col__inner {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transition: transform 1s calc(var(--i) * 0.1s);
+}
+
+.hc-col__bg {
+  position: absolute;
+  inset: -5% 0;
+  transition: transform 1s calc(var(--i) * 0.1s);
+}
+
+.hc-cols[data-phase="waiting"] .hc-col__inner {
+  transform: translateY(100%);
+}
+
+.hc-cols[data-phase="waiting"] .hc-col__bg {
+  transform: translateY(-100%) scale(1.2);
+}
+
+.hc-col[data-active] .hc-col__bg {
+  transform: scale(1.1);
+  transition: transform 0.8s 0.6s;
+}
+
+/* A dimming veil: the columns dim a little while the mouse is over the box, and
+   the one under it brightens (as in the sample). */
+.hc-col__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgb(4 14 9 / 0.75),
+    rgb(4 14 9 / 0.25) 55%,
+    rgb(4 14 9 / 0.35)
+  );
+  opacity: 0.75;
+  transition: opacity 0.5s;
+}
+
+@media (hover: hover) {
+  .hc-cols:hover .hc-col__shade {
+    opacity: 1;
+  }
+
+  .hc-cols .hc-col:hover .hc-col__shade {
+    opacity: 0.35;
+  }
+}
+
+.hc-col__link {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+}
+
+.hc-col__link:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: -6px;
+  border-radius: 1rem;
+}
+
+.hc-col__name {
+  font-family: var(--font-display, serif);
+  font-size: clamp(1rem, 1.6vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.35);
+  transition:
+    opacity 0.3s 1.2s,
+    transform 0.3s 1.2s;
+}
+
+/*
+ * Phones (owner, 2026-11-23): the columns sit side by side as an accordion. One stands
+ * open (wide, its name across) and the others are narrow strips (their names reading
+ * upwards, like a book's spine). The open one moves along every 3 s (the script), each
+ * opening in 0.3 s. A tapped column still grows to fill the box for its quick view.
+ */
+@media (max-width: 639px) {
+  /*
+   * Shorter, and just tall enough for the open column to show its whole photo (owner,
+   * 2026-11-23): the open column takes 8 of 12 shares of the width (the 4 strips one
+   * each), and the photos are 4:5, so the height is that width × 1.25.
+   */
+  .hc-cols {
+    --share: calc((100vw - 2rem - 4 * 0.5rem) * 8 / 12);
+    display: flex;
+    gap: 0.5rem;
+    height: calc(var(--share) * 1.25);
+  }
+
+  .hc-col,
+  .hc-col[data-active],
+  .hc-cols[data-open] .hc-col:not([data-active]) {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    transform: none;
+    transition:
+      flex-grow 0.3s ease,
+      opacity 0.3s ease;
+  }
+
+  .hc-col[data-wide] {
+    flex-grow: 8;
+  }
+
+  /* The whole photo: no extra height above and below it (the rise-in still slides it). */
+  .hc-col__bg {
+    inset: 0;
+  }
+
+  /* Room for the strips' upward names. */
+  .hc-col__link {
+    padding: 0.5rem 0.25rem;
+  }
+
+  /* The quick view: the tapped column takes the whole box, the others fold away. */
+  .hc-cols[data-open] .hc-col[data-active] {
+    flex-grow: 1;
+  }
+
+  .hc-cols[data-open] .hc-col:not([data-active]) {
+    flex-grow: 0;
+    flex-basis: 0;
+    opacity: 0;
+    margin-left: -0.5rem;
+  }
+
+  .hc-col__name {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    /* Turns at once when its column opens (no late flip); only the first fade is delayed. */
+    transition: opacity 0.3s 1.2s;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 80%;
+  }
+
+  .hc-col[data-wide] .hc-col__name {
+    writing-mode: horizontal-tb;
+    transform: none;
+    align-self: flex-end;
+    margin-bottom: 1.5rem;
+    font-size: 1.35rem;
+    white-space: normal;
+    max-height: none;
+  }
+}
+
+.hc-cols[data-phase="waiting"] .hc-col__name,
+.hc-cols[data-open] .hc-col__name {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.hc-col__index {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-family: var(--font-display, serif);
+  font-size: clamp(4rem, 10vw, 10rem);
+  font-weight: 700;
+  line-height: 0.8;
+  color: rgb(255 255 255 / 0.9);
+  opacity: 0;
+  transform: translateY(60%);
+  transition:
+    transform 0.5s,
+    opacity 0.5s;
+}
+
+@media (hover: hover) {
+  .hc-col:hover .hc-col__index {
+    opacity: 1;
+    transform: translateY(12%);
+  }
+}
+
+.hc-cols[data-open] .hc-col__index {
+  opacity: 0;
+}
+
+/* The quick view, over the grown column. */
+.hc-col__panel {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 1rem 1.5rem;
+  background: var(--cream);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+
+.hc-col__panel.is-shown {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (min-width: 640px) {
+  .hc-col__panel {
+    padding: 0 2rem 2rem;
+  }
+}
+
+.hc-col__close {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: 0.75rem 0 0.75rem auto;
+  border-radius: 9999px;
+  background: var(--deep);
+  color: #fff;
+  box-shadow: 0 8px 20px -8px rgb(11 41 26 / 0.5);
+  transition: transform 0.3s cubic-bezier(0.72, 0.09, 0.32, 1.57);
+}
+
+.hc-col__close:hover {
+  transform: rotate(90deg);
+}
+
+.hc-col__close:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-col,
+  .hc-col[data-active],
+  .hc-cols[data-open] .hc-col:not([data-active]),
+  .hc-col__inner,
+  .hc-col__bg,
+  .hc-col__name,
+  .hc-col__index,
+  .hc-col__panel,
+  .hc-col__close {
+    transition: none;
+  }
+}
+
+/*
+ * Shop by concern as a spotlight slider (owner, 2026-11-23, after MDJAmin's
+ * sample; concern-spotlight.tsx): the item in the spotlight fills the box, the
+ * one before it stays full size underneath, the next three wait on the right
+ * as small cards, and the rest wait out of sight. Moving between these places
+ * takes 0.5 s, as in the sample.
+ */
+.hc-spot {
+  /* The sample's 200 × 250 px cards, 20 px apart. */
+  --cw: 200px;
+  --ch: 250px;
+  --gap: 20px;
+  /*
+   * The waiting cards run out past the box's right edge, as in the sample (owner,
+   * 2026-11-23): the last of them (--qn, set by the script) sits half outside the box,
+   * centred on its edge. The section clips the page edge.
+   */
+  --q: calc(100% + var(--cw) / 2 - var(--qn, 3) * (var(--cw) + var(--gap)) + var(--gap));
+  /*
+   * Wider than the page's content but not the whole screen (owner, 2026-11-23: "lil less
+   * wider", then "lil more narrower"): 3 rem in from each side, at most 1200 px, centred; 520 px tall;
+   * 20 px corners and a soft light shadow.
+   */
+  --bw: min(calc(100vw - 6rem), 1200px);
+  position: relative;
+  width: var(--bw);
+  height: 520px;
+  margin-left: calc(50% - var(--bw) / 2);
+  border-radius: 20px;
+  background: #f5f5f5;
+  box-shadow: 0 24px 50px -20px rgb(11 41 26 / 0.18);
+  touch-action: pan-y;
+}
+
+/* Exactly the sample's: a small card is centred with top: 50% and translate(0, -50%), and
+   every change of place, size or opacity runs together; slower and softer than the
+   sample's 0.5 s (owner, 2026-11-23): 0.9 s, easing in and out. */
+.hc-spot__item {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--q) + 3 * (var(--cw) + var(--gap)));
+  width: var(--cw);
+  height: var(--ch);
+  overflow: hidden;
+  border-radius: 20px;
+  background: #e8e8e8;
+  /* A light shadow (owner, 2026-11-23: no darker shade); the big photo has none. */
+  box-shadow: 0 18px 36px -12px rgb(0 0 0 / 0.28);
+  opacity: 0;
+  z-index: 0;
+  transform: translate(0, -50%);
+  transition: all 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.hc-spot__item[data-slot="under"],
+.hc-spot__item[data-slot="main"] {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  opacity: 1;
+  transform: translate(0, 0);
+  box-shadow: none;
+}
+
+.hc-spot__item[data-slot="under"] {
+  z-index: 1;
+}
+
+.hc-spot__item[data-slot="main"] {
+  z-index: 2;
+}
+
+.hc-spot__item[data-slot="q1"],
+.hc-spot__item[data-slot="q2"],
+.hc-spot__item[data-slot="q3"] {
+  z-index: 3;
+  opacity: 1;
+}
+
+.hc-spot__item[data-slot="q1"] {
+  left: var(--q);
+}
+
+.hc-spot__item[data-slot="q2"] {
+  left: calc(var(--q) + var(--cw) + var(--gap));
+}
+
+.hc-spot__item[data-slot="q3"] {
+  left: calc(var(--q) + 2 * (var(--cw) + var(--gap)));
+}
+
+/* As in the sample: 100 px in from the left, 300 px wide. The sample's photos are dark and its
+   words light; the shop's photos are light, so the words are the shop's deep green with a
+   soft white glow, which reads on both. */
+.hc-spot__content {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 100px;
+  width: 300px;
+  color: var(--deep);
+  font-family: system-ui, sans-serif;
+  text-align: left;
+  transform: translateY(-50%);
+}
+
+.hc-spot__name {
+  font-size: 40px;
+  font-weight: bold;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.hc-spot__des {
+  margin: 10px 0 20px;
+  font-weight: 500;
+}
+
+.hc-spot__more {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background-color: rgb(255 255 255 / 0.673);
+  color: #000;
+  box-shadow: 0 6px 18px -8px rgb(0 0 0 / 0.35);
+  transition: background-color 0.5s;
+}
+
+.hc-spot__more:hover {
+  background-color: #fff;
+}
+
+.hc-spot__more:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* As in the sample: up from 100 px below, out of a 33 px blur. */
+.hc-spot__rise {
+  opacity: 0;
+  /* The sample's rise, a little longer (owner, 2026-11-23). */
+  animation: hc-spot-rise 1.4s ease-in-out forwards;
+}
+
+@keyframes hc-spot-rise {
+  from {
+    opacity: 0;
+    transform: translateY(100px);
+    filter: blur(33px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+/* As in the sample: 20 px from the foot, 20 px apart (plus 5 px each side). */
+.hc-spot__buttons {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 20px;
+  display: flex;
+  gap: 20px;
+  transform: translateX(-50%);
+}
+
+/* The sample's ◁ ▷ with their box made invisible (owner, 2026-11-23): just the arrows,
+   which grow a little on hover and focus, as in the sample (0.3 s). */
+.hc-spot__button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 35px;
+  margin: 0 5px;
+  border: 0;
+  background: transparent;
+  color: var(--deep);
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.hc-spot__button:hover,
+.hc-spot__button:focus-visible {
+  transform: scale(1.1);
+  color: #000;
+}
+
+.hc-spot__button:active {
+  transform: scale(1.02);
+}
+
+.hc-spot__button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Phones: a shorter box, the words higher up, two smaller cards in the bottom right. */
+@media (max-width: 639px) {
+  .hc-spot {
+    --cw: 6.5rem;
+    --ch: 8.75rem;
+    --gap: 0.75rem;
+    width: 100%;
+    margin-left: 0;
+    height: 32rem;
+  }
+
+  .hc-spot__item {
+    /* Centred by translate(0, -50%), as on desktop. */
+    top: calc(100% - var(--ch) / 2 - 4.5rem);
+    left: calc(100% + 1rem);
+  }
+
+  .hc-spot__item[data-slot="q1"] {
+    left: calc(100% - 2 * var(--cw) - var(--gap) - 1rem);
+  }
+
+  .hc-spot__item[data-slot="q2"] {
+    left: calc(100% - var(--cw) - 1rem);
+  }
+
+  .hc-spot__item[data-slot="q3"] {
+    left: calc(100% + 1rem);
+    opacity: 0;
+  }
+
+  .hc-spot__content {
+    top: 2rem;
+    left: 1.5rem;
+    right: 1.5rem;
+    width: auto;
+    transform: none;
+  }
+
+  .hc-spot__name {
+    font-size: 28px;
+  }
+
+  .hc-spot__buttons {
+    left: 1.5rem;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-spot__item {
+    transition: none;
+  }
+
+  .hc-spot__rise {
+    animation: none;
+    opacity: 1;
+  }
+}

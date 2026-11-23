@@ -111,9 +111,10 @@ test.describe("home page", () => {
     await expect(offers.locator(".hc-marquee-track")).toHaveCount(1);
   });
 
-  test("shop by concern: each card opens its page, with a photo", async ({ page }) => {
+  test("shop by concern: a spotlight slider; every concern links to its page", async ({ page }) => {
+    // A spotlight slider (owner, 2026-11-23): the current concern fills the box, the next
+    // ones wait as small cards; every concern is also a plain link for search engines.
     await page.goto(OPEN + "/");
-    // "Find your match" is gone (owner, 2026-11-03).
     await expect(page.getByRole("region", { name: /Find your hair extension match/ })).toHaveCount(
       0,
     );
@@ -124,59 +125,32 @@ test.describe("home page", () => {
       ["Hair loss or full coverage", "hair-loss-or-full-coverage"],
       ["Instant volume for an occasion", "instant-volume-for-an-occasion"],
     ]) {
-      const card = section.getByRole("link", { name: new RegExp(`^${concern}`) });
-      await expect(card).toHaveAttribute("href", `/concern/${slug}`);
-      await expect(card.locator("img")).toHaveCount(1);
-      // No "Shop now": the whole card is the link (owner, 2026-11-05).
-      await expect(card).not.toContainText("Shop now");
+      await expect(
+        section.getByRole("link", { name: new RegExp(`^${concern}`), includeHidden: true }),
+      ).toHaveAttribute("href", `/concern/${slug}`);
     }
-    await expect(section.getByRole("link")).toHaveCount(3);
+    // "See More" opens the concern in the spotlight.
+    const title = await section.locator(".hc-spot__content h3").textContent();
+    const shop = section.getByRole("link", { name: /^See More/ });
+    await expect(shop).toHaveAttribute("href", /^\/concern\//);
+    await expect(shop).toHaveAccessibleName(new RegExp(title ?? ""));
   });
 
-  test("shop by concern: the cards keep opening on the second round of the slider", async ({
-    page,
-  }) => {
+  test("shop by concern: next and previous move the spotlight and go round", async ({ page }) => {
     await page.goto(OPEN + "/");
-    const row = page.locator("#concerns ul");
-    await row.scrollIntoViewIfNeeded();
-    // Slide on until a repeated card (the "second round") is fully in view.
-    const next = page.getByRole("button", { name: "Next concerns" });
-    await expect(next).toBeVisible({ timeout: 10_000 });
-    const repeatInView = () =>
-      row.evaluate((ul) => {
-        const box = ul.getBoundingClientRect();
-        const li = [...ul.querySelectorAll("li[data-repeat]")].find((el) => {
-          const b = el.getBoundingClientRect();
-          return b.left >= box.left - 2 && b.right <= box.right + 2;
-        });
-        return li?.querySelector("a")?.getAttribute("href") ?? null;
-      });
-    let href: string | null = null;
-    await expect(async () => {
-      href = await repeatInView();
-      if (!href) await next.click();
-      expect(href).not.toBeNull();
-    }).toPass({ timeout: 40_000, intervals: [1200] });
-    // A repeat is still a working link (it was inert before), but not in the Tab order.
-    const repeat = row.locator(`li[data-repeat] a[href="${href}"]`).first();
-    await expect(repeat).toHaveAttribute("tabindex", "-1");
-    expect(href).toMatch(/^\/concern\//);
-    // Clicked where it is on screen, as a shopper would.
-    const spot = await row.evaluate((ul, target) => {
-      const box = ul.getBoundingClientRect();
-      const li = [...ul.querySelectorAll("li[data-repeat]")].find((el) => {
-        const b = el.getBoundingClientRect();
-        return (
-          el.querySelector("a")?.getAttribute("href") === target &&
-          b.left >= box.left - 2 &&
-          b.right <= box.right + 2
-        );
-      })!;
-      const b = li.getBoundingClientRect();
-      return { x: b.left + b.width / 2, y: b.top + b.height / 3 };
-    }, href);
-    await page.mouse.click(spot.x, spot.y);
-    await expect(page).toHaveURL(OPEN + href!);
+    const section = page.getByRole("region", { name: "What would you like to change?" });
+    const title = section.locator(".hc-spot__content h3");
+    await section.scrollIntoViewIfNeeded();
+    const first = await title.textContent();
+    const next = section.getByRole("button", { name: "Next concern" });
+    await next.click();
+    await expect(title).not.toHaveText(first ?? "");
+    await section.getByRole("button", { name: "Previous concern" }).click();
+    await expect(title).toHaveText(first ?? "");
+    // Round all 3 and back to the first.
+    for (let i = 0; i < 3; i++) await next.click();
+    await expect(title).toHaveText(first ?? "");
+    await expect(page).toHaveURL(OPEN + "/");
   });
 
   test("a concern page lists the products of all its categories, with filters", async ({

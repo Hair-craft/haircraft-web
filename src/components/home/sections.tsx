@@ -4,6 +4,8 @@ import { ApiUnavailable } from "@/components/api-unavailable";
 import { routes } from "@/components/layout/nav";
 import { Reveal } from "@/components/motion/reveal";
 import { ProductCard, productHref } from "@/components/product/product-card";
+import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
+import { PriceRange } from "@/components/ui/display";
 import { ButtonLink } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/display";
 import { ChevronRightIcon } from "@/components/ui/icons";
@@ -25,8 +27,11 @@ import { faqJsonLd } from "./content";
 import { FaqAccordion } from "./faq-accordion";
 import { storyImage } from "./home-images";
 import { ProductTabs } from "./product-tabs";
+import { ProductRing } from "./product-ring";
+import { BestSellerColumns } from "./best-seller-columns";
+import { MIN_RING_ITEMS } from "@/lib/home/ring";
 import { SectionHeader } from "./section-header";
-import { ConcernCarousel } from "./concern-carousel";
+import { ConcernSpotlight } from "./concern-spotlight";
 import { concernPhoto } from "./concerns";
 
 /** Runs a section's data loading; an API outage becomes `null` (the section shows a calm message). */
@@ -83,65 +88,39 @@ export async function ConcernSection() {
     <section
       id="concerns"
       aria-labelledby="concerns-heading"
-      className={`${shell} scroll-mt-28 py-10`}
+      // Full width and clipped sideways: the small cards hang past the box's edge (owner,
+      // 2026-11-23) without ever widening the page.
+      className="scroll-mt-28 overflow-x-clip py-10 pb-16"
     >
-      {/* Wide, tall cards (owner, 2026-11-03) in a slider that moves on by itself on desktop
-          and slides by hand everywhere (owner, 2026-11-04): three in view on desktop, two on
-          tablets, one large card on phones (the next one peeks in). On phones the heading and
-          row stay pinned while scrolling slides the cards past (owner, 2026-11-04). */}
-      <ConcernCarousel
-        label="Concerns"
-        header={
-          <SectionHeader
-            id="concerns-heading"
-            align="left"
-            eyebrow="Shop by concern"
-            title={section.heading}
-            intro={section.intro || undefined}
-            className="mb-8 max-w-3xl"
-          />
-        }
-        items={section.items.map((concern, i) => {
-          const photo = concernPhoto(concern, photos[i]?.image ?? null);
-          return {
-            key: concern.id,
-            node: (
-              <Reveal delay={Math.min(i, 7) * 0.06} className="h-full">
-                <Link
-                  href={routes.concern(concern.slug)}
-                  className="hc-card group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep"
-                >
-                  <span className="relative block aspect-[4/5] w-full overflow-hidden bg-sand">
-                    <span aria-hidden className="hc-sheen z-[1]" />
-                    {photo ? (
-                      <Image
-                        src={photo.src}
-                        alt={photo.alt}
-                        fill
-                        sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 78vw"
-                        className="object-cover transition-transform duration-700 ease-out motion-safe:group-hover:scale-[1.06]"
-                      />
-                    ) : null}
-                  </span>
-                  {/* A slim white strip under the photo: a bigger title, no "Shop now" (the
-                      whole card is the link) (owner, 2026-11-05). */}
-                  <span className="flex flex-1 flex-col gap-0.5 px-4 py-2.5 sm:px-5 sm:py-3">
-                    <h3 className="text-lg leading-snug font-semibold transition-colors group-hover:text-gold-ink sm:text-[1.375rem]">
-                      {concern.title}
-                    </h3>
-                    {concern.line ? (
-                      <span className="line-clamp-1 text-sm text-muted">{concern.line}</span>
-                    ) : null}
-                    <span className="sr-only">
-                      Shop {concern.categories.map((c) => c.name).join(", ")}
-                    </span>
-                  </span>
-                </Link>
-              </Reveal>
-            ),
-          };
-        })}
-      />
+      <div className={shell}>
+        {/* A spotlight slider (owner, 2026-11-23, after MDJAmin's sample): the current concern
+            fills the box, the next ones wait as small cards on the right. */}
+        <ConcernSpotlight
+          label="Concerns"
+          header={
+            <SectionHeader
+              id="concerns-heading"
+              align="left"
+              eyebrow="Shop by concern"
+              title={section.heading}
+              intro={section.intro || undefined}
+              className="mb-8 max-w-3xl"
+            />
+          }
+          items={section.items.map((concern, i) => {
+            const large = concern.image?.large ?? photos[i]?.image?.large ?? null;
+            const photo = concernPhoto(concern, photos[i]?.image ?? null);
+            return {
+              key: concern.id,
+              title: concern.title,
+              line: concern.line,
+              href: routes.concern(concern.slug),
+              photo: photo && large ? { src: large, alt: photo.alt } : photo,
+              shops: concern.categories.map((c) => c.name).join(", "),
+            };
+          })}
+        />
+      </div>
     </section>
   );
 }
@@ -208,8 +187,56 @@ export async function CategorySection() {
 
 // ── Bestsellers (tabs) ──────────────────────────────────────────────────
 
-/** Four columns on desktop; a row that scrolls sideways on phones (the next card peeks in). */
-function ProductRow({ products }: { products: ProductCardData[] }) {
+/**
+ * A product on the ring, as in the owner's sample (2026-11-23): the photo
+ * only, with the name and price over its foot. The whole panel opens the product.
+ */
+function RingPanel({ product }: { product: ProductCardData }) {
+  return (
+    <Link
+      href={productHref(product.slug)}
+      className="relative block aspect-[3/4] overflow-hidden rounded-xl bg-sand shadow-[0_18px_40px_-18px_rgb(11_41_26/0.45)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+    >
+      {product.image ? (
+        <Image
+          src={product.image.medium}
+          alt={product.imageAlt ?? product.name}
+          fill
+          sizes="(min-width: 1024px) 22rem, 46vw"
+          className="object-cover"
+        />
+      ) : (
+        <PhotoPlaceholder />
+      )}
+      <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 via-black/35 to-transparent px-3 pt-12 pb-3 text-white sm:px-4 sm:pb-4">
+        <h3 className="line-clamp-2 font-display text-sm leading-tight font-semibold sm:text-lg">
+          {product.name}
+        </h3>
+        <PriceRange
+          min={product.priceRange.min}
+          max={product.priceRange.max}
+          className="mt-1 block text-xs text-white/90! sm:text-sm"
+        />
+      </div>
+    </Link>
+  );
+}
+
+/**
+ * A 3D ring you drag to spin (owner, 2026-11-23), or with fewer than 3 products
+ * (a ring needs 3) the plain row: four columns on desktop, sideways on phones.
+ */
+function ProductRow({ products, label }: { products: ProductCardData[]; label: string }) {
+  if (products.length >= MIN_RING_ITEMS)
+    return (
+      <ProductRing
+        label={label}
+        items={products.map((product) => ({
+          key: product.id,
+          node: <RingPanel product={product} />,
+        }))}
+      />
+    );
   return (
     // `relative` keeps the row's overflow inside it: without it, phone browsers widen the whole page.
     // `overflow-y-hidden`: cards waiting to fade up sit a little lower; without it the row also
@@ -234,7 +261,8 @@ function ProductRow({ products }: { products: ProductCardData[] }) {
  * none are ticked (or the API is down): never an empty or invented list.
  */
 export async function BestSellersSection() {
-  const products = await load(() => getBestSellers(8));
+  // Five tall columns, as in the owner's sample (2026-11-23).
+  const products = await load(() => getBestSellers(5));
   if (!products || products.length === 0) return null;
   return (
     <section aria-labelledby="bestsellers-heading" className={`${shell} py-10`}>
@@ -247,7 +275,7 @@ export async function BestSellersSection() {
         />
         <ViewAll href={routes.shop} label="View all products" />
       </div>
-      <ProductRow products={products} />
+      <BestSellerColumns products={products.slice(0, 5)} />
     </section>
   );
 }
@@ -260,9 +288,19 @@ export async function MostLovedSection() {
   const tabs = data
     ? [
         ...(data.rated.length > 0
-          ? [{ key: "rated", label: "Best rated", panel: <ProductRow products={data.rated} /> }]
+          ? [
+              {
+                key: "rated",
+                label: "Best rated",
+                panel: <ProductRow products={data.rated} label="Best rated" />,
+              },
+            ]
           : []),
-        { key: "new", label: "New arrivals", panel: <ProductRow products={data.newest} /> },
+        {
+          key: "new",
+          label: "New arrivals",
+          panel: <ProductRow products={data.newest} label="New arrivals" />,
+        },
       ]
     : [];
   return (
