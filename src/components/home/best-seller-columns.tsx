@@ -11,6 +11,7 @@ import {
   type CSSProperties,
   type MouseEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { productHref } from "@/components/product/product-card";
 import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
 import { ProductView } from "@/components/product-page/product-view";
@@ -52,6 +53,25 @@ export function BestSellerColumns({ products }: { products: ProductCardData[] })
   const [view, setView] = useState<QuickViewResult | null>(null);
   // The column has finished growing: the quick view shows once this and its data are ready.
   const [grown, setGrown] = useState(false);
+  // Phones get the quick view as a full-screen sheet (owner, 2026-11-23).
+  const [phone, setPhone] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 639px)");
+    const update = () => setPhone(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  // The page behind the sheet stays still.
+  useEffect(() => {
+    if (!phone || active === null) return;
+    const before = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = before;
+    };
+  }, [phone, active]);
+
   // Phones: the column that stands open (wide), moving on by itself (owner, 2026-11-23).
   const [wide, setWide] = useState(0);
   const touched = useRef(0);
@@ -107,12 +127,15 @@ export function BestSellerColumns({ products }: { products: ProductCardData[] })
     setGrown(false);
     window.history.pushState({ hcQuickView: true }, "", window.location.href);
     pushed.current = true;
-    box.current?.scrollIntoView({
-      behavior: reducedMotion() ? "auto" : "smooth",
-      block: "center",
-    });
+    // Desktop: the section comes into view while the column grows (phones open a sheet).
+    if (!phone)
+      box.current?.scrollIntoView({
+        behavior: reducedMotion() ? "auto" : "smooth",
+        block: "center",
+      });
     const slug = products[index].slug;
-    window.setTimeout(() => setGrown(true), reducedMotion() ? 0 : EXPAND_MS);
+    // The sheet shows at once on phones; on desktop, once the column has grown.
+    window.setTimeout(() => setGrown(true), reducedMotion() || phone ? 0 : EXPAND_MS);
     void quickView(slug)
       .catch(() => ({ ok: false, message: "We couldn't load this product just now." }) as const)
       .then(setView);
@@ -167,99 +190,123 @@ export function BestSellerColumns({ products }: { products: ProductCardData[] })
     };
   }, [active, count]);
 
-  return (
-    <div
-      ref={box}
-      className="hc-cols"
-      data-phase={phase}
-      data-open={active !== null || undefined}
-      onPointerDown={() => (touched.current = Date.now())}
-      style={{ "--n": count } as CSSProperties}
-    >
-      {products.map((product, i) => {
-        const isActive = active === i;
-        return (
-          <div
-            key={product.id}
-            className="hc-col"
-            data-active={isActive || undefined}
-            data-wide={wide === i || undefined}
-            style={{ "--i": i } as CSSProperties}
-            inert={(active !== null && !isActive) || undefined}
-            aria-hidden={(active !== null && !isActive) || undefined}
-          >
-            <div className="hc-col__inner">
-              <div className="hc-col__bg">
-                {product.image ? (
-                  <Image
-                    src={product.image.large}
-                    alt=""
-                    fill
-                    sizes="(min-width: 640px) 22vw, 60vw"
-                    className="object-cover"
-                  />
-                ) : (
-                  <PhotoPlaceholder />
-                )}
-              </div>
-              <span aria-hidden className="hc-col__shade" />
-              <a
-                ref={(el) => {
-                  links.current[i] = el;
-                }}
-                href={productHref(product.slug)}
-                onClick={(event) => open(event, i)}
-                aria-haspopup="dialog"
-                // Opens the quick view, not a page: no loading bar.
-                data-no-progress=""
-                aria-label={`Quick view: ${product.name}`}
-                tabIndex={isActive ? -1 : undefined}
-                className="hc-col__link"
-              >
-                <span className="hc-col__name">{product.name}</span>
-                <span aria-hidden className="hc-col__index">
-                  {i + 1}
-                </span>
-              </a>
-            </div>
+  // The quick view's contents: the close button and the product page's buying panel.
+  const details = (product: ProductCardData) => (
+    <>
+      <button
+        ref={closer}
+        type="button"
+        onClick={close}
+        aria-label="Close quick view"
+        className="hc-col__close"
+      >
+        <CloseIcon width={22} height={22} />
+      </button>
+      {view === null ? (
+        <p className="p-8 text-sm text-muted" id={titleId}>
+          Loading {product.name}…
+        </p>
+      ) : view.ok ? (
+        <ProductView
+          product={view.product}
+          initialSku={view.initialSku}
+          descriptionHtml={view.descriptionHtml}
+          quickView={{ titleId }}
+        />
+      ) : (
+        <p className="p-8 text-sm" id={titleId} role="alert">
+          {view.message}
+        </p>
+      )}
+    </>
+  );
 
-            {isActive ? (
-              <div
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby={titleId}
-                className={cx("hc-col__panel", shown && "is-shown")}
-              >
-                <button
-                  ref={closer}
-                  type="button"
-                  onClick={close}
-                  aria-label="Close quick view"
-                  className="hc-col__close"
+  return (
+    <>
+      {/* Phones (owner, 2026-11-23: the quick view wasn't mobile friendly inside a 272 px
+          column): a full-screen sheet over the page instead. */}
+      {phone && active !== null
+        ? createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={titleId}
+              className={cx("hc-col__sheet", grown && "is-shown")}
+            >
+              {details(products[active])}
+            </div>,
+            document.body,
+          )
+        : null}
+      <div
+        ref={box}
+        className="hc-cols"
+        data-phase={phase}
+        data-open={(active !== null && !phone) || undefined}
+        onPointerDown={() => (touched.current = Date.now())}
+        style={{ "--n": count } as CSSProperties}
+      >
+        {products.map((product, i) => {
+          const isActive = active === i;
+          return (
+            <div
+              key={product.id}
+              className="hc-col"
+              data-active={isActive || undefined}
+              data-wide={wide === i || undefined}
+              style={{ "--i": i } as CSSProperties}
+              inert={(active !== null && !isActive) || undefined}
+              aria-hidden={(active !== null && !isActive) || undefined}
+            >
+              <div className="hc-col__inner">
+                <div className="hc-col__bg">
+                  {product.image ? (
+                    <Image
+                      src={product.image.large}
+                      alt=""
+                      fill
+                      sizes="(min-width: 640px) 22vw, 60vw"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <PhotoPlaceholder />
+                  )}
+                </div>
+                <span aria-hidden className="hc-col__shade" />
+                <a
+                  ref={(el) => {
+                    links.current[i] = el;
+                  }}
+                  href={productHref(product.slug)}
+                  onClick={(event) => open(event, i)}
+                  aria-haspopup="dialog"
+                  // Opens the quick view, not a page: no loading bar.
+                  data-no-progress=""
+                  aria-label={`Quick view: ${product.name}`}
+                  tabIndex={isActive ? -1 : undefined}
+                  className="hc-col__link"
                 >
-                  <CloseIcon width={22} height={22} />
-                </button>
-                {view === null ? (
-                  <p className="p-8 text-sm text-muted" id={titleId}>
-                    Loading {product.name}…
-                  </p>
-                ) : view.ok ? (
-                  <ProductView
-                    product={view.product}
-                    initialSku={view.initialSku}
-                    descriptionHtml={view.descriptionHtml}
-                    quickView={{ titleId }}
-                  />
-                ) : (
-                  <p className="p-8 text-sm" id={titleId} role="alert">
-                    {view.message}
-                  </p>
-                )}
+                  <span className="hc-col__name">{product.name}</span>
+                  <span aria-hidden className="hc-col__index">
+                    {i + 1}
+                  </span>
+                </a>
               </div>
-            ) : null}
-          </div>
-        );
-      })}
-    </div>
+
+              {isActive && !phone ? (
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby={titleId}
+                  className={cx("hc-col__panel", shown && "is-shown")}
+                >
+                  {details(product)}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }

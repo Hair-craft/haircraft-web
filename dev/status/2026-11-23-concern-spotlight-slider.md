@@ -172,3 +172,12 @@ The owner gave four points ("No out sourcing / No middle man / Directly from fac
   - "15+ years of hair-crafting expertise"
 - It sits in `page.tsx` right after `ConcernSection`, outside its `Suspense`, so it shows even if that section is hidden.
 - Checked on the local site: it runs between Shop by concern and Our best sellers.
+
+## Phones: smooth sliding, clear words (owner, same day)
+
+The owner reported lag while it slid on phones, and words that were hard to read. Under 640px:
+
+- **Removed the expensive parts:** the 28px blur layer (redrawn every frame while a card grows) is gone, replaced by a plain sand background; the words rise without the 33px blur filter (`hc-spot-rise-lite`, 0.8s); the move is 0.6s.
+- **Clear space for the words:** the whole photo sits in the lower 66%, so the title, line and See More have their own clear space at the top. The title is 24px.
+- **Checked** in a 390px frame: the words at the top, fully visible; the whole photo below; the cards bottom right.
+- **Then** (owner, same day: a bigger photo, smaller words, see-through over the image): on phones the photo fills the whole card (`object-fit: cover`). The words sit on the photo over a light white fade across the top 42% (72% → 0). Title 18px, line 12px, a smaller See More. Checked in a 390px frame.

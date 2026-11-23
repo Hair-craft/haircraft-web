@@ -1074,6 +1074,88 @@ label {
     left: 1.5rem;
     transform: none;
   }
+
+  /*
+   * Smooth on phones (owner, 2026-11-23: it lagged while sliding and the words were hard to
+   * read). No 28 px blur layer redrawn every frame (a soft plain background instead), the
+   * whole photo in the lower two thirds so the words have their own clear space at the top,
+   * the words rising without the 33 px blur, and a shorter move.
+   */
+  .hc-spot {
+    height: 34rem;
+  }
+
+  .hc-spot__item {
+    transition: all 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .hc-spot__item[data-slot="main"],
+  .hc-spot__item[data-slot="under"] {
+    background: var(--sand);
+  }
+
+  .hc-spot__blur {
+    display: none;
+  }
+
+  /* The photo fills the whole card (owner, 2026-11-23: "more bigger"). */
+  .hc-spot__whole {
+    object-fit: cover;
+  }
+
+  /* The words sit on the photo over a light see-through fade at the top, smaller. */
+  .hc-spot__item[data-slot="main"]::after,
+  .hc-spot__item[data-slot="under"]::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 42%;
+    background: linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 0.72),
+      rgb(255 255 255 / 0.35) 60%,
+      rgb(255 255 255 / 0)
+    );
+    pointer-events: none;
+  }
+
+  .hc-spot__content {
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+  }
+
+  .hc-spot__name {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .hc-spot__des {
+    margin: 4px 0 10px;
+    font-size: 12px;
+  }
+
+  .hc-spot__more {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+
+  .hc-spot__rise {
+    animation-name: hc-spot-rise-lite;
+    animation-duration: 0.8s;
+  }
+}
+
+@keyframes hc-spot-rise-lite {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1205,6 +1287,36 @@ label {
   }
 
   .hc-flip {
+    transition: none;
+  }
+}
+
+/*
+ * Phones: the Best sellers quick view as a full-screen sheet over the page (owner,
+ * 2026-11-23: it wasn't mobile friendly inside the short column). It slides up.
+ */
+.hc-col__sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 1rem 2rem;
+  background: var(--cream);
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.hc-col__sheet.is-shown {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-col__sheet {
     transition: none;
   }
 }

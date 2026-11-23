@@ -72,3 +72,11 @@ by one automatically. Timing (owner's choice): each opens in 0.3s and stays open
   - the photo layer has no extra 5% above and below (`inset: 0`).
   - Checked in a 390px frame: the open column is about 204 × 272px, which shows the whole
     3:4 product photo (390 × 520) with nothing cut off, and the strips show their names.
+
+## Phones: the quick view as a full-screen sheet (owner, same day)
+
+The owner reported the quick view wasn't mobile friendly; it opened inside the 272px column.
+
+- **Under 640px:** tapping a column opens the product view as a full-screen sheet (`createPortal` to `body`, `.hc-col__sheet`). It slides up in 0.3s and the page behind stops scrolling. ✕, Esc and back close it. The columns stay as they are, with no grow.
+- **Desktop:** unchanged.
+- **Checked** in a 390px frame: the sheet is 390 × 780; Round Topper's gallery, price and options are full width; the address stays `/`; the page doesn't scroll sideways.
