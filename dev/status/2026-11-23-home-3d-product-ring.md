@@ -146,3 +146,13 @@ not darker.
   edges. So the cards grow lighter towards both ends and melt into the page, with no dark tint
   and no hard edge.
 - **Checked** on the local site (New arrivals): a clear centre, light fading sides, soft ends.
+
+
+## Auto-slide (owner, same day)
+
+The owner asked for Shop by concern and Customer favourites to slide on their own ("with 0.3s"). An interval of 0.3s would be unreadable, so they move every **3s**, as chosen for Best sellers on phones; the owner was told it can change.
+
+- **`src/components/home/use-auto-slide.ts`:** `useAutoSlide(box, onTick, enabled)` calls `onTick` every 3s. It waits while the mouse is over the slider, while something in it has focus, for 6s after a pointer, key or wheel use, off screen, and in a hidden tab, and never runs with "reduce motion".
+- **Shop by concern:** moves to the next concern (the 0.9s eased move).
+- **Customer favourites:** the ring turns by one card (0.7s glide); the dots follow.
+- **Checked** on the local site: the spotlight moved from "Hair loss or full coverage" to "Want more length" by itself. The ring stayed still while the mouse was over it, then turned by itself once the mouse moved away.

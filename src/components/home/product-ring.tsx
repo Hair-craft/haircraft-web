@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { cx } from "@/lib/cx";
+import { useAutoSlide } from "./use-auto-slide";
 import {
   faceAngle,
   frontIndex,
@@ -89,6 +90,10 @@ export function ProductRing({ label, items }: { label: string; items: RingItem[]
     },
     [apply, count, products, turnTo],
   );
+
+  // Turns on by one card every 3 s (owner, 2026-11-23), pausing while it's in use.
+  const wrap = useRef<HTMLDivElement>(null);
+  useAutoSlide(wrap, () => move(1));
 
   // The entrance: if the ring is still below the screen, its cards wait lower down
   // and rise in one by one (the given code's y:200, stagger 0.1) as it turns into place.
@@ -261,6 +266,7 @@ export function ProductRing({ label, items }: { label: string; items: RingItem[]
       role="region"
       aria-roledescription="carousel"
       aria-label={label}
+      ref={wrap}
       className="hc-ring-wrap"
       data-front={front}
       onKeyDown={onKeyDown}

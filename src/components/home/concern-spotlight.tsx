@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { spotSlot, spotStep, waitingCards } from "@/lib/home/spotlight";
+import { useAutoSlide } from "./use-auto-slide";
 
 export interface SpotlightItem {
   key: string;
@@ -28,7 +29,7 @@ export interface SpotlightItem {
  * sample): the current concern's photo fills the box, its title, line and
  * "Shop now" rise in out of a blur on the left, and the next ones wait on the
  * right as small cards. ◁ ▷, the arrow keys, a swipe or a tap on a small card
- * move it on. It never moves by itself: only this effect, as in the sample
+ * move it on, and it moves on by itself every 3 s, pausing while in use
  * (owner, 2026-11-23). The positions are CSS (globals.css, `.hc-spot`).
  */
 export function ConcernSpotlight({
@@ -44,6 +45,9 @@ export function ConcernSpotlight({
   const [active, setActive] = useState(0);
   const [announce, setAnnounce] = useState("");
   const swipe = useRef<{ x: number; y: number; id: number } | null>(null);
+  const box = useRef<HTMLDivElement>(null);
+  // Moves on by itself every 3 s (owner, 2026-11-23), pausing while it's in use.
+  useAutoSlide(box, () => setActive((current) => spotStep(current, 1, count)), count > 1);
 
   const go = useCallback(
     (next: number, byHand: boolean) => {
@@ -80,6 +84,7 @@ export function ConcernSpotlight({
     <div role="region" aria-roledescription="carousel" aria-label={label} onKeyDown={onKeyDown}>
       {header}
       <div
+        ref={box}
         className="hc-spot"
         style={{ "--qn": waitingCards(count) } as CSSProperties}
         onPointerDown={onPointerDown}
