@@ -6,6 +6,9 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ChevronRightIcon, CloseIcon } from "@/components/ui/icons";
 import type { ProductImage, ProductVideo } from "@/lib/api/types";
 import { cx } from "@/lib/cx";
+
+/** More photos than this get a "3 / 21" counter instead of a dot each. */
+const MAX_DOTS = 8;
 import { HoverZoom } from "./hover-zoom";
 
 /** The same `sizes` everywhere, so the phone row and the desktop photo share one download. */
@@ -264,8 +267,17 @@ function PhotoGallery({
             </li>
           ))}
         </ul>
-        {total > 1 ? (
-          <div className="mt-1 flex justify-center">
+        {total > MAX_DOTS ? (
+          // Many photos (owner, 2026-11-23: a product with 21 photos made the dots wider than
+          // a phone and the whole page scrolled sideways): a counter instead; swiping still works.
+          <p
+            aria-live="polite"
+            className="mt-2 text-center text-xs font-semibold text-muted tabular-nums"
+          >
+            {active + 1} / {total}
+          </p>
+        ) : total > 1 ? (
+          <div className="mt-1 flex flex-wrap justify-center">
             {items.map((item, i) => (
               <button
                 key={itemKey(item)}

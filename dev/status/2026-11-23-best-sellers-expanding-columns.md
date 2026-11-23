@@ -80,3 +80,4 @@ The owner reported the quick view wasn't mobile friendly; it opened inside the 2
 - **Under 640px:** tapping a column opens the product view as a full-screen sheet (`createPortal` to `body`, `.hc-col__sheet`). It slides up in 0.3s and the page behind stops scrolling. ✕, Esc and back close it. The columns stay as they are, with no grow.
 - **Desktop:** unchanged.
 - **Checked** in a 390px frame: the sheet is 390 × 780; Round Topper's gallery, price and options are full width; the address stays `/`; the page doesn't scroll sideways.
+- **Desktop names** (owner, same day): from 640px up the names sit lower (`align-items: flex-end`, 26% from the foot), in a thinner weight (400, was 600).

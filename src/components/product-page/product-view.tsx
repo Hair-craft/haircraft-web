@@ -86,7 +86,7 @@ export function ProductView({
     <>
       <div className="grid items-start gap-8 lg:grid-cols-12">
         {/* Photos in a white card, then three promises (the shop's real ones). */}
-        <div className="flex flex-col gap-5 lg:col-span-7">
+        <div className="flex min-w-0 flex-col gap-5 lg:col-span-7">
           <div className="rounded-2xl bg-white p-3 shadow-[0_8px_24px_rgba(11,41,26,0.04)] sm:p-4">
             <Gallery
               key={variant?.id ?? "none"}
@@ -116,7 +116,7 @@ export function ProductView({
           </ul>
         </div>
 
-        <div className="flex flex-col rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(11,41,26,0.04)] lg:sticky lg:top-28 lg:col-span-5 lg:p-7">
+        <div className="flex min-w-0 flex-col rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(11,41,26,0.04)] lg:sticky lg:top-28 lg:col-span-5 lg:p-7">
           <div className="flex flex-wrap items-center justify-between gap-2">
             {product.categories[0] ? (
               <p className="text-[0.7rem] font-bold tracking-[0.2em] text-gold-ink uppercase">

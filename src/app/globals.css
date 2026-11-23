@@ -599,10 +599,19 @@ label {
   border-radius: 1rem;
 }
 
+/* Desktop (owner, 2026-11-23): the names sit lower in the columns, in a thinner weight. */
+@media (min-width: 640px) {
+  .hc-col__link {
+    align-items: flex-end;
+    padding-bottom: 26%;
+  }
+}
+
 .hc-col__name {
   font-family: var(--font-display, serif);
   font-size: clamp(1rem, 1.6vw, 1.5rem);
-  font-weight: 600;
+  font-weight: 400;
+  letter-spacing: 0.01em;
   line-height: 1.2;
   text-shadow: 0 2px 12px rgb(0 0 0 / 0.35);
   transition:
