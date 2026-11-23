@@ -129,3 +129,18 @@ cards (from its middle at 50%, +220px, +440px) run out past its right edge onto 
 - **Narrower again** (owner, same day: "lil more narrower"): at most 1300px (was 1400).
 - **Then** (owner, same day): at most 1200px wide, 520px tall, and the last small card ends right at the box's edge (was 40px in).
 - **Then** (owner, same day: "the small one is outside of the card like the last one"): the cards hang past the edge again, as in the sample. The last waiting card is centred on the box's right edge (half outside). The section is now full width with `overflow-x: clip` (its usual width moved to an inner div), so the hanging card never widens the page. Checked: box 160–1360px, last card 1260–1460px, no sideways scroll.
+
+## Revision: the whole photo in the big card (owner, same day)
+
+The concern photos are portrait, so filling the wide big card cut off the girl and the concern
+areas (crown, parting). Each panel now has three layers of the same photo:
+
+- **`hc-spot__photo`** (cover) shows in the small cards;
+- **`hc-spot__blur`** (cover, `blur(28px)`, scaled 1.15, 85%) fills the big card;
+- **`hc-spot__whole`** (`object-contain`) shows the whole photo, uncropped, in the middle of
+  the big card.
+
+They cross-fade over 0.9s as a card grows or shrinks (instantly with "reduce motion"). The
+browser fetches the photo once (same URL and size). Checked on the local site: the whole girl
+shows in the middle of the big card, with soft blurred sides, the title on the left and the
+small cards on the right.

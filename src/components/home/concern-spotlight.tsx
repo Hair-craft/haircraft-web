@@ -92,14 +92,34 @@ export function ConcernSpotlight({
           return (
             <div key={item.key} className="hc-spot__item" data-slot={slot} aria-hidden>
               {item.photo ? (
-                <Image
-                  src={item.photo.src}
-                  alt=""
-                  fill
-                  sizes="(min-width: 1024px) 80vw, 100vw"
-                  priority={i === 0}
-                  className="object-cover"
-                />
+                // Three layers of the same photo (owner, 2026-11-23: the big card shows the
+                // whole photo): filling a small card; blurred, filling the big one; and the
+                // whole photo, uncropped, in the middle of the big one. CSS fades between them.
+                <>
+                  <Image
+                    src={item.photo.src}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 80vw, 100vw"
+                    priority={i === 0}
+                    className="hc-spot__photo object-cover"
+                  />
+                  <Image
+                    src={item.photo.src}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 80vw, 100vw"
+                    className="hc-spot__blur object-cover"
+                  />
+                  <Image
+                    src={item.photo.src}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 80vw, 100vw"
+                    priority={i === 0}
+                    className="hc-spot__whole object-contain"
+                  />
+                </>
               ) : null}
               {waiting ? (
                 <button

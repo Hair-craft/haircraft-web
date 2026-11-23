@@ -882,6 +882,43 @@ label {
   left: calc(var(--q) + 2 * (var(--cw) + var(--gap)));
 }
 
+/*
+ * The photos (owner, 2026-11-23): a small card is filled by its photo; the big card shows
+ * the whole photo, uncropped, over a soft blurred copy that fills the space around it, so
+ * the concern areas (the crown, the parting…) are always in view. The layers cross-fade
+ * as a card grows or shrinks.
+ */
+.hc-spot__photo,
+.hc-spot__blur,
+.hc-spot__whole {
+  transition: opacity 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.hc-spot__blur,
+.hc-spot__whole {
+  opacity: 0;
+}
+
+.hc-spot__blur {
+  filter: blur(28px) saturate(1.1);
+  transform: scale(1.15);
+}
+
+.hc-spot__item[data-slot="main"] .hc-spot__photo,
+.hc-spot__item[data-slot="under"] .hc-spot__photo {
+  opacity: 0;
+}
+
+.hc-spot__item[data-slot="main"] .hc-spot__blur,
+.hc-spot__item[data-slot="under"] .hc-spot__blur {
+  opacity: 0.85;
+}
+
+.hc-spot__item[data-slot="main"] .hc-spot__whole,
+.hc-spot__item[data-slot="under"] .hc-spot__whole {
+  opacity: 1;
+}
+
 /* As in the sample: 100 px in from the left, 300 px wide. The sample's photos are dark and its
    words light; the shop's photos are light, so the words are the shop's deep green with a
    soft white glow, which reads on both. */
@@ -1040,7 +1077,10 @@ label {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hc-spot__item {
+  .hc-spot__item,
+  .hc-spot__photo,
+  .hc-spot__blur,
+  .hc-spot__whole {
     transition: none;
   }
 
