@@ -28,6 +28,8 @@ export function PhotoPlaceholder({
         alt=""
         width={1240}
         height={1088}
+        // Shown small (a fifth to two fifths of a card): no need for a 3840 px logo.
+        sizes="(max-width: 639px) 40vw, 160px"
         className={cx("h-auto opacity-35", size === "small" ? "w-3/5" : "w-2/5")}
       />
     </div>

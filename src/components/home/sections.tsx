@@ -232,7 +232,7 @@ function RingPanel({ product }: { product: ProductCardData }) {
           src={product.image.medium}
           alt={product.imageAlt ?? product.name}
           fill
-          sizes="(min-width: 1024px) 22rem, 46vw"
+          sizes="(min-width: 1024px) 300px, 40vw"
           className="object-cover"
         />
       ) : (
