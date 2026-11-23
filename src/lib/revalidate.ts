@@ -5,8 +5,11 @@
  */
 import { timingSafeEqual } from "node:crypto";
 
-/** The cache tags the API may refresh: product lists, pages and filters; the category menu. */
-export const REVALIDATE_TAGS = ["products", "categories"] as const;
+/**
+ * The cache tags the API may refresh: product lists, pages and filters; the category menu;
+ * reviews (owner, 2026-11-23: the home page's chosen reviews change from the admin).
+ */
+export const REVALIDATE_TAGS = ["products", "categories", "reviews"] as const;
 export type RevalidateTag = (typeof REVALIDATE_TAGS)[number];
 
 /** The secret must be at least this long, or refreshing stays switched off. */

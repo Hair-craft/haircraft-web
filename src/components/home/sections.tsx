@@ -6,7 +6,6 @@ import { Reveal } from "@/components/motion/reveal";
 import { ProductCard, productHref } from "@/components/product/product-card";
 import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
 import { PriceRange } from "@/components/ui/display";
-import { ButtonLink } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/display";
 import { ChevronRightIcon } from "@/components/ui/icons";
 import {
@@ -21,6 +20,7 @@ import {
 import { isApiError } from "@/lib/api/errors";
 import type { ProductCard as ProductCardData } from "@/lib/api/types";
 import { ConsultBanner } from "@/components/layout/consult-banner";
+import { Marquee } from "@/components/motion/marquee";
 import { story } from "@/content/about";
 import { getFaqs } from "@/lib/api/faqs";
 import { faqJsonLd } from "./content";
@@ -28,6 +28,8 @@ import { FaqAccordion } from "./faq-accordion";
 import { storyImage } from "./home-images";
 import { ProductTabs } from "./product-tabs";
 import { ProductRing } from "./product-ring";
+import { HOME_REVIEW_COUNT } from "@/lib/home/bounce-cards";
+import { ReviewBounceCards } from "./review-bounce-cards";
 import { BestSellerColumns } from "./best-seller-columns";
 import { MIN_RING_ITEMS } from "@/lib/home/ring";
 import { SectionHeader } from "./section-header";
@@ -122,6 +124,34 @@ export async function ConcernSection() {
         />
       </div>
     </section>
+  );
+}
+
+// ── Our promise (a running strip) ───────────────────────────────────────
+
+/**
+ * What sets the shop apart, in the owner's words (2026-11-23: "No out
+ * sourcing, No middle man, Directly from factory, 15+ years of crafting
+ * expertise"), rephrased and running by endlessly like the strip above the
+ * header, just under Shop by concern.
+ */
+export const promiseItems = [
+  "Crafted in our own workshop, never outsourced",
+  "No middlemen, just honest prices",
+  "Straight from our factory to you",
+  "15+ years of hair-crafting expertise",
+];
+
+export function PromiseStrip() {
+  return (
+    <Marquee
+      items={promiseItems}
+      label="Why HairCraft"
+      repeat={2}
+      speedSeconds={36}
+      className="bg-deep py-2.5 text-white sm:py-3"
+      itemClassName="text-[0.7rem] font-semibold tracking-wide uppercase sm:text-sm sm:tracking-wider"
+    />
   );
 }
 
@@ -327,78 +357,24 @@ export async function MostLovedSection() {
 
 // ── Review spotlight ────────────────────────────────────────────────────
 
-function Star() {
-  return (
-    <svg viewBox="0 0 24 24" width={20} height={20} aria-hidden fill="var(--gold)">
-      <path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" />
-    </svg>
-  );
-}
-
 /**
- * One real review, large (chosen by the API: an approved 5-star review that
- * says something, photos first), with its photo if it has one. Hidden when
- * there are no reviews: never invented quotes.
+ * Real reviews as React Bits' Bounce Cards (owner, 2026-11-23): up to 8
+ * reviews chosen by the admin, else by the API (5-star, saying something,
+ * photos first), in a fanned stack that bounces in; each shows its photo, and
+ * clicking one flips it over to the review. Hidden when there are no reviews: never invented quotes.
  */
 export async function TestimonialsSection() {
-  const featured = (await load(() => getFeaturedReviews(1))) ?? [];
+  const featured = (await load(() => getFeaturedReviews(HOME_REVIEW_COUNT))) ?? [];
   if (featured.length === 0) return null;
-  const { review, product } = featured[0];
-  const reviewPhoto = review.photos[0];
   return (
-    <section aria-labelledby="reviews-heading" className={`${shell} py-10`}>
-      <div className="grid items-center gap-8 rounded-3xl bg-white p-6 shadow-lg sm:p-8 lg:grid-cols-12 lg:p-12">
-        <div className="flex flex-col gap-4 lg:col-span-6">
-          <h2 id="reviews-heading" className="font-display text-3xl font-semibold sm:text-4xl">
-            Loved by women like you
-          </h2>
-          {reviewPhoto ? (
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-sand shadow-sm">
-              <Image
-                src={reviewPhoto.urls.large}
-                alt={`Photo by ${review.reviewerName} of ${product.name}`}
-                fill
-                sizes="(min-width: 1024px) 34rem, 90vw"
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <p className="text-muted">What customers say about HairCraft, in their own words.</p>
-          )}
-        </div>
-        <figure className="flex flex-col gap-6 rounded-2xl bg-sand p-6 shadow-sm sm:p-8 lg:col-span-6">
-          <div className="flex items-center justify-between gap-4">
-            <span role="img" aria-label={`Rated ${review.rating} out of 5`} className="flex">
-              {Array.from({ length: review.rating }, (_, i) => (
-                <Star key={i} />
-              ))}
-            </span>
-            {review.verifiedPurchase ? (
-              <span className="rounded-full bg-sage px-3 py-1 text-[0.65rem] font-bold tracking-wider text-sage-ink uppercase">
-                Verified buyer
-              </span>
-            ) : null}
-          </div>
-          <blockquote className="font-display text-xl leading-relaxed sm:text-2xl">
-            {review.title ? <p className="font-semibold">“{review.title}”</p> : null}
-            {review.body ? <p className="mt-2 line-clamp-6 italic">{review.body}</p> : null}
-          </blockquote>
-          <figcaption className="flex flex-wrap items-end justify-between gap-4">
-            <span className="font-semibold">{review.reviewerName}</span>
-            <span className="text-right">
-              <Link
-                href={productHref(product.slug)}
-                className="text-sm font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-deep"
-              >
-                {product.name}
-              </Link>
-            </span>
-          </figcaption>
-          <ButtonLink href={productHref(product.slug)} className="w-full">
-            Shop this look <span aria-hidden>→</span>
-          </ButtonLink>
-        </figure>
+    <section aria-labelledby="reviews-heading" className={`${shell} overflow-x-clip py-14`}>
+      <div className="text-center">
+        <h2 id="reviews-heading" className="font-display text-3xl font-semibold sm:text-4xl">
+          Loved by women like you
+        </h2>
+        <p className="mt-2 text-muted">What customers say about HairCraft, in their own words.</p>
       </div>
+      <ReviewBounceCards reviews={featured.slice(0, HOME_REVIEW_COUNT)} />
     </section>
   );
 }

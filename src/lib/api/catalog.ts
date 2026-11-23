@@ -12,6 +12,7 @@ import type {
   PublicReview,
   ReviewSummary,
   SearchSuggestions,
+  ImageUrls,
 } from "./types";
 
 /** Categories change rarely; the menu is refreshed every 5 minutes. */
@@ -139,13 +140,14 @@ export async function getCategoryPhoto(slug: string): Promise<ProductCard | null
 /** A featured review (home page): an approved review with the product it is about. */
 export interface FeaturedReview {
   review: PublicReview;
-  product: { id: string; name: string; slug: string };
+  /** With its main photo (owner, 2026-11-23); an older API sends none. */
+  product: { id: string; name: string; slug: string; image?: ImageUrls | null };
 }
 
 /**
- * The shop's most relevant reviews (the API picks them: approved 5-star
- * reviews that say something, one per product, with photos first, then
- * verified purchases, then the newest). Empty when there are none.
+ * The home page's reviews: those the admin chose (any rating, newest choice
+ * first; owner, 2026-11-23), or without any, the API's pick of approved 5-star
+ * reviews that say something, one per product, photos first. Empty when none.
  */
 export function getFeaturedReviews(limit = 3): Promise<FeaturedReview[]> {
   return apiFetch<FeaturedReview[]>("/reviews/featured", {

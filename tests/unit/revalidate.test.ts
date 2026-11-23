@@ -24,8 +24,9 @@ describe("cache refresh from the API", () => {
       "products",
       "categories",
     ]);
-    expect(requestedTags({ tags: ["users"] })).toEqual(["products", "categories"]);
-    expect(requestedTags(null)).toEqual(["products", "categories"]);
+    expect(requestedTags({ tags: ["reviews"] })).toEqual(["reviews"]);
+    expect(requestedTags({ tags: ["users"] })).toEqual(["products", "categories", "reviews"]);
+    expect(requestedTags(null)).toEqual(["products", "categories", "reviews"]);
   });
 });
 

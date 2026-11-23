@@ -9,6 +9,7 @@ import {
   ConcernSection,
   ConsultSection,
   MostLovedSection,
+  PromiseStrip,
   FaqSection,
   SectionSkeleton,
   StorySection,
@@ -42,6 +43,8 @@ export default function HomePage() {
         <Suspense fallback={null}>
           <ConcernSection />
         </Suspense>
+        {/* The shop's promise, running like the strip above the header (owner, 2026-11-23). */}
+        <PromiseStrip />
         <Suspense fallback={null}>
           <BestSellersSection />
         </Suspense>

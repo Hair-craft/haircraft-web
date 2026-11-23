@@ -159,3 +159,16 @@ The owner asked for Shop by concern and Customer favourites to slide on their ow
 - **Shop by concern:** moves to the next concern (the 0.9s eased move).
 - **Customer favourites:** the ring turns by one card (0.7s glide); the dots follow.
 - **Checked** on the local site: the spotlight moved from "Hair loss or full coverage" to "Want more length" by itself. The ring stayed still while the mouse was over it, then turned by itself once the mouse moved away.
+
+## The promise strip under Shop by concern (owner, same day)
+
+The owner gave four points ("No out sourcing / No middle man / Directly from factory / 15+ years of crafting expertise") to run like the strip above the header, rephrased, under Shop by concern.
+
+- `PromiseStrip` in `sections.tsx` uses the same `Marquee` as the top strip (deep green, white capitals, gold ✦ between, 36 s a loop, pauses on hover, still with "reduce motion"), slightly larger. Its label is "Why HairCraft".
+- Points (`promiseItems`):
+  - "Crafted in our own workshop, never outsourced"
+  - "No middlemen, just honest prices"
+  - "Straight from our factory to you"
+  - "15+ years of hair-crafting expertise"
+- It sits in `page.tsx` right after `ConcernSection`, outside its `Suspense`, so it shows even if that section is hidden.
+- Checked on the local site: it runs between Shop by concern and Our best sellers.
