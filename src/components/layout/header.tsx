@@ -67,7 +67,7 @@ export async function Header() {
             alt="HairCraft home"
             width={73}
             height={64}
-            priority
+            loading="eager"
             className="h-9 w-auto lg:h-10"
           />
           <span aria-hidden className="hidden flex-col xl:flex">

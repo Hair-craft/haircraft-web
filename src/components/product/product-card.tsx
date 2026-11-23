@@ -69,7 +69,7 @@ export function ProductCard({
               alt={product.imageAlt ?? product.name}
               fill
               sizes={sizes}
-              priority={priority}
+              preload={priority}
               className={cx(
                 "object-cover transition-[transform,opacity] duration-700 ease-out motion-safe:group-hover:scale-[1.06]",
                 !product.inStock && "opacity-60",

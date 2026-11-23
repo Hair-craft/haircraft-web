@@ -111,7 +111,9 @@ export function Hero() {
             src={heroImage.src}
             alt={heroImage.alt}
             fill
-            priority
+            // The page's largest picture: fetched first (Next 16's priority no longer does this).
+            preload
+            fetchPriority="high"
             sizes="100vw"
             // Sharp, not soft (owner, 2026-11-20): the higher of the allowed qualities.
             quality={90}

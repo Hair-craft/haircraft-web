@@ -195,7 +195,7 @@ export function BestSellerColumns({ products }: { products: ProductCardData[] })
                     src={product.image.large}
                     alt=""
                     fill
-                    sizes="(min-width: 1024px) 60vw, 100vw"
+                    sizes="(min-width: 640px) 22vw, 60vw"
                     className="object-cover"
                   />
                 ) : (

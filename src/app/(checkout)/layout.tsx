@@ -32,7 +32,7 @@ export default async function CheckoutLayout({ children }: LayoutProps<"/">) {
               alt="HairCraft home"
               width={73}
               height={64}
-              priority
+              loading="eager"
               className="h-9 w-auto"
             />
             <span aria-hidden className="hidden flex-col sm:flex">

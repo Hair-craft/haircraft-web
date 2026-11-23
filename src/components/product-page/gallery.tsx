@@ -175,7 +175,7 @@ function PhotoGallery({
                   src={current.image.urls.large}
                   alt={alt(current.image, name, active, total)}
                   fill
-                  priority={active === 0}
+                  preload={active === 0}
                   sizes={SIZES}
                   className="hc-fade-in object-contain"
                 />
@@ -251,7 +251,7 @@ function PhotoGallery({
                     src={item.image.urls.large}
                     alt={alt(item.image, name, i, total)}
                     fill
-                    priority={i === 0}
+                    preload={i === 0}
                     sizes={SIZES}
                     className="object-contain"
                   />

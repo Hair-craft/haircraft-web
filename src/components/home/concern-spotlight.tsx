@@ -101,29 +101,36 @@ export function ConcernSpotlight({
                 // whole photo): filling a small card; blurred, filling the big one; and the
                 // whole photo, uncropped, in the middle of the big one. CSS fades between them.
                 <>
+                  {/* Small cards are 200 px wide (104 px on phones): a small photo is enough. */}
                   <Image
                     src={item.photo.src}
                     alt=""
                     fill
-                    sizes="(min-width: 1024px) 80vw, 100vw"
-                    priority={i === 0}
+                    sizes="(max-width: 639px) 104px, 200px"
                     className="hc-spot__photo object-cover"
                   />
-                  <Image
-                    src={item.photo.src}
-                    alt=""
-                    fill
-                    sizes="(min-width: 1024px) 80vw, 100vw"
-                    className="hc-spot__blur object-cover"
-                  />
-                  <Image
-                    src={item.photo.src}
-                    alt=""
-                    fill
-                    sizes="(min-width: 1024px) 80vw, 100vw"
-                    priority={i === 0}
-                    className="hc-spot__whole object-contain"
-                  />
+                  {/* The big card's layers load only for the big card, the one under it and the
+                      next one (so it is ready to grow): not for every concern at once. */}
+                  {slot === "main" || slot === "under" || slot === "q1" ? (
+                    <>
+                      {/* Blurred: a small photo looks the same. */}
+                      <Image
+                        src={item.photo.src}
+                        alt=""
+                        fill
+                        sizes="200px"
+                        className="hc-spot__blur object-cover"
+                      />
+                      {/* The whole photo stands 520 px tall in the box (32rem on phones). */}
+                      <Image
+                        src={item.photo.src}
+                        alt=""
+                        fill
+                        sizes="(max-width: 639px) 80vw, 420px"
+                        className="hc-spot__whole object-contain"
+                      />
+                    </>
+                  ) : null}
                 </>
               ) : null}
               {waiting ? (
