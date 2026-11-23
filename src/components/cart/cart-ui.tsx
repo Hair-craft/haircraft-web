@@ -549,7 +549,7 @@ export function AddToBag({
         <div
           role="group"
           aria-label="Quantity"
-          className="flex h-12 items-center rounded-full bg-sand-deep px-1.5"
+          className="flex h-12 shrink-0 items-center rounded-full bg-sand-deep px-1.5"
         >
           <button
             type="button"
@@ -586,7 +586,9 @@ export function AddToBag({
           size="lg"
           loading={pending}
           aria-label="Add to bag"
-          className="h-12 flex-1 text-sm tracking-wider whitespace-nowrap uppercase"
+          // Small phones (owner, 2026-11-23: it ran past the card at 360 px): it may shrink,
+          // with tighter padding and letter-spacing there.
+          className="h-12 min-w-0 flex-1 px-4! text-sm tracking-wide whitespace-nowrap uppercase sm:px-8! sm:tracking-wider"
         >
           <BagIcon width={20} height={20} />
           Add to Bag
