@@ -6,12 +6,11 @@ import { Reveal } from "@/components/motion/reveal";
 import { Skeleton } from "@/components/ui/display";
 import { ChevronRightIcon } from "@/components/ui/icons";
 import {
-  getBestRated,
   getBestSellers,
   getCategories,
   getCategoryPhoto,
   getConcerns,
-  getNewArrivals,
+  getChosenNewArrivals,
   getFeaturedReviews,
 } from "@/lib/api/catalog";
 import { isApiError } from "@/lib/api/errors";
@@ -23,7 +22,6 @@ import { getHomeContent } from "@/lib/api/home";
 import { faqJsonLd } from "./content";
 import { FaqAccordion } from "./faq-accordion";
 import { storyImage } from "./home-images";
-import { ProductTabs } from "./product-tabs";
 import { PhotoDeck } from "./photo-deck";
 import { HOME_REVIEW_COUNT } from "@/lib/home/review-cards";
 import { ReviewTiltCards } from "./review-tilt-cards";
@@ -240,29 +238,12 @@ export async function BestSellersSection() {
   );
 }
 
+/**
+ * Customer favourites (owner, 2026-11-24): only the products ticked "New arrival"
+ * in the admin, as the Photo Deck; the Best rated tab is gone.
+ */
 export async function MostLovedSection() {
-  const data = await load(async () => {
-    const [rated, newest] = await Promise.all([getBestRated(8), getNewArrivals(8)]);
-    return { rated, newest };
-  });
-  const tabs = data
-    ? [
-        ...(data.rated.length > 0
-          ? [
-              {
-                key: "rated",
-                label: "Best rated",
-                panel: <PhotoDeck products={data.rated} label="Best rated" />,
-              },
-            ]
-          : []),
-        {
-          key: "new",
-          label: "New arrivals",
-          panel: <PhotoDeck products={data.newest} label="New arrivals" />,
-        },
-      ]
-    : [];
+  const data = await load(() => getChosenNewArrivals(8));
   return (
     <section aria-labelledby="loved-heading" className={`${shell} py-10`}>
       <SectionHeader
@@ -275,7 +256,7 @@ export async function MostLovedSection() {
         <ApiUnavailable />
       ) : (
         <>
-          <ProductTabs tabs={tabs} label="Customer favourites" />
+          <PhotoDeck products={data} label="New arrivals" />
           <div className="mt-6 text-center">
             <ViewAll href={routes.shop} label="View all products" />
           </div>

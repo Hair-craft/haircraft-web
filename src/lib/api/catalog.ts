@@ -1,6 +1,7 @@
 import "server-only";
 import { settings } from "@/lib/env";
 import { apiFetch, apiFetchPage, type QueryValue } from "./client";
+import { isApiError } from "./errors";
 import type { FilterOptions } from "@/lib/listing/query";
 import type {
   Category,
@@ -60,6 +61,8 @@ export interface ProductListQuery {
   inStock?: boolean;
   /** Only products ticked "Best seller" in the admin. */
   bestSeller?: boolean;
+  /** Only products ticked "New arrival" in the admin. */
+  newArrival?: boolean;
   [key: string]: QueryValue;
 }
 
@@ -113,6 +116,22 @@ export function findCategory(
 /** The newest products, newest first. */
 export async function getNewArrivals(limit = 8): Promise<ProductCard[]> {
   return (await getProducts({ sort: "createdAt:desc", limit })).items;
+}
+
+/**
+ * The home page's Customer favourites (owner, 2026-11-24: "just new arrival will be
+ * shown, and we can select the new arrival in admin panel"): the products ticked
+ * "New arrival" in the admin, newest first; until any are ticked, the newest products.
+ */
+export async function getChosenNewArrivals(limit = 8): Promise<ProductCard[]> {
+  let chosen: ProductCard[] = [];
+  try {
+    chosen = (await getProducts({ newArrival: true, sort: "createdAt:desc", limit })).items;
+  } catch (error) {
+    // An API from before 2026-11-24 doesn't know the filter: show the newest instead.
+    if (!(isApiError(error) && error.status === 400)) throw error;
+  }
+  return chosen.length > 0 ? chosen : getNewArrivals(limit);
 }
 
 /** Products ticked "Best seller" in the admin (owner, 2026-11-03), newest first. */

@@ -68,6 +68,8 @@ export interface ProductCard {
   reviewCount: number;
   /** Ticked "Best seller" in the admin (older API answers leave it out). */
   bestSeller?: boolean;
+  /** Ticked "New arrival" in the admin (owner, 2026-11-24). */
+  newArrival?: boolean;
   /**
    * The only variant on sale: nothing to choose, so the card adds it to the
    * bag (owner, 2026-11-13). Null with several (older API answers leave it out).
