@@ -116,13 +116,16 @@ function HeroPicture({ desktopSrc, mobileSrc }: { desktopSrc: string; mobileSrc:
         loading="eager"
         decoding="async"
         className={
-          // Phones: 209% of the square window's width, so 85% of the banner's height
-          // (just above her hand down to the stand) fills it, moved to the stylist and the table.
-          // 640–767 px: the same at 4:3. Tablets up: sized by the banner's height, 84% of the
-          // banner (her hand to the stand) filling it, on the right; the cream on the left.
-          "hc-settle absolute top-[-17.6%] left-[-97.7%] h-auto w-[209.2%] max-w-none " +
-          "sm:left-[-57%] sm:w-[156.9%] " +
-          "md:top-[-19%] md:right-0 md:left-auto md:h-[119%] md:w-auto"
+          // The picture ends exactly at the bottom of the table's stand, where the sliding
+          // panel begins: no empty ground under it (owner, 2026-11-24). Measured in the SVGs:
+          // the stand ends at 98.6% of the mobile banner's height, 92.1% of the desktop one's.
+          // Phones: 15%–98.6% of the mobile banner fills the square window (212.7% of its
+          // width), moved to the stylist and the table; 640–767 px the same at 4:3.
+          // Tablets up: 16%–92.1% of the desktop banner fills the height down to the panel's
+          // edge (2rem above the bottom), on the right; the cream on the left.
+          "hc-settle absolute top-[-17.94%] left-[-97.95%] h-auto w-[212.7%] max-w-none " +
+          "sm:left-[-59.5%] sm:w-[159.5%] " +
+          "md:top-[calc(-21.02%_+_0.42rem)] md:right-0 md:left-auto md:h-[calc(131.4%_-_2.628rem)] md:w-auto"
         }
       />
     </picture>
