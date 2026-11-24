@@ -25,8 +25,8 @@ import { FaqAccordion } from "./faq-accordion";
 import { storyImage } from "./home-images";
 import { ProductTabs } from "./product-tabs";
 import { PhotoDeck } from "./photo-deck";
-import { HOME_REVIEW_COUNT } from "@/lib/home/bounce-cards";
-import { ReviewBounceCards } from "./review-bounce-cards";
+import { HOME_REVIEW_COUNT } from "@/lib/home/review-cards";
+import { ReviewTiltCards } from "./review-tilt-cards";
 import { BestSellerColumns } from "./best-seller-columns";
 import { SectionHeader } from "./section-header";
 import { ConcernSpotlight } from "./concern-spotlight";
@@ -288,13 +288,22 @@ export async function MostLovedSection() {
 // ── Review spotlight ────────────────────────────────────────────────────
 
 /**
- * Real reviews as React Bits' Bounce Cards (owner, 2026-11-23): up to 8
- * reviews chosen by the admin, else by the API (5-star, saying something,
- * photos first), in a fanned stack that bounces in; each shows its photo, and
- * clicking one flips it over to the review. Hidden when there are no reviews: never invented quotes.
+ * Real reviews as tilted cards in a row that slides sideways (owner, 2026-11-24):
+ * every review the admin chose (up to the API's 50), else the API's pick (5-star,
+ * saying something, photos first). Each shows its photo; hovering one turns it
+ * over to the review. Hidden when there are no reviews: never invented quotes.
  */
 export async function TestimonialsSection() {
-  const featured = (await load(() => getFeaturedReviews(HOME_REVIEW_COUNT))) ?? [];
+  const featured =
+    (await load(async () => {
+      try {
+        return await getFeaturedReviews(HOME_REVIEW_COUNT);
+      } catch (error) {
+        // An API from before 2026-11-24 allows at most 8: ask again for 8 rather than hide the reviews.
+        if (isApiError(error) && error.status === 400) return getFeaturedReviews(8);
+        throw error;
+      }
+    })) ?? [];
   if (featured.length === 0) return null;
   return (
     <section aria-labelledby="reviews-heading" className={`${shell} overflow-x-clip py-14`}>
@@ -304,7 +313,7 @@ export async function TestimonialsSection() {
         </h2>
         <p className="mt-2 text-muted">What customers say about HairCraft, in their own words.</p>
       </div>
-      <ReviewBounceCards reviews={featured.slice(0, HOME_REVIEW_COUNT)} />
+      <ReviewTiltCards reviews={featured} />
     </section>
   );
 }
