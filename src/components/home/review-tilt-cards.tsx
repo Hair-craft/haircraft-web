@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { productHref } from "@/components/product/product-card";
 import type { FeaturedReview } from "@/lib/api/catalog";
-import { cardTilt, reviewCardPicture, reviewDate } from "@/lib/home/review-cards";
+import { reviewCardPicture, reviewDate } from "@/lib/home/review-cards";
 
 function Stars({ rating, dim = "rgb(11 41 26 / 0.18)" }: { rating: number; dim?: string }) {
   return (
@@ -46,7 +46,8 @@ function Arrow({ dir }: { dir: "left" | "right" }) {
 }
 
 /**
- * Real reviews as tilted cards in a row that slides sideways (owner, 2026-11-24:
+ * Real reviews as straight cards in a row that slides sideways (upright since
+ * 2026-11-24: "make that card into straight"), (owner, 2026-11-24:
  * "we just need the tilted cards design only, not the bounced card design, and it
  * will be horizontally slide, there is no limit of 8, and when we hover the card
  * will rotate automatically"). Every review the admin chose is shown. Swipe,
@@ -113,7 +114,6 @@ export function ReviewTiltCards({ reviews }: { reviews: FeaturedReview[] }) {
               key={review.id}
               className="hc-tilt__card"
               data-flipped={isFlipped || undefined}
-              style={{ "--tilt": `${cardTilt(i)}deg` } as CSSProperties}
               onMouseEnter={() => {
                 if (canHover.current) setFlipped(i);
               }}
