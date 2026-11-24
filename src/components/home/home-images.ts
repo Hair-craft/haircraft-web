@@ -14,8 +14,12 @@ export interface HomeImage {
  * To change it, replace the file with another wide photo laid out the same
  * way (the section's cream, #fbf6f2 in hero.tsx, matches its background).
  */
-export const heroImage: HomeImage = {
-  src: "/images/home/hero-banner-6.jpg",
+export const heroImage: HomeImage & { mobile: string } = {
+  // The owner's "Blog Banner for Website Content" desktop and mobile files (2026-11-24),
+  // 2240 × 1260 each, used as the SVGs themselves (owner, 2026-11-24): the desktop one from
+  // tablets up, the mobile one on phones.
+  src: "/images/home/hero-banner-desktop.svg",
+  mobile: "/images/home/hero-banner-mobile.svg",
   alt: "A smiling HairCraft stylist holds up a dark human hair piece beside two long-haired mannequins and a HairCraft box",
 };
 

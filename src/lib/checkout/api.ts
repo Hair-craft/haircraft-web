@@ -32,6 +32,8 @@ export interface PlacedOrderItem {
 /** An order, as `POST /orders` and `GET /orders/:orderNumber` return it (the fields the shop uses). */
 export interface PlacedOrder {
   orderNumber: string;
+  /** The GST tax invoice, once issued (owner, 2026-11-24). */
+  invoiceNumber?: string | null;
   status: string;
   paymentStatus: string;
   paymentMethod: PaymentMethod;

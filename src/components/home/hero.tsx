@@ -1,10 +1,12 @@
-import Image from "next/image";
+import { getImageProps } from "next/image";
+import { preload } from "react-dom";
 import Link from "next/link";
 import { routes } from "@/components/layout/nav";
 import { Cormorant_Garamond } from "next/font/google";
 import { type ReactNode } from "react";
 import { type BrandPromise } from "./copy";
 import { heroImage } from "./home-images";
+import { getHomeContent } from "@/lib/api/home";
 
 /*
  * The elegant italic of the older hero (owner, 2026-11-03), now for
@@ -56,7 +58,7 @@ export function PromiseIcon({
  * The hero banner, after the owner's design and photo (2026-11-04: the words
  * on the LEFT; 2026-11-20: the stylist with a hair piece, two mannequins and
  * the HairCraft box, on a cream ground the section matches). The photo at the
- * full width; from tablets up the banner is 44% of the screen's width (at
+ * full width; from tablets up the banner is 48% of the screen's width (at
  * least 24rem; owner, 2026-11-21), so the whole photo fits on wide screens too. From tablets up the words sit over the photo's open cream space on
  * the left, a little above the middle (owner, 2026-11-20). No button (owner).
  *
@@ -69,9 +71,70 @@ export function PromiseIcon({
  * eases back a little (`.hc-shutter` in globals.css; none for people who
  * prefer reduced motion). The words rise in with CSS, so they are visible at once.
  */
-export function Hero() {
+/** A banner file as is (the owner's SVGs), or an uploaded photo through next/image. */
+function bannerSource(src: string): { src: string; srcSet: string | undefined } {
+  if (src.endsWith(".svg")) return { src, srcSet: undefined };
+  // Sharp, not soft (owner, 2026-11-20): the higher of the allowed qualities.
+  const { props } = getImageProps({ src, alt: "", fill: true, sizes: "100vw", quality: 90 });
+  return { src: props.src, srcSet: props.srcSet };
+}
+
+/**
+ * The banner, one picture per screen (owner, 2026-11-24): the desktop banner from 768 px
+ * up, the mobile one below, each the owner's SVG as is (or a photo uploaded in the admin).
+ * Each screen downloads only its own, fetched first as the page's largest picture.
+ *
+ * Both banners are 16:9 with the stylist and the table on the right. The framing always
+ * shows her raised hand at the top down to the table's stand at the bottom (owner,
+ * 2026-11-24): from tablets up the whole width, its empty top trimmed; on phones a close
+ * window on the stylist and the table (see the frame in `Hero`).
+ */
+function HeroPicture({ desktopSrc, mobileSrc }: { desktopSrc: string; mobileSrc: string }) {
+  const desktop = bannerSource(desktopSrc);
+  const mobile = bannerSource(mobileSrc);
+  for (const [banner, media] of [
+    [desktop, "(min-width: 768px)"],
+    [mobile, "(max-width: 767px)"],
+  ] as const)
+    preload(banner.src, {
+      as: "image",
+      ...(banner.srcSet ? { imageSrcSet: banner.srcSet, imageSizes: "100vw" } : {}),
+      fetchPriority: "high",
+      media,
+    });
   return (
-    <section className="hc-shutter sticky top-0 z-0 w-full overflow-hidden bg-[#fbf6f2] md:flex md:h-[44vw] md:min-h-[24rem] md:items-center">
+    <picture>
+      <source media="(min-width: 768px)" srcSet={desktop.srcSet ?? desktop.src} sizes="100vw" />
+      <img
+        src={mobile.src}
+        srcSet={mobile.srcSet}
+        sizes="100vw"
+        alt={heroImage.alt}
+        width={2240}
+        height={1260}
+        fetchPriority="high"
+        loading="eager"
+        decoding="async"
+        className={
+          // Phones: 209% of the square window's width, so 85% of the banner's height
+          // (just above her hand down to the stand) fills it, moved to the stylist and the table.
+          // 640–767 px: the same at 4:3. Tablets up: sized by the banner's height, 84% of the
+          // banner (her hand to the stand) filling it, on the right; the cream on the left.
+          "hc-settle absolute top-[-17.6%] left-[-97.7%] h-auto w-[209.2%] max-w-none " +
+          "sm:left-[-57%] sm:w-[156.9%] " +
+          "md:top-[-19%] md:right-0 md:left-auto md:h-[119%] md:w-auto"
+        }
+      />
+    </picture>
+  );
+}
+export async function Hero() {
+  // Banners uploaded in Admin → Home page (owner, 2026-11-24), else the built-in ones.
+  const banners = (await getHomeContent())?.banners;
+  const desktopSrc = banners?.desktop?.original ?? heroImage.src;
+  const mobileSrc = banners?.mobile?.original ?? heroImage.mobile;
+  return (
+    <section className="hc-shutter sticky top-0 z-0 w-full overflow-hidden bg-[#fbf6f2] md:flex md:h-[min(48vw,calc(100svh-7.5rem))] md:min-h-[24rem] md:items-center">
       {/* The whole banner opens Shop all (owner, 2026-11-20); still no button. */}
       <Link
         href={routes.shop}
@@ -98,32 +161,19 @@ export function Hero() {
           </h1>
         </div>
       </div>
-      <div className="relative -mt-8 aspect-[6/5] w-full overflow-hidden sm:-mt-24 sm:aspect-[16/9] md:absolute md:inset-0 md:mt-0 md:aspect-auto">
-        {/*
-          The photo's table stand ends in a flat cut just below the tabletop (owner,
-          2026-11-21). From tablets up the banner's height follows the screen's width (44vw),
-          so wide screens no longer cut the hair piece at the top, and the photo sits so the
-          cut is under the panel that slides over the banner. On phones the photo is a little
-          taller than its frame, for the same reason: the table reads as going on behind it.
-        */}
-        <div className="absolute inset-x-0 top-0 h-[105%] sm:h-[104%] md:inset-0 md:h-full">
-          <Image
-            src={heroImage.src}
-            alt={heroImage.alt}
-            fill
-            // The page's largest picture: fetched first (Next 16's priority no longer does this).
-            preload
-            fetchPriority="high"
-            sizes="100vw"
-            // Sharp, not soft (owner, 2026-11-20): the higher of the allowed qualities.
-            quality={90}
-            className="hc-settle object-cover object-[80%_0%] md:object-[100%_62%]"
-          />
+      {/*
+        Phones: a square window (4:3 from 640 px) on the stylist and the table, plus a strip
+        of the banner's green under it that the sliding panel covers, so the stand is never
+        hidden (owner, 2026-11-24). Tablets up: the whole banner behind the words.
+      */}
+      <div className="relative mt-3 w-full overflow-hidden bg-[#e0e9d2] pb-6 sm:mt-2 sm:pb-8 md:absolute md:inset-0 md:mt-0 md:bg-transparent md:pb-0">
+        <div className="relative aspect-square w-full overflow-hidden sm:aspect-[4/3] md:absolute md:inset-0 md:aspect-auto">
+          <HeroPicture desktopSrc={desktopSrc} mobileSrc={mobileSrc} />
         </div>
-        {/* Phones: a cream fade over the photo's top, behind the words (owner, 2026-11-04). */}
+        {/* Phones: the photo starts under the words, its top edge softened into the cream. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-[#fbf6f2] to-transparent md:hidden"
+          className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-[#fbf6f2] to-transparent md:hidden"
         />
         <div
           aria-hidden

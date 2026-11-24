@@ -3,9 +3,6 @@ import Link from "next/link";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { routes } from "@/components/layout/nav";
 import { Reveal } from "@/components/motion/reveal";
-import { ProductCard, productHref } from "@/components/product/product-card";
-import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
-import { PriceRange } from "@/components/ui/display";
 import { Skeleton } from "@/components/ui/display";
 import { ChevronRightIcon } from "@/components/ui/icons";
 import {
@@ -18,20 +15,19 @@ import {
   getFeaturedReviews,
 } from "@/lib/api/catalog";
 import { isApiError } from "@/lib/api/errors";
-import type { ProductCard as ProductCardData } from "@/lib/api/types";
 import { ConsultBanner } from "@/components/layout/consult-banner";
 import { Marquee } from "@/components/motion/marquee";
 import { story } from "@/content/about";
 import { getFaqs } from "@/lib/api/faqs";
+import { getHomeContent } from "@/lib/api/home";
 import { faqJsonLd } from "./content";
 import { FaqAccordion } from "./faq-accordion";
 import { storyImage } from "./home-images";
 import { ProductTabs } from "./product-tabs";
-import { ProductRing } from "./product-ring";
+import { PhotoDeck } from "./photo-deck";
 import { HOME_REVIEW_COUNT } from "@/lib/home/bounce-cards";
 import { ReviewBounceCards } from "./review-bounce-cards";
 import { BestSellerColumns } from "./best-seller-columns";
-import { MIN_RING_ITEMS } from "@/lib/home/ring";
 import { SectionHeader } from "./section-header";
 import { ConcernSpotlight } from "./concern-spotlight";
 import { concernPhoto } from "./concerns";
@@ -136,16 +132,19 @@ export async function ConcernSection() {
  * header, just under Shop by concern.
  */
 export const promiseItems = [
-  "Crafted in our own workshop, never outsourced",
-  "No middlemen, just honest prices",
-  "Straight from our factory to you",
-  "15+ years of hair-crafting expertise",
+  "Exclusively Crafted In-House",
+  "From Our Hands to Yours",
+  "Direct from Our Factory",
+  "15+ Years of Crafting Excellence",
 ];
 
-export function PromiseStrip() {
+/** The lines come from Admin → Home page; these are shown until then, or if the API is down. */
+export async function PromiseStrip() {
+  const content = await getHomeContent();
+  const lines = content?.promiseLines.length ? content.promiseLines : promiseItems;
   return (
     <Marquee
-      items={promiseItems}
+      items={lines}
       label="Why HairCraft"
       repeat={2}
       speedSeconds={36}
@@ -218,75 +217,6 @@ export async function CategorySection() {
 // ── Bestsellers (tabs) ──────────────────────────────────────────────────
 
 /**
- * A product on the ring, as in the owner's sample (2026-11-23): the photo
- * only, with the name and price over its foot. The whole panel opens the product.
- */
-function RingPanel({ product }: { product: ProductCardData }) {
-  return (
-    <Link
-      href={productHref(product.slug)}
-      className="relative block aspect-[3/4] overflow-hidden rounded-xl bg-sand shadow-[0_18px_40px_-18px_rgb(11_41_26/0.45)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
-    >
-      {product.image ? (
-        <Image
-          src={product.image.medium}
-          alt={product.imageAlt ?? product.name}
-          fill
-          sizes="(min-width: 1024px) 300px, 40vw"
-          className="object-cover"
-        />
-      ) : (
-        <PhotoPlaceholder />
-      )}
-      <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 via-black/35 to-transparent px-3 pt-12 pb-3 text-white sm:px-4 sm:pb-4">
-        <h3 className="line-clamp-2 font-display text-sm leading-tight font-semibold sm:text-lg">
-          {product.name}
-        </h3>
-        <PriceRange
-          min={product.priceRange.min}
-          max={product.priceRange.max}
-          className="mt-1 block text-xs text-white/90! sm:text-sm"
-        />
-      </div>
-    </Link>
-  );
-}
-
-/**
- * A 3D ring you drag to spin (owner, 2026-11-23), or with fewer than 3 products
- * (a ring needs 3) the plain row: four columns on desktop, sideways on phones.
- */
-function ProductRow({ products, label }: { products: ProductCardData[]; label: string }) {
-  if (products.length >= MIN_RING_ITEMS)
-    return (
-      <ProductRing
-        label={label}
-        items={products.map((product) => ({
-          key: product.id,
-          node: <RingPanel product={product} />,
-        }))}
-      />
-    );
-  return (
-    // `relative` keeps the row's overflow inside it: without it, phone browsers widen the whole page.
-    // `overflow-y-hidden`: cards waiting to fade up sit a little lower; without it the row also
-    // scrolled up and down inside itself, catching the finger on phones (owner, 2026-11-04).
-    <ul
-      data-reveal-row
-      className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 md:grid-cols-3 lg:grid-cols-4"
-    >
-      {products.map((product, i) => (
-        <li key={product.id} className="w-[72%] shrink-0 snap-start sm:w-auto">
-          <Reveal delay={Math.min(i, 7) * 0.08} className="h-full">
-            <ProductCard product={product} />
-          </Reveal>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/**
  * Products ticked "Best seller" in the admin (owner, 2026-11-03). Hidden when
  * none are ticked (or the API is down): never an empty or invented list.
  */
@@ -312,7 +242,7 @@ export async function BestSellersSection() {
 
 export async function MostLovedSection() {
   const data = await load(async () => {
-    const [rated, newest] = await Promise.all([getBestRated(4), getNewArrivals(8)]);
+    const [rated, newest] = await Promise.all([getBestRated(8), getNewArrivals(8)]);
     return { rated, newest };
   });
   const tabs = data
@@ -322,14 +252,14 @@ export async function MostLovedSection() {
               {
                 key: "rated",
                 label: "Best rated",
-                panel: <ProductRow products={data.rated} label="Best rated" />,
+                panel: <PhotoDeck products={data.rated} label="Best rated" />,
               },
             ]
           : []),
         {
           key: "new",
           label: "New arrivals",
-          panel: <ProductRow products={data.newest} label="New arrivals" />,
+          panel: <PhotoDeck products={data.newest} label="New arrivals" />,
         },
       ]
     : [];

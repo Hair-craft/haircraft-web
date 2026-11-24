@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { SummaryLines, TotalsList } from "@/components/checkout/checkout-parts";
 import { PaymentPanel } from "@/components/checkout/payment-panel";
-import { ButtonLink } from "@/components/ui/button";
+import { ButtonLink, buttonClasses } from "@/components/ui/button";
+import { invoiceHref } from "@/lib/orders/invoice";
 import { isApiError } from "@/lib/api/errors";
 import { getOrder, type PlacedOrder } from "@/lib/checkout/api";
 import { getMagicReceipt } from "@/lib/checkout/magic-api";
@@ -60,6 +61,7 @@ export default async function OrderPlacedPage({
   const payment = panelState(order);
   const a = order.shippingAddress;
   const name = session.user?.firstName;
+  const invoice = invoiceHref(order.orderNumber, session.accessToken ? null : receiptToken);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
@@ -150,6 +152,16 @@ export default async function OrderPlacedPage({
 
       <div className="mt-8 flex flex-wrap gap-3">
         <ButtonLink href="/shop">Continue shopping</ButtonLink>
+        {order.invoiceNumber && invoice ? (
+          <a
+            href={invoice}
+            download
+            className={buttonClasses("secondary")}
+            aria-label={`Download tax invoice ${order.invoiceNumber} (PDF)`}
+          >
+            Download invoice
+          </a>
+        ) : null}
         {session.accessToken ? (
           <ButtonLink href={`/account/orders/${order.orderNumber}`} variant="secondary">
             View your order

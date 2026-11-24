@@ -260,9 +260,10 @@ export function BestSellerColumns({ products }: { products: ProductCardData[] })
             >
               <div className="hc-col__inner">
                 <div className="hc-col__bg">
-                  {product.image ? (
+                  {(product.homeImage ?? product.image) ? (
                     <Image
-                      src={product.image.large}
+                      // The admin's home thumbnail when chosen (owner, 2026-11-24), else the main photo.
+                      src={(product.homeImage ?? product.image)!.large}
                       alt=""
                       fill
                       sizes="(min-width: 640px) 22vw, 60vw"
@@ -287,9 +288,6 @@ export function BestSellerColumns({ products }: { products: ProductCardData[] })
                   className="hc-col__link"
                 >
                   <span className="hc-col__name">{product.name}</span>
-                  <span aria-hidden className="hc-col__index">
-                    {i + 1}
-                  </span>
                 </a>
               </div>
 

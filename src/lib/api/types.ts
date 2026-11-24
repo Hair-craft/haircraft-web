@@ -73,6 +73,10 @@ export interface ProductCard {
    * bag (owner, 2026-11-13). Null with several (older API answers leave it out).
    */
   onlyVariantId?: string | null;
+  /** A short line: the short description, else the headline (owner, 2026-11-24; older API answers leave it out). */
+  summary?: string | null;
+  /** The photo chosen for the home page's Best sellers (owner, 2026-11-24; older API answers leave it out). */
+  homeImage?: ImageUrls | null;
 }
 
 /** A "Shop by concern" card (owner, 2026-11-03), managed in the admin. */

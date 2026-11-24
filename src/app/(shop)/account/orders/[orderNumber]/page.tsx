@@ -7,13 +7,14 @@ import { ProgressLine, StatusBadge } from "@/components/account/order-parts";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { SummaryLines, TotalsList } from "@/components/checkout/checkout-parts";
 import { PaymentPanel } from "@/components/checkout/payment-panel";
-import { Button } from "@/components/ui/button";
+import { Button, buttonClasses } from "@/components/ui/button";
 import { localMobile } from "@/lib/account/rules";
 import { isApiError } from "@/lib/api/errors";
 import { panelState } from "@/lib/checkout/payment";
 import { settings } from "@/lib/env";
 import { buyAgainAction } from "@/lib/orders/actions";
 import { getOrderDetail, type OrderDetail, type OrderTracking } from "@/lib/orders/api";
+import { invoiceHref } from "@/lib/orders/invoice";
 import { orderDate, orderDateTime, progressSteps, refundText } from "@/lib/orders/rules";
 import { getSession } from "@/lib/session/session";
 
@@ -159,12 +160,24 @@ export default async function OrderPage({ params }: PageProps<"/account/orders/[
               </ul>
             </div>
           ) : null}
-          <form action={buyAgainAction}>
-            <input type="hidden" name="orderNumber" value={order.orderNumber} />
-            <Button type="submit" variant="secondary">
-              Buy again
-            </Button>
-          </form>
+          <div className="flex flex-wrap gap-3">
+            <form action={buyAgainAction}>
+              <input type="hidden" name="orderNumber" value={order.orderNumber} />
+              <Button type="submit" variant="secondary">
+                Buy again
+              </Button>
+            </form>
+            {order.invoiceNumber && invoiceHref(order.orderNumber) ? (
+              <a
+                href={invoiceHref(order.orderNumber)!}
+                download
+                className={buttonClasses("ghost")}
+                aria-label={`Download tax invoice ${order.invoiceNumber} (PDF)`}
+              >
+                Download invoice
+              </a>
+            ) : null}
+          </div>
         </AccountCard>
 
         <div className="grid gap-5 sm:grid-cols-2">
