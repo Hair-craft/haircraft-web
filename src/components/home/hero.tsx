@@ -145,15 +145,15 @@ export async function Hero() {
         className="absolute inset-0 z-20 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-deep"
       />
       <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pt-6 sm:px-6 sm:pt-8 md:pt-6 md:pb-16 lg:pb-24 xl:pt-10 xl:pb-32">
-        <div className="flex max-w-xl flex-col items-start gap-3 sm:gap-4 md:w-[40%] md:gap-3 lg:w-[42%] lg:gap-5 xl:w-[46%] xl:max-w-2xl">
+        <div className="flex max-w-xl flex-col items-start gap-3 sm:gap-4 md:w-[40%] md:gap-3 lg:w-[42%] lg:gap-5 xl:w-[46%] xl:max-w-2xl min-[112.5rem]:w-[60%] min-[112.5rem]:max-w-[46rem] min-[112.5rem]:gap-6">
           {/* The badge a little higher than the headline (owner, 2026-11-20). */}
-          <p className="hc-rise relative -top-1 inline-flex items-center gap-2 rounded-full border border-line bg-white/90 px-3 py-1 text-[0.625rem] font-bold tracking-widest text-deep uppercase shadow-sm backdrop-blur-sm sm:px-3.5 sm:text-[0.7rem] md:-top-2 md:text-[0.65rem] lg:-top-3 lg:px-4 lg:py-1.5 lg:text-[0.8rem] xl:-top-4 xl:text-[0.9rem]">
+          <p className="hc-rise relative -top-1 inline-flex items-center gap-2 rounded-full border border-line bg-white/90 px-3 py-1 text-[0.625rem] font-bold tracking-widest text-deep uppercase shadow-sm backdrop-blur-sm sm:px-3.5 sm:text-[0.7rem] md:-top-2 md:text-[0.65rem] lg:-top-3 lg:px-4 lg:py-1.5 lg:text-[0.8rem] xl:-top-4 xl:text-[0.9rem] min-[112.5rem]:px-5 min-[112.5rem]:py-2 min-[112.5rem]:text-[1.05rem]">
             <span aria-hidden className="text-gold">
               ✦
             </span>
             100% Real Human Hair
           </p>
-          <h1 className="hc-rise hc-delay font-display text-[1.75rem] leading-[1.15] font-semibold tracking-tight text-deep sm:text-5xl md:text-[2rem] lg:text-[2.75rem] xl:text-[3.5rem] 2xl:text-[3.75rem]">
+          <h1 className="hc-rise hc-delay font-display text-[1.75rem] leading-[1.15] font-semibold tracking-tight text-deep sm:text-5xl md:text-[2rem] lg:text-[2.75rem] xl:text-[3.5rem] 2xl:text-[3.75rem] min-[112.5rem]:text-[4.5rem]">
             {/* The owner's banner words (2026-11-20). */}
             Fuller Hair, A More{" "}
             <em

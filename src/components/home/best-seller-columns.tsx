@@ -14,6 +14,7 @@ import {
 import { createPortal } from "react-dom";
 import { productHref } from "@/components/product/product-card";
 import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
+import { homeFocusStyle } from "@/lib/home/home-focus";
 import { ProductView } from "@/components/product-page/product-view";
 import { CloseIcon } from "@/components/ui/icons";
 import type { ProductCard as ProductCardData } from "@/lib/api/types";
@@ -268,6 +269,8 @@ export function BestSellerColumns({ products }: { products: ProductCardData[] })
                       fill
                       sizes="(min-width: 640px) 22vw, 60vw"
                       className="object-cover"
+                      // The admin's framing (owner, 2026-11-24): the chosen point stays in view.
+                      style={homeFocusStyle(product.homeFocus)}
                     />
                   ) : (
                     <PhotoPlaceholder />

@@ -77,6 +77,8 @@ export interface ProductCard {
   summary?: string | null;
   /** The photo chosen for the home page's Best sellers (owner, 2026-11-24; older API answers leave it out). */
   homeImage?: ImageUrls | null;
+  /** How the admin framed that photo (owner, 2026-11-24); null: centred. */
+  homeFocus?: { x: number; y: number; zoom: number } | null;
 }
 
 /** A "Shop by concern" card (owner, 2026-11-03), managed in the admin. */
