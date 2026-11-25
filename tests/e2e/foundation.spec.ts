@@ -36,12 +36,6 @@ test.describe("shop layout (shop open)", () => {
     for (const name of TOP_CATEGORIES) {
       await expect(nav.getByText(name, { exact: true })).toBeVisible();
     }
-    const cards = page
-      .getByRole("region", { name: "Shop by category" })
-      .getByRole("listitem")
-      .getByRole("link");
-    await expect(cards).toHaveCount(4);
-    await expect(cards.first()).toHaveAttribute("href", "/shop/clip-in-extensions");
     // Account and cart icons are labelled for screen readers.
     for (const label of ["Search", "Wishlist", "Sign in", "Bag, 0 items"]) {
       await expect(

@@ -4,8 +4,8 @@ import { HOME_DESCRIPTION, HOME_TITLE } from "@/lib/seo/titles";
 import { Suspense } from "react";
 import { Hero, HeroShutterPanel } from "@/components/home/hero";
 import {
+  BeforeAfterSection,
   BestSellersSection,
-  CategorySection,
   ConcernSection,
   ConsultSection,
   MostLovedSection,
@@ -29,7 +29,8 @@ export const metadata: Metadata = {
 
 /**
  * The home page, after the owner's design (2026-10-31, updated 2026-11-03):
- * hero, shop by concern, best sellers, categories, customer favourites, a
+ * hero, shop by concern, best sellers, before and after (in place of the
+ * categories, owner 2026-11-25), customer favourites, a
  * real review, WhatsApp advice, our story (photo left, words right), then the
  * FAQ (owner, 2026-11-05: "Why HairCraft" removed). The hero renders first; each data
  * section streams in on its own, so a slow or failing section never holds
@@ -48,9 +49,8 @@ export default function HomePage() {
         <Suspense fallback={null}>
           <BestSellersSection />
         </Suspense>
-        <Suspense fallback={<SectionSkeleton title="Shop by category" tall />}>
-          <CategorySection />
-        </Suspense>
+        {/* Before and after, in place of Shop by category (owner, 2026-11-25). */}
+        <BeforeAfterSection />
         <Suspense fallback={<SectionSkeleton title="Customer favourites" />}>
           <MostLovedSection />
         </Suspense>

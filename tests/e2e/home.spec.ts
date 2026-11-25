@@ -17,11 +17,10 @@ async function apiProducts(request: APIRequestContext, query: string): Promise<A
   return (await res.json()).data as ApiCard[];
 }
 
-/** The reviewed products the "Best rated" tab shows (highest first, at most four). */
-async function apiBestRated(request: APIRequestContext) {
-  return (await apiProducts(request, "sort=rating:desc&limit=16"))
-    .filter((p) => p.reviewCount > 0)
-    .slice(0, 4);
+/** Customer favourites (owner, 2026-11-24): the products ticked New arrival, else the newest. */
+async function apiFavourites(request: APIRequestContext) {
+  const chosen = await apiProducts(request, "newArrival=true&sort=createdAt:desc&limit=8");
+  return chosen.length > 0 ? chosen : apiProducts(request, "sort=createdAt:desc&limit=8");
 }
 
 async function expectPhotosLoad(images: Locator, where: string) {
@@ -219,88 +218,56 @@ test.describe("home page", () => {
 
   test("product and category photos actually load (not just image tags)", async ({ page }) => {
     await page.goto(OPEN + "/");
-    for (const name of ["Shop by category", "Customer favourites"]) {
+    for (const name of ["See the difference", "Customer favourites"]) {
       await expectPhotosLoad(page.getByRole("region", { name }).locator("img"), name);
     }
   });
 
-  test("shop by category: every top-level category with a photo and a link", async ({ page }) => {
+  test("before and after: moving across the photo wipes between them (owner, 2026-11-25)", async ({
+    page,
+  }) => {
     await page.goto(OPEN + "/");
-    const section = page.getByRole("region", { name: "Shop by category" });
-    const cards = section.getByRole("listitem").getByRole("link");
-    await expect(cards).toHaveCount(4);
-    await expect(section.getByRole("link", { name: "View all products" })).toHaveAttribute(
+    const section = page.getByRole("region", { name: "See the difference" });
+    await expect(section.getByRole("img", { name: /^Before:/ })).toBeVisible();
+    await expect(section.getByRole("img", { name: /^After:/ })).toBeVisible();
+    const slider = section.getByRole("slider", { name: "Compare before and after" });
+    await expect(slider).toHaveAttribute("aria-valuenow", "50");
+
+    // The divider follows the pointer.
+    const frame = section.locator(".hc-compare");
+    const box = (await frame.boundingBox())!;
+    await page.mouse.move(box.x + box.width * 0.2, box.y + box.height / 2);
+    await expect(slider).toHaveAttribute("aria-valuenow", "20");
+
+    // And the keyboard.
+    await slider.focus();
+    await page.keyboard.press("End");
+    await expect(slider).toHaveAttribute("aria-valuenow", "100");
+    await page.keyboard.press("ArrowLeft");
+    await expect(slider).toHaveAttribute("aria-valuenow", "98");
+    await expect(section.getByRole("link", { name: "Shop all human hair" })).toHaveAttribute(
       "href",
       "/shop",
     );
-    for (const [name, slug] of [
-      ["Clip-in Extensions", "clip-in-extensions"],
-      ["Tape-in Extensions", "tape-in-extensions"],
-      ["Wigs", "wigs"],
-      ["Ponytails", "ponytails"],
-    ]) {
-      const card = section.getByRole("link", { name: new RegExp(`^${name}`) });
-      await expect(card).toHaveAttribute("href", `/shop/${slug}`);
-      await expect(card.locator("img")).toHaveCount(1);
-    }
   });
 
-  test("most loved: best rated first, then new arrivals, by mouse and keyboard", async ({
+  test("customer favourites: the admin's new arrivals, without tabs (owner, 2026-11-24)", async ({
     page,
     request,
   }) => {
-    const [rated, newest] = await Promise.all([
-      apiBestRated(request),
-      apiProducts(request, "sort=createdAt:desc&limit=8"),
-    ]);
+    const favourites = await apiFavourites(request);
     await page.goto(OPEN + "/");
     const section = page.getByRole("region", { name: "Customer favourites" });
-    const names = () => section.getByRole("tabpanel").getByRole("heading", { level: 3 });
+    await expect(section.getByRole("tab")).toHaveCount(0);
+    await expect(section.getByRole("region", { name: "New arrivals" })).toBeVisible();
+    await expect(section.getByRole("heading", { name: favourites[0].name })).toBeVisible();
     await expect(section.getByRole("link", { name: "View all products" })).toHaveAttribute(
       "href",
       "/shop",
     );
-
-    if (rated.length === 0) {
-      // Nothing reviewed yet: no tabs, just the new arrivals.
-      await expect(section.getByRole("tab")).toHaveCount(0);
-      await expect(section.getByRole("heading", { level: 3 })).toHaveText(
-        newest.map((p) => p.name),
-      );
-      return;
-    }
-
-    const ratedTab = section.getByRole("tab", { name: "Best rated" });
-    const newTab = section.getByRole("tab", { name: "New arrivals" });
-    await expect(ratedTab).toHaveAttribute("aria-selected", "true");
-    await expect(names()).toHaveText(rated.map((p) => p.name));
-
-    await newTab.click();
-    await expect(newTab).toHaveAttribute("aria-selected", "true");
-    await expect(names()).toHaveText(newest.map((p) => p.name));
-    for (const product of newest) {
-      const card = section.getByRole("link", { name: new RegExp(product.name) });
-      await expect(card).toHaveAttribute("href", `/product/${product.slug}`);
-      await expect(card.getByText("Sale", { exact: true })).toHaveCount(
-        product.onSale && product.inStock ? 1 : 0,
-      );
-      await expect(card.getByText("Sold out", { exact: true })).toHaveCount(
-        product.inStock ? 0 : 1,
-      );
-    }
-
-    // Keyboard: arrows move between the tabs (and focus follows).
-    await newTab.focus();
-    await page.keyboard.press("ArrowLeft");
-    await expect(ratedTab).toHaveAttribute("aria-selected", "true");
-    await expect(ratedTab).toBeFocused();
-    await page.keyboard.press("End");
-    await expect(newTab).toBeFocused();
-    await expect(newTab).toHaveAttribute("tabindex", "0");
-    await expect(ratedTab).toHaveAttribute("tabindex", "-1");
   });
 
-  test("sections in the owner's order: concern, best sellers (if any), categories, favourites", async ({
+  test("sections in the owner's order: concern, best sellers (if any), before and after, favourites", async ({
     page,
   }) => {
     await page.goto(OPEN + "/");
@@ -308,13 +275,13 @@ test.describe("home page", () => {
       .locator("main section[aria-labelledby]")
       .evaluateAll((sections) => sections.map((el) => el.getAttribute("aria-labelledby")));
     const known = order.filter((id) =>
-      ["concerns-heading", "bestsellers-heading", "categories-heading", "loved-heading"].includes(
+      ["concerns-heading", "bestsellers-heading", "results-heading", "loved-heading"].includes(
         id ?? "",
       ),
     );
     expect(known.filter((id) => id !== "bestsellers-heading")).toEqual([
       "concerns-heading",
-      "categories-heading",
+      "results-heading",
       "loved-heading",
     ]);
     if (known.includes("bestsellers-heading")) expect(known[1]).toBe("bestsellers-heading");
@@ -436,18 +403,21 @@ test.describe("home page", () => {
     expect(faq.y).toBeGreaterThan(photo.y + photo.height - 1);
   });
 
-  test("review spotlight: one real review, or nothing", async ({ page, request }) => {
+  test("reviews: every featured review as a card in a sliding row, or nothing", async ({
+    page,
+    request,
+  }) => {
+    const featured = (await (await request.get(`${API}/reviews/featured?limit=50`)).json())
+      .data as unknown[];
     await page.goto(OPEN + "/");
-    const reviews = page.getByRole("region", { name: "Loved by women like you" });
-    if ((await apiBestRated(request)).length === 0) {
-      await expect(reviews).toHaveCount(0);
+    const section = page.getByRole("region", { name: "Loved by women like you" });
+    if (featured.length === 0) {
+      await expect(section).toHaveCount(0);
       return;
     }
-    await expect(reviews.locator("figure")).toHaveCount(1);
-    await expect(reviews.getByRole("link", { name: /Shop this look/ })).toHaveAttribute(
-      "href",
-      /^\/product\//,
-    );
+    const cards = section.getByRole("list", { name: "Customer reviews" }).getByRole("listitem");
+    await expect(cards).toHaveCount(featured.length);
+    await expect(section.getByRole("button", { name: "More reviews" })).toBeVisible();
   });
 
   test("FAQ: one answer open at a time, and described for search engines", async ({ page }) => {

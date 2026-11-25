@@ -2,12 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { routes } from "@/components/layout/nav";
-import { Reveal } from "@/components/motion/reveal";
 import { Skeleton } from "@/components/ui/display";
 import { ChevronRightIcon } from "@/components/ui/icons";
 import {
   getBestSellers,
-  getCategories,
   getCategoryPhoto,
   getConcerns,
   getChosenNewArrivals,
@@ -25,6 +23,7 @@ import { storyImage } from "./home-images";
 import { PhotoDeck } from "./photo-deck";
 import { HOME_REVIEW_COUNT } from "@/lib/home/review-cards";
 import { ReviewTiltCards } from "./review-tilt-cards";
+import { BeforeAfter } from "./before-after";
 import { BestSellerColumns } from "./best-seller-columns";
 import { SectionHeader } from "./section-header";
 import { ConcernSpotlight } from "./concern-spotlight";
@@ -152,62 +151,41 @@ export async function PromiseStrip() {
   );
 }
 
-// ── Shop by category ────────────────────────────────────────────────────
+// ── Before and after ────────────────────────────────────────────────
 
-async function categoriesWithPhotos() {
-  const categories = await getCategories();
-  // One small (cached) call per top-level category for its photo.
-  const photos = await Promise.all(categories.map((category) => getCategoryPhoto(category.slug)));
-  return categories.map((category, i) => ({ category, photo: photos[i] }));
-}
-
-export async function CategorySection() {
-  const data = await load(categoriesWithPhotos);
+/**
+ * Before and after (owner, 2026-11-25), in place of "Shop by category": the
+ * owner's two short clips of thinning hair and of fuller, glossy hair, compared
+ * by moving across the photo (see before-after.tsx). No data to load.
+ */
+export function BeforeAfterSection() {
   return (
-    <section aria-labelledby="categories-heading" className={`${shell} py-10`}>
-      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <SectionHeader
-          id="categories-heading"
-          align="left"
-          eyebrow="Curated collections"
-          title="Shop by category"
-        />
-        <ViewAll href={routes.shop} label="View all products" />
+    <section aria-labelledby="results-heading" className={`${shell} py-12`}>
+      <div className="mx-auto grid max-w-5xl items-center gap-8 md:grid-cols-[1fr_minmax(0,26rem)] md:gap-12 lg:gap-16">
+        <div className="max-w-xl">
+          <SectionHeader
+            id="results-heading"
+            align="left"
+            eyebrow="Real results"
+            title="See the difference"
+          />
+          <p className="mt-4 text-muted">
+            From thinning to fuller, glossier hair. Move across the photo to compare before and
+            after.
+          </p>
+          <div className="mt-6">
+            <ViewAll href={routes.shop} label="Shop all human hair" />
+          </div>
+        </div>
+        <div className="mx-auto w-full max-w-[22rem] md:max-w-none">
+          <BeforeAfter
+            before="/images/home/before-hair.webp"
+            after="/images/home/after-hair.webp"
+            beforeAlt="Before: a woman checks her thinning hair at the parting"
+            afterAlt="After: the same look with fuller, glossy, long hair"
+          />
+        </div>
       </div>
-      {data === null ? (
-        <ApiUnavailable />
-      ) : (
-        <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {data.map(({ category, photo: cover }, i) => (
-            <li key={category.id}>
-              <Reveal delay={Math.min(i, 5) * 0.06} className="h-full">
-                <Link
-                  href={routes.category(category.slug)}
-                  className="group flex h-full flex-col items-center rounded-2xl bg-white p-3 text-center shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-deep sm:p-4"
-                >
-                  <span className="relative mb-3 block aspect-square w-full overflow-hidden rounded-xl bg-sand">
-                    {cover?.image ? (
-                      <Image
-                        src={cover.image.medium}
-                        alt=""
-                        fill
-                        sizes="(min-width: 1024px) 13vw, (min-width: 768px) 30vw, 45vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : null}
-                  </span>
-                  <h3 className="text-sm font-semibold transition-colors group-hover:text-gold-ink">
-                    {category.name}
-                  </h3>
-                  <span className="mt-0.5 text-xs text-muted">
-                    {category.productCount} {category.productCount === 1 ? "item" : "items"}
-                  </span>
-                </Link>
-              </Reveal>
-            </li>
-          ))}
-        </ul>
-      )}
     </section>
   );
 }
