@@ -162,20 +162,28 @@ export function BeforeAfterSection() {
   return (
     <section aria-labelledby="results-heading" className={`${shell} py-12`}>
       <div className="mx-auto grid max-w-5xl items-center gap-8 md:grid-cols-[1fr_minmax(0,26rem)] md:gap-12 lg:gap-16">
+        {/* Bigger words than the other sections (owner, 2026-11-25: "make the texts bigger"). */}
         <div className="max-w-xl">
-          <SectionHeader
+          <p className="text-xs font-bold tracking-[0.2em] text-gold-ink uppercase sm:text-sm">
+            Real results
+          </p>
+          <h2
             id="results-heading"
-            align="left"
-            eyebrow="Real results"
-            title="See the difference"
-          />
-          <p className="mt-4 text-muted">
+            className="mt-3 font-display text-4xl leading-tight font-medium tracking-tight sm:text-5xl lg:text-6xl"
+          >
+            See the difference
+          </h2>
+          <p className="mt-5 text-lg leading-relaxed text-muted sm:text-xl">
             From thinning to fuller, glossier hair. Move across the photo to compare before and
             after.
           </p>
-          <div className="mt-6">
-            <ViewAll href={routes.shop} label="Shop all human hair" />
-          </div>
+          <Link
+            href={routes.shop}
+            className="mt-7 inline-flex items-center gap-1.5 text-base font-semibold transition-colors hover:text-gold-ink focus-visible:outline-2 focus-visible:outline-deep sm:text-lg"
+          >
+            Shop all human hair
+            <ChevronRightIcon width={20} height={20} />
+          </Link>
         </div>
         <div className="mx-auto w-full max-w-[22rem] md:max-w-none">
           <BeforeAfter

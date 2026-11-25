@@ -79,10 +79,10 @@ export function BeforeAfter({
         style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
       />
 
-      <span className="pointer-events-none absolute top-3 left-3 rounded-full bg-deep/75 px-3 py-1 text-[0.65rem] font-bold tracking-widest text-white uppercase backdrop-blur-sm">
+      <span className="pointer-events-none absolute top-3 left-3 rounded-full bg-deep/75 px-3.5 py-1.5 text-xs font-bold tracking-widest text-white uppercase backdrop-blur-sm">
         Before
       </span>
-      <span className="pointer-events-none absolute top-3 right-3 rounded-full bg-gold px-3 py-1 text-[0.65rem] font-bold tracking-widest text-deep uppercase">
+      <span className="pointer-events-none absolute top-3 right-3 rounded-full bg-gold px-3.5 py-1.5 text-xs font-bold tracking-widest text-deep uppercase">
         After
       </span>
 
