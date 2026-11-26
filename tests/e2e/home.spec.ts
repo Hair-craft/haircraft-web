@@ -78,6 +78,32 @@ test.describe("home page", () => {
     await expect(description).toHaveAttribute("content", /100% human hair extensions in India/);
   });
 
+  test("hero slideshow: the banners take turns, chosen with the dots (owner, 2026-11-26)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const slides = page.locator('[aria-roledescription="slide"]');
+    await expect(slides).toHaveCount(2);
+    await expect(slides.nth(0)).toBeVisible();
+    await expect(slides.nth(1)).toBeHidden();
+    // Computer pictures from 768 px up, each slide its own.
+    await expect(
+      page.locator('source[srcset="/images/home/hero-toppers-desktop.svg"]'),
+    ).toHaveCount(1);
+    await page.getByRole("button", { name: "Show banner 2: Hair toppers" }).click();
+    await expect(slides.nth(1)).toBeVisible();
+    await expect(slides.nth(0)).toBeHidden();
+    // Its words, styled like the first banner's (owner, 2026-11-26).
+    await expect(slides.nth(1)).toContainText("Crafted for Seamless Confidence");
+    await expect(slides.nth(1)).toContainText("Beautifully Yours. Confidently You.");
+    await expect(page.getByRole("button", { name: "Show banner 2: Hair toppers" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+    // Still one h1 and one link to Shop all over the whole hero.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  });
+
   test("hero banner on a tablet: like desktop, the words on the left over the photo", async ({
     page,
   }) => {

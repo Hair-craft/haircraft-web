@@ -23,6 +23,48 @@ export const heroImage: HomeImage & { mobile: string } = {
   alt: "A smiling HairCraft stylist holds up a dark human hair piece beside two long-haired mannequins and a HairCraft box",
 };
 
+/**
+ * The hero's slides, in the order they play (owner, 2026-11-26: "multiple slide show
+ * banners ... make them size wise"): each with its own computer and phone picture, the
+ * owner's SVGs as they are. The admin only shows or hides them (no uploads); the keys
+ * match the API's.
+ */
+export const heroSlides = [
+  {
+    key: "stylist",
+    label: "Fuller hair, a more confident you",
+    // The banner with the headline; its pictures are `heroImage`.
+    desktop: heroImage.src,
+    mobile: heroImage.mobile,
+    alt: heroImage.alt,
+  },
+  {
+    key: "toppers",
+    label: "Hair toppers",
+    // The owner's "2nd Blog Banner" (computers) and its closer "2.1" (phones), 2240 × 1260.
+    desktop: "/images/home/hero-toppers-desktop.svg",
+    mobile: "/images/home/hero-toppers-mobile.svg",
+    alt: "Smiling women showing HairCraft hair toppers, the clips on their bases, and long wavy human hair",
+    // Its words (owner, 2026-11-26), styled like the first banner's, at the top right.
+    tagline: "Crafted for Seamless Confidence",
+    headline: ["Beautifully Yours.", "Confidently You."],
+  },
+] as const;
+export type HeroSlide = (typeof heroSlides)[number];
+
+/**
+ * The slides to show: those the admin left on, in order. Every one when the API is older
+ * (it sends no list), can't be reached, or (it never should) has them all off.
+ */
+export function shownHeroSlides(
+  settings: { key: string; shown: boolean }[] | undefined | null,
+): HeroSlide[] {
+  if (!settings) return [...heroSlides];
+  const hidden = new Set(settings.filter((s) => !s.shown).map((s) => s.key));
+  const shown = heroSlides.filter((slide) => !hidden.has(slide.key));
+  return shown.length > 0 ? shown : [...heroSlides];
+}
+
 export const storyImage: HomeImage = {
   src: "/images/home/story.webp",
   alt: "A smiling woman wearing a long, wavy, warm brown HairCraft wig",
