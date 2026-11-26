@@ -218,7 +218,7 @@ test.describe("home page", () => {
 
   test("product and category photos actually load (not just image tags)", async ({ page }) => {
     await page.goto(OPEN + "/");
-    for (const name of ["See the difference", "Customer favourites"]) {
+    for (const name of ["Customer favourites"]) {
       await expectPhotosLoad(page.getByRole("region", { name }).locator("img"), name);
     }
   });
@@ -228,8 +228,8 @@ test.describe("home page", () => {
   }) => {
     await page.goto(OPEN + "/");
     const section = page.getByRole("region", { name: "See the difference" });
-    await expect(section.getByRole("img", { name: /^Before:/ })).toBeVisible();
-    await expect(section.getByRole("img", { name: /^After:/ })).toBeVisible();
+    await expect(section.locator('video[aria-label^="Before:"]')).toBeVisible();
+    await expect(section.locator('video[aria-label^="After:"]')).toBeVisible();
     const slider = section.getByRole("slider", { name: "Compare before and after" });
     await expect(slider).toHaveAttribute("aria-valuenow", "50");
 

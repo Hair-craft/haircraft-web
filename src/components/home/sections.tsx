@@ -155,7 +155,7 @@ export async function PromiseStrip() {
 
 /**
  * Before and after (owner, 2026-11-25), in place of "Shop by category": the
- * owner's two short clips of thinning hair and of fuller, glossy hair, compared
+ * owner's two videos (2026-11-26) of thinning hair and of fuller, glossy hair, compared
  * by moving across the photo (see before-after.tsx). No data to load.
  */
 export function BeforeAfterSection() {
@@ -187,10 +187,16 @@ export function BeforeAfterSection() {
         </div>
         <div className="mx-auto w-full max-w-[22rem] md:max-w-none">
           <BeforeAfter
-            before="/images/home/before-hair.webp"
-            after="/images/home/after-hair.webp"
-            beforeAlt="Before: a woman checks her thinning hair at the parting"
-            afterAlt="After: the same look with fuller, glossy, long hair"
+            before={{
+              src: "/videos/before-hair.mp4",
+              poster: "/videos/before-hair-poster.webp",
+              label: "Before: a woman shows her thinning hair at the parting",
+            }}
+            after={{
+              src: "/videos/after-hair.mp4",
+              poster: "/videos/after-hair-poster.webp",
+              label: "After: the same woman with fuller, glossy, long hair",
+            }}
           />
         </div>
       </div>
