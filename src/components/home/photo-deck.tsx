@@ -228,7 +228,8 @@ export function PhotoDeck({ label, products }: { label: string; products: Produc
               {[
                 <h3
                   key="name"
-                  className="font-display text-2xl leading-tight font-semibold sm:text-3xl"
+                  // Two lines of room (longer names end in …), so every product lines up.
+                  className="line-clamp-2 min-h-[2.5em] font-display text-2xl leading-tight font-semibold sm:text-3xl"
                 >
                   {current.name}
                 </h3>,
