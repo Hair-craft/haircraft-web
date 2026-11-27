@@ -41,9 +41,10 @@ export const heroSlides = [
   {
     key: "toppers",
     label: "Hair toppers",
-    // The owner's "2nd Blog Banner" (computers) and its closer "2.1" (phones), 2240 × 1260.
+    // The owner's "2nd Blog Banner" (computers, 2240 × 1260) and "Mobile Banner" (phones,
+    // owner 2026-11-27: a tall 1890 × 3780 picture with open beige space at the top).
     desktop: "/images/home/hero-toppers-desktop.svg",
-    mobile: "/images/home/hero-toppers-mobile.svg",
+    mobile: "/images/home/hero-toppers-phone.svg",
     alt: "Smiling women showing HairCraft hair toppers, the clips on their bases, and long wavy human hair",
     // Its words (owner, 2026-11-26), styled like the first banner's, at the top right.
     tagline: "Crafted for Seamless Confidence",

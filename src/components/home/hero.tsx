@@ -224,8 +224,8 @@ function ToppersSlide({
     ] as const)
       preload(src, { as: "image", fetchPriority: "high", media });
   return (
-    <div className="relative flex h-full min-h-[min(140vw,36rem)] flex-col pb-6 sm:min-h-[90vw] sm:pb-8 md:block md:min-h-0 md:pb-0">
-      <div className="relative z-10 px-5 pt-6 sm:px-6 sm:pt-8 md:absolute md:top-[9%] md:right-[2.5%] md:p-0 xl:top-[10%]">
+    <div className="relative h-full min-h-[calc(100vw+10rem)] overflow-hidden bg-[#ecded3] sm:min-h-[calc(75vw+12rem)] md:min-h-0 md:bg-transparent">
+      <div className="relative z-20 px-5 pt-6 sm:px-6 sm:pt-8 md:absolute md:top-[9%] md:right-[2.5%] md:p-0 xl:top-[10%]">
         <div className="flex max-w-xl flex-col items-start gap-3 sm:gap-4 md:gap-3 lg:gap-5 xl:max-w-2xl min-[112.5rem]:max-w-[46rem] min-[112.5rem]:gap-6">
           <Badge>{slide.tagline}</Badge>
           <p className={headlineClass}>
@@ -235,26 +235,30 @@ function ToppersSlide({
           </p>
         </div>
       </div>
-      <div className="relative mt-3 flex-1 overflow-hidden md:absolute md:inset-0 md:mt-0">
-        <picture>
-          <source media="(min-width: 768px)" srcSet={slide.desktop} />
-          <img
-            src={slide.mobile}
-            alt={slide.alt}
-            width={2240}
-            height={1260}
-            fetchPriority={first ? "high" : "low"}
-            loading="eager"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover object-[52%_30%] md:object-[50%_30%]"
-          />
-        </picture>
-        {/* Phones: the picture starts under the words, its top edge softened into the cream. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-[#fbf6f2] to-transparent md:hidden"
+      {/*
+        Phones: the tall phone picture (beige, like the slide) from the bottom up, its green
+        wave (ending at 92% of its height) just above the sliding panel; its open top sits
+        behind the words. 640–767 px: the same, 75% wide and centred, its sides faded into the
+        beige. Tablets up: the wide
+        computer picture fills the hero.
+      */}
+      <picture>
+        <source media="(min-width: 768px)" srcSet={slide.desktop} width={2240} height={1260} />
+        <img
+          src={slide.mobile}
+          alt={slide.alt}
+          width={1890}
+          height={3780}
+          fetchPriority={first ? "high" : "low"}
+          loading="eager"
+          decoding="async"
+          className={
+            "absolute bottom-[calc(1.5rem-16vw)] left-0 h-auto w-full max-w-none " +
+            "sm:bottom-[calc(2rem-12vw)] sm:left-[12.5%] sm:w-[75%] sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] md:[mask-image:none] " +
+            "md:inset-0 md:h-full md:w-full md:object-cover md:object-[50%_30%]"
+          }
         />
-      </div>
+      </picture>
     </div>
   );
 }
