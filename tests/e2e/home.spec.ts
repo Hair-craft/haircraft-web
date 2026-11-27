@@ -86,10 +86,10 @@ test.describe("home page", () => {
     await expect(slides).toHaveCount(2);
     await expect(slides.nth(0)).toBeVisible();
     await expect(slides.nth(1)).toBeHidden();
-    // Computer pictures from 768 px up, each slide its own.
-    await expect(
-      page.locator('source[srcset="/images/home/hero-toppers-desktop.svg"]'),
-    ).toHaveCount(1);
+    // The second slide's picture loads only after the page has (owner, 2026-11-27: faster).
+    await page.waitForLoadState("load");
+    // Computer pictures from 768 px up, each slide its own, as sized copies.
+    await expect(page.locator('source[srcset*="hero-toppers-desktop.webp"]')).toHaveCount(1);
     await page.getByRole("button", { name: "Show banner 2: Hair toppers" }).click();
     await expect(slides.nth(1)).toBeVisible();
     await expect(slides.nth(0)).toBeHidden();

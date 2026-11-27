@@ -24,6 +24,7 @@ describe("settings", () => {
       googleSiteVerification: null,
       bingSiteVerification: null,
       gtmId: null,
+      clarityId: null,
     });
     expect(parseSettings({ NODE_ENV: "development" })).toMatchObject({
       storeOpen: true,

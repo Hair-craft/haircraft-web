@@ -4,7 +4,7 @@ import { Cormorant_Garamond } from "next/font/google";
 import { type ReactNode } from "react";
 import { type BrandPromise } from "./copy";
 import { heroImage, type HeroSlide, shownHeroSlides } from "./home-images";
-import { HeroSlides } from "./hero-slides";
+import { HeroSlides, LateImage } from "./hero-slides";
 import { getHomeContent } from "@/lib/api/home";
 
 /*
@@ -70,17 +70,24 @@ export function PromiseIcon({
  * eases back a little (`.hc-shutter` in globals.css; none for people who
  * prefer reduced motion). The words rise in with CSS, so they are visible at once.
  */
-/** A banner file as is (the owner's SVGs), or a photo through next/image. */
-function bannerSource(src: string): { src: string; srcSet: string | undefined } {
-  if (src.endsWith(".svg")) return { src, srcSet: undefined };
-  // Sharp, not soft (owner, 2026-11-20): the higher of the allowed qualities.
-  const { props } = getImageProps({ src, alt: "", fill: true, sizes: "100vw", quality: 90 });
-  return { src: props.src, srcSet: props.srcSet };
+/**
+ * A banner through next/image: each screen gets a copy sized for it (owner, 2026-11-27:
+ * "make it faster to load"; the SVGs were about 1.7 MB each). `sizes` is how wide the
+ * picture shows, as it is framed. Sharp, not soft (owner, 2026-11-20): the higher of the
+ * allowed qualities, from masters rendered at 1.5× from the owner's SVGs.
+ */
+function bannerSource(
+  src: string,
+  sizes: string,
+): { src: string; srcSet: string | undefined; sizes: string } {
+  if (src.endsWith(".svg")) return { src, srcSet: undefined, sizes };
+  const { props } = getImageProps({ src, alt: "", fill: true, sizes, quality: 90 });
+  return { src: props.src, srcSet: props.srcSet, sizes };
 }
 
 /**
  * The banner, one picture per screen (owner, 2026-11-24): the desktop banner from 768 px
- * up, the mobile one below, each the owner's SVG as is.
+ * up, the mobile one below (the owner's artwork, as sized WebP copies).
  * Each screen downloads only its own, fetched first as the page's largest picture.
  *
  * Both banners are 16:9 with the stylist and the table on the right. The framing always
@@ -97,8 +104,10 @@ function HeroPicture({
   mobileSrc: string;
   first: boolean;
 }) {
-  const desktop = bannerSource(desktopSrc);
-  const mobile = bannerSource(mobileSrc);
+  // As framed below: about 110% of the screen's width from tablets up (the whole height,
+  // 16:9), 212.7% on phones and 159.5% from 640 px.
+  const desktop = bannerSource(desktopSrc, "110vw");
+  const mobile = bannerSource(mobileSrc, "(min-width: 640px) 160vw, 213vw");
   if (first)
     for (const [banner, media] of [
       [desktop, "(min-width: 768px)"],
@@ -106,37 +115,43 @@ function HeroPicture({
     ] as const)
       preload(banner.src, {
         as: "image",
-        ...(banner.srcSet ? { imageSrcSet: banner.srcSet, imageSizes: "100vw" } : {}),
+        ...(banner.srcSet ? { imageSrcSet: banner.srcSet, imageSizes: banner.sizes } : {}),
         fetchPriority: "high",
         media,
       });
   return (
-    <picture>
-      <source media="(min-width: 768px)" srcSet={desktop.srcSet ?? desktop.src} sizes="100vw" />
-      <img
-        src={mobile.src}
-        srcSet={mobile.srcSet}
-        sizes="100vw"
-        alt={heroImage.alt}
-        width={2240}
-        height={1260}
-        fetchPriority={first ? "high" : "low"}
-        loading="eager"
-        decoding="async"
-        className={
-          // The picture ends exactly at the bottom of the table's stand, where the sliding
-          // panel begins: no empty ground under it (owner, 2026-11-24). Measured in the SVGs:
-          // the stand ends at 98.6% of the mobile banner's height, 92.1% of the desktop one's.
-          // Phones: 15%–98.6% of the mobile banner fills the square window (212.7% of its
-          // width), moved to the stylist and the table; 640–767 px the same at 4:3.
-          // Tablets up: 16%–92.1% of the desktop banner fills the height down to the panel's
-          // edge (2rem above the bottom), on the right; the cream on the left.
-          "hc-settle absolute top-[-17.94%] left-[-97.95%] h-auto w-[212.7%] max-w-none " +
-          "sm:left-[-59.5%] sm:w-[159.5%] " +
-          "md:top-[calc(-21.02%_+_0.42rem)] md:right-0 md:left-auto md:h-[calc(131.4%_-_2.628rem)] md:w-auto"
-        }
-      />
-    </picture>
+    <LateImage first={first}>
+      <picture>
+        <source
+          media="(min-width: 768px)"
+          srcSet={desktop.srcSet ?? desktop.src}
+          sizes={desktop.sizes}
+        />
+        <img
+          src={mobile.src}
+          srcSet={mobile.srcSet}
+          sizes={mobile.sizes}
+          alt={heroImage.alt}
+          width={2240}
+          height={1260}
+          fetchPriority={first ? "high" : "low"}
+          loading="eager"
+          decoding="async"
+          className={
+            // The picture ends exactly at the bottom of the table's stand, where the sliding
+            // panel begins: no empty ground under it (owner, 2026-11-24). Measured in the SVGs:
+            // the stand ends at 98.6% of the mobile banner's height, 92.1% of the desktop one's.
+            // Phones: 15%–98.6% of the mobile banner fills the square window (212.7% of its
+            // width), moved to the stylist and the table; 640–767 px the same at 4:3.
+            // Tablets up: 16%–92.1% of the desktop banner fills the height down to the panel's
+            // edge (2rem above the bottom), on the right; the cream on the left.
+            "hc-settle absolute top-[-17.94%] left-[-97.95%] h-auto w-[212.7%] max-w-none " +
+            "sm:left-[-59.5%] sm:w-[159.5%] " +
+            "md:top-[calc(-21.02%_+_0.42rem)] md:right-0 md:left-auto md:h-[calc(131.4%_-_2.628rem)] md:w-auto"
+          }
+        />
+      </picture>
+    </LateImage>
   );
 }
 /** The banners' pill and headline (the first banner's design, owner 2026-11-20; the toppers banner's too, 2026-11-26). */
@@ -217,12 +232,20 @@ function ToppersSlide({
   slide: Extract<HeroSlide, { key: "toppers" }>;
   first: boolean;
 }) {
+  // As framed below: the whole width from tablets up; phones the whole width, 75% from 640 px.
+  const desktop = bannerSource(slide.desktop, "100vw");
+  const phone = bannerSource(slide.mobile, "(min-width: 640px) 75vw, 100vw");
   if (first)
-    for (const [src, media] of [
-      [slide.desktop, "(min-width: 768px)"],
-      [slide.mobile, "(max-width: 767px)"],
+    for (const [banner, media] of [
+      [desktop, "(min-width: 768px)"],
+      [phone, "(max-width: 767px)"],
     ] as const)
-      preload(src, { as: "image", fetchPriority: "high", media });
+      preload(banner.src, {
+        as: "image",
+        ...(banner.srcSet ? { imageSrcSet: banner.srcSet, imageSizes: banner.sizes } : {}),
+        fetchPriority: "high",
+        media,
+      });
   return (
     <div className="relative h-full min-h-[calc(100vw+10rem)] overflow-hidden bg-[#ecded3] sm:min-h-[calc(75vw+12rem)] md:min-h-0 md:bg-transparent">
       <div className="relative z-20 px-5 pt-6 sm:px-6 sm:pt-8 md:absolute md:top-[9%] md:right-[2.5%] md:p-0 xl:top-[10%]">
@@ -242,23 +265,33 @@ function ToppersSlide({
         beige. Tablets up: the wide
         computer picture fills the hero.
       */}
-      <picture>
-        <source media="(min-width: 768px)" srcSet={slide.desktop} width={2240} height={1260} />
-        <img
-          src={slide.mobile}
-          alt={slide.alt}
-          width={1890}
-          height={3780}
-          fetchPriority={first ? "high" : "low"}
-          loading="eager"
-          decoding="async"
-          className={
-            "absolute bottom-[calc(1.5rem-16vw)] left-0 h-auto w-full max-w-none " +
-            "sm:bottom-[calc(2rem-12vw)] sm:left-[12.5%] sm:w-[75%] sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] md:[mask-image:none] " +
-            "md:inset-0 md:h-full md:w-full md:object-cover md:object-[50%_30%]"
-          }
-        />
-      </picture>
+      <LateImage first={first}>
+        <picture>
+          <source
+            media="(min-width: 768px)"
+            srcSet={desktop.srcSet ?? desktop.src}
+            sizes={desktop.sizes}
+            width={2240}
+            height={1260}
+          />
+          <img
+            src={phone.src}
+            srcSet={phone.srcSet}
+            sizes={phone.sizes}
+            alt={slide.alt}
+            width={1890}
+            height={3780}
+            fetchPriority={first ? "high" : "low"}
+            loading="eager"
+            decoding="async"
+            className={
+              "absolute bottom-[calc(1.5rem-16vw)] left-0 h-auto w-full max-w-none " +
+              "sm:bottom-[calc(2rem-12vw)] sm:left-[12.5%] sm:w-[75%] sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] md:[mask-image:none] " +
+              "md:inset-0 md:h-full md:w-full md:object-cover md:object-[50%_30%]"
+            }
+          />
+        </picture>
+      </LateImage>
     </div>
   );
 }

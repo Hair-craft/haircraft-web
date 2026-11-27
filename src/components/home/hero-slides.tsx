@@ -1,8 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { Children, type ReactNode, type TouchEvent, useEffect, useRef, useState } from "react";
+import {
+  Children,
+  createContext,
+  type ReactNode,
+  type TouchEvent,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { routes } from "@/components/layout/nav";
+
+/**
+ * Whether the later slides' pictures may load yet (owner, 2026-11-27: "make it faster to
+ * load"): only the first slide's picture loads with the page; the others start once the
+ * page has finished loading (or as soon as someone picks a slide), so they never compete
+ * with it. True outside the slideshow.
+ */
+const LaterPictures = createContext(true);
+
+/** A slide's picture: the first slide's at once, the others once the page has loaded. */
+export function LateImage({ first, children }: { first: boolean; children: ReactNode }) {
+  const ready = useContext(LaterPictures);
+  return first || ready ? children : null;
+}
 
 /** How long each slide stays before the next one fades in. */
 export const SLIDE_SECONDS = 6;
@@ -24,15 +47,36 @@ export function HeroSlides({ labels, children }: { labels: string[]; children: R
   const count = slides.length;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [later, setLater] = useState(false);
   const touchX = useRef<number | null>(null);
 
-  const go = (to: number) => setIndex(((to % count) + count) % count);
+  const go = (to: number) => {
+    setLater(true);
+    setIndex(((to % count) + count) % count);
+  };
+
+  // The later slides' pictures: a moment after the page has loaded.
+  useEffect(() => {
+    if (count < 2) return;
+    let timer = 0;
+    const start = () => {
+      timer = window.setTimeout(() => setLater(true), 800);
+    };
+    if (document.readyState === "complete") start();
+    else window.addEventListener("load", start, { once: true });
+    return () => {
+      window.removeEventListener("load", start);
+      window.clearTimeout(timer);
+    };
+  }, [count]);
 
   useEffect(() => {
     if (count < 2 || paused) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") setIndex((i) => (i + 1) % count);
+      if (document.visibilityState !== "visible") return;
+      setLater(true);
+      setIndex((i) => (i + 1) % count);
     }, SLIDE_SECONDS * 1000);
     return () => window.clearInterval(timer);
   }, [count, paused, index]);
@@ -64,23 +108,25 @@ export function HeroSlides({ labels, children }: { labels: string[]; children: R
         aria-label="Shop all human hair"
         className="absolute inset-0 z-20 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-deep"
       />
-      <div className="grid md:h-full md:grid-rows-[100%]">
-        {slides.map((slide, i) => (
-          <div
-            key={labels[i] ?? i}
-            role="group"
-            aria-roledescription="slide"
-            aria-label={`${i + 1} of ${count}: ${labels[i] ?? ""}`}
-            aria-hidden={i !== index}
-            className={
-              "col-start-1 row-start-1 self-stretch transition-[opacity,visibility,transform] duration-[1200ms] ease-in-out motion-reduce:transition-none " +
-              (i === index ? "visible scale-100 opacity-100" : "invisible scale-[1.03] opacity-0")
-            }
-          >
-            {slide}
-          </div>
-        ))}
-      </div>
+      <LaterPictures value={later}>
+        <div className="grid md:h-full md:grid-rows-[100%]">
+          {slides.map((slide, i) => (
+            <div
+              key={labels[i] ?? i}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${i + 1} of ${count}: ${labels[i] ?? ""}`}
+              aria-hidden={i !== index}
+              className={
+                "col-start-1 row-start-1 self-stretch transition-[opacity,visibility,transform] duration-[1200ms] ease-in-out motion-reduce:transition-none " +
+                (i === index ? "visible scale-100 opacity-100" : "invisible scale-[1.03] opacity-0")
+              }
+            >
+              {slide}
+            </div>
+          ))}
+        </div>
+      </LaterPictures>
       {count > 1 && (
         // Above the sliding panel's rounded edge, which covers the hero's last 1.5–2rem.
         <div className="absolute inset-x-0 bottom-9 z-30 flex justify-center gap-2 sm:bottom-11 md:bottom-12">

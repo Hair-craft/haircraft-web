@@ -18,8 +18,9 @@ export const heroImage: HomeImage & { mobile: string } = {
   // The owner's "Blog Banner for Website Content" desktop and mobile files (2026-11-24),
   // 2240 × 1260 each, used as the SVGs themselves (owner, 2026-11-24): the desktop one from
   // tablets up, the mobile one on phones.
-  src: "/images/home/hero-banner-desktop.svg",
-  mobile: "/images/home/hero-banner-mobile.svg",
+  // WebP masters rendered at 1.5× from the owner's SVGs (owner, 2026-11-27: faster to load).
+  src: "/images/home/hero-banner-desktop.webp",
+  mobile: "/images/home/hero-banner-mobile.webp",
   alt: "A smiling HairCraft stylist holds up a dark human hair piece beside two long-haired mannequins and a HairCraft box",
 };
 
@@ -43,8 +44,9 @@ export const heroSlides = [
     label: "Hair toppers",
     // The owner's "2nd Blog Banner" (computers, 2240 × 1260) and "Mobile Banner" (phones,
     // owner 2026-11-27: a tall 1890 × 3780 picture with open beige space at the top).
-    desktop: "/images/home/hero-toppers-desktop.svg",
-    mobile: "/images/home/hero-toppers-phone.svg",
+    // WebP masters rendered from the SVGs (owner, 2026-11-27: faster to load).
+    desktop: "/images/home/hero-toppers-desktop.webp",
+    mobile: "/images/home/hero-toppers-phone.webp",
     alt: "Smiling women showing HairCraft hair toppers, the clips on their bases, and long wavy human hair",
     // Its words (owner, 2026-11-26), styled like the first banner's, at the top right.
     tagline: "Crafted for Seamless Confidence",

@@ -7,8 +7,10 @@ describe("Hero slideshow: the admin shows or hides the built-in slides (owner, 2
   it("has the stylist slide, then the toppers, each with its pictures", () => {
     expect(keys([...heroSlides])).toEqual(["stylist", "toppers"]);
     for (const slide of heroSlides) {
-      expect(slide.desktop).toMatch(/^\/images\/home\/.+\.svg$/);
-      expect(slide.mobile).toMatch(/^\/images\/home\/.+\.svg$/);
+      // Sized WebP copies of the owner's artwork (owner, 2026-11-27: faster to load).
+      expect(slide.desktop).toMatch(/^\/images\/home\/.+\.webp$/);
+      expect(slide.mobile).toMatch(/^\/images\/home\/.+\.webp$/);
+      expect(slide.desktop).not.toBe(slide.mobile);
     }
   });
 

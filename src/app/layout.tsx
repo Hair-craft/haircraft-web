@@ -3,6 +3,7 @@ import { Belgrano, Merriweather, Roboto_Slab } from "next/font/google";
 import { settings } from "@/lib/env";
 import { siteJsonLd } from "@/lib/seo/organization";
 import { jsonLdScript } from "@/lib/seo/json-ld";
+import { clarityScript } from "@/lib/analytics/clarity";
 import { gtmHeadScript, gtmNoscriptSrc } from "@/lib/analytics/gtm";
 import "./globals.css";
 
@@ -55,15 +56,21 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   // Google Tag Manager on every page (owner, 2026-11-27), when GTM_ID is set (the live shop).
-  const gtmId = settings().gtmId;
+  // Microsoft Clarity too (owner, the same day), when CLARITY_ID is set; it starts after the page loads.
+  const { gtmId, clarityId } = settings();
   return (
     <html
       lang="en-IN"
       className={`${display.variable} ${accent.variable} ${sans.variable} h-full antialiased`}
     >
-      {gtmId ? (
+      {gtmId || clarityId ? (
         <head>
-          <script id="gtm" dangerouslySetInnerHTML={{ __html: gtmHeadScript(gtmId) }} />
+          {gtmId ? (
+            <script id="gtm" dangerouslySetInnerHTML={{ __html: gtmHeadScript(gtmId) }} />
+          ) : null}
+          {clarityId ? (
+            <script id="clarity" dangerouslySetInnerHTML={{ __html: clarityScript(clarityId) }} />
+          ) : null}
         </head>
       ) : null}
       <body className="flex min-h-full flex-col">

@@ -5,6 +5,7 @@
  * either (no NEXT_PUBLIC_ prefix).
  */
 
+import { CLARITY_ID_PATTERN } from "@/lib/analytics/clarity";
 import { GTM_ID_PATTERN } from "@/lib/analytics/gtm";
 
 export interface StoreSettings {
@@ -48,6 +49,8 @@ export interface StoreSettings {
   bingSiteVerification: string | null;
   /** Google Tag Manager's container ID (GTM_ID, "GTM-…"), set on the live shop only; null: none. */
   gtmId: string | null;
+  /** Microsoft Clarity's project ID (CLARITY_ID), set on the live shop only; null: none. */
+  clarityId: string | null;
 }
 
 /** Razorpay Checkout's script, as Razorpay publishes it. */
@@ -191,6 +194,15 @@ export function parseSettings(env: Env): StoreSettings {
     else
       problems.push(`GTM_ID must be a Tag Manager container ID like GTM-ABC1234 (got "${gtmRaw}")`);
   }
+  const clarityRaw = env.CLARITY_ID?.trim();
+  let clarityId: string | null = null;
+  if (clarityRaw) {
+    if (CLARITY_ID_PATTERN.test(clarityRaw)) clarityId = clarityRaw;
+    else
+      problems.push(
+        `CLARITY_ID must be a Clarity project ID: lower-case letters and digits (got "${clarityRaw}")`,
+      );
+  }
   if (problems.length > 0) throw new ConfigError(problems);
   return {
     apiBaseUrl,
@@ -206,6 +218,7 @@ export function parseSettings(env: Env): StoreSettings {
     googleSiteVerification,
     bingSiteVerification,
     gtmId,
+    clarityId,
   };
 }
 
