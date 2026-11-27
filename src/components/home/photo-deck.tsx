@@ -3,7 +3,7 @@
 import { AnimatePresence, m, useReducedMotion, type PanInfo } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { LazyMotionProvider } from "@/components/motion/lazy";
 import { productHref } from "@/components/product/product-card";
 import { PhotoPlaceholder } from "@/components/product/photo-placeholder";
@@ -44,26 +44,80 @@ function Odometer({ value, direction }: { value: string; direction: number }) {
 }
 
 /**
+ * A product's description in the caption (owner, 2026-11-27: "should have the description,
+ * so for the alignment add read more"): up to 3 lines in a space always 3 lines tall, so the
+ * price and Shop now stay in the same place for every product; "Read more" (only when the
+ * text is cut off) opens the rest in place, "Read less" closes it.
+ */
+function Description({
+  text,
+  open,
+  onToggle,
+}: {
+  text: string | null | undefined;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [cut, setCut] = useState(false);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const measure = () => setCut(element.scrollHeight > element.clientHeight + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [text]);
+  return (
+    // Always three lines tall (1.5 × 3), however short the text, or none.
+    <div className="max-w-md text-sm leading-6 text-muted sm:text-base sm:leading-6">
+      <p ref={ref} className={open ? "" : "line-clamp-3 min-h-[4.5rem]"}>
+        {text ?? ""}
+      </p>
+      {text && (cut || open) ? (
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={onToggle}
+          className="mt-1 text-sm font-semibold text-deep underline decoration-gold/60 underline-offset-4 hover:decoration-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deep"
+        >
+          {open ? "Read less" : "Read more"}
+        </button>
+      ) : (
+        // Keeps the button's room, so every product lines up.
+        <span aria-hidden className="mt-1 block h-5" />
+      )}
+    </div>
+  );
+}
+
+/**
  * Customer favourites as a Photo Deck (owner, 2026-11-24, after 21st.dev's
  * "Photo Deck"): the products as a stack of photo prints. Drag or flick the
  * top print, use the ‹ › buttons or the arrow keys: the top print flies off
  * with a tilt, going back flies the previous one in from the left, the
- * counter rolls like an odometer and the caption (name, a short line, the
- * price and Shop now) hands over line by line. It moves on by itself every 3 s.
+ * counter rolls like an odometer and the caption (name, the description with
+ * Read more, the price and Shop now) hands over line by line. It moves on by itself every 3 s.
  */
 export function PhotoDeck({ label, products }: { label: string; products: ProductCardData[] }) {
   const count = products.length;
   const reduced = useReducedMotion();
   const [state, setState] = useState({ active: 0, direction: 1 });
+  /** The description opened with Read more (closed again on the next product). */
+  const [openId, setOpenId] = useState<string | null>(null);
   const box = useRef<HTMLDivElement>(null);
   const { active, direction } = state;
 
   const go = useCallback(
-    (by: number) =>
-      setState((s) => ({ active: deckStep(s.active, by, count), direction: by >= 0 ? 1 : -1 })),
+    (by: number) => {
+      setOpenId(null);
+      setState((s) => ({ active: deckStep(s.active, by, count), direction: by >= 0 ? 1 : -1 }));
+    },
     [count],
   );
-  useAutoSlide(box, () => go(1), count > 1);
+  // Stays put while a description is open, so it can be read.
+  useAutoSlide(box, () => go(1), count > 1 && openId === null);
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -178,11 +232,12 @@ export function PhotoDeck({ label, products }: { label: string; products: Produc
                 >
                   {current.name}
                 </h3>,
-                current.summary ? (
-                  <p key="line" className="max-w-md text-sm text-muted sm:text-base">
-                    {current.summary}
-                  </p>
-                ) : null,
+                <Description
+                  key="line"
+                  text={current.summary}
+                  open={openId === current.id}
+                  onToggle={() => setOpenId((id) => (id === current.id ? null : current.id))}
+                />,
                 <PriceRange
                   key="price"
                   min={current.priceRange.min}

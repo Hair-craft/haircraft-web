@@ -293,6 +293,31 @@ test.describe("home page", () => {
     );
   });
 
+  test("customer favourites: the description in 3 lines with Read more, everything else in place (owner, 2026-11-27)", async ({
+    page,
+  }) => {
+    await page.goto(OPEN + "/");
+    const deck = page.getByRole("region", { name: "New arrivals" });
+    const shopNow = deck.getByRole("link", { name: /Shop now/ });
+    // The Shop now button stays at the same height whatever the description's length.
+    const offsets: number[] = [];
+    for (let i = 0; i < 3; i++) {
+      const [box, link] = [await deck.boundingBox(), await shopNow.boundingBox()];
+      offsets.push(Math.round(link!.y - box!.y));
+      await deck.getByRole("button", { name: "Next favourite" }).click();
+      await page.waitForTimeout(700);
+    }
+    expect(new Set(offsets).size).toBe(1);
+    const more = deck.getByRole("button", { name: "Read more" });
+    if (await more.count()) {
+      await more.click();
+      await expect(deck.getByRole("button", { name: "Read less" })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      );
+    }
+  });
+
   test("sections in the owner's order: concern, best sellers (if any), before and after, favourites", async ({
     page,
   }) => {
