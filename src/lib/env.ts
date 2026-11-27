@@ -5,6 +5,8 @@
  * either (no NEXT_PUBLIC_ prefix).
  */
 
+import { GTM_ID_PATTERN } from "@/lib/analytics/gtm";
+
 export interface StoreSettings {
   /** The NestJS API, e.g. `http://localhost:3000/api/v1` (no trailing slash). */
   apiBaseUrl: string;
@@ -44,6 +46,8 @@ export interface StoreSettings {
   googleSiteVerification: string | null;
   /** Bing Webmaster Tools' HTML-tag verification code (msvalidate.01), or null. */
   bingSiteVerification: string | null;
+  /** Google Tag Manager's container ID (GTM_ID, "GTM-…"), set on the live shop only; null: none. */
+  gtmId: string | null;
 }
 
 /** Razorpay Checkout's script, as Razorpay publishes it. */
@@ -180,6 +184,13 @@ export function parseSettings(env: Env): StoreSettings {
   };
   const googleSiteVerification = verificationCode("GOOGLE_SITE_VERIFICATION", "Search Console");
   const bingSiteVerification = verificationCode("BING_SITE_VERIFICATION", "Bing Webmaster Tools");
+  const gtmRaw = env.GTM_ID?.trim();
+  let gtmId: string | null = null;
+  if (gtmRaw) {
+    if (GTM_ID_PATTERN.test(gtmRaw)) gtmId = gtmRaw;
+    else
+      problems.push(`GTM_ID must be a Tag Manager container ID like GTM-ABC1234 (got "${gtmRaw}")`);
+  }
   if (problems.length > 0) throw new ConfigError(problems);
   return {
     apiBaseUrl,
@@ -194,6 +205,7 @@ export function parseSettings(env: Env): StoreSettings {
     allowIndexing,
     googleSiteVerification,
     bingSiteVerification,
+    gtmId,
   };
 }
 

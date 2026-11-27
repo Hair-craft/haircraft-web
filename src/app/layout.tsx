@@ -3,6 +3,7 @@ import { Belgrano, Merriweather, Roboto_Slab } from "next/font/google";
 import { settings } from "@/lib/env";
 import { siteJsonLd } from "@/lib/seo/organization";
 import { jsonLdScript } from "@/lib/seo/json-ld";
+import { gtmHeadScript, gtmNoscriptSrc } from "@/lib/analytics/gtm";
 import "./globals.css";
 
 /** The owner's three fonts (2026-11-03): headlines, highlighters (labels, buttons, prices) and sub text. */
@@ -53,12 +54,30 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  // Google Tag Manager on every page (owner, 2026-11-27), when GTM_ID is set (the live shop).
+  const gtmId = settings().gtmId;
   return (
     <html
       lang="en-IN"
       className={`${display.variable} ${accent.variable} ${sans.variable} h-full antialiased`}
     >
+      {gtmId ? (
+        <head>
+          <script id="gtm" dangerouslySetInnerHTML={{ __html: gtmHeadScript(gtmId) }} />
+        </head>
+      ) : null}
       <body className="flex min-h-full flex-col">
+        {gtmId ? (
+          <noscript>
+            <iframe
+              src={gtmNoscriptSrc(gtmId)}
+              height="0"
+              width="0"
+              title="Google Tag Manager"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        ) : null}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

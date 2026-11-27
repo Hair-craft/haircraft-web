@@ -23,6 +23,7 @@ describe("settings", () => {
       allowIndexing: false,
       googleSiteVerification: null,
       bingSiteVerification: null,
+      gtmId: null,
     });
     expect(parseSettings({ NODE_ENV: "development" })).toMatchObject({
       storeOpen: true,
